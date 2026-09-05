@@ -117,6 +117,8 @@ function S:SkinMenu(_, manager, _, menuDescription)
 	menuDescription:AddMenuAcquiredCallback(createShadow)
 end
 
-S:SecureHook(ES, "SkinMenu")
+if ES.SkinMenu then
+	S:SecureHook(ES, "SkinMenu")
+end
 S:AddCallback("BlizzardMiscFrames")
 S:AddCallbackForAddon("Blizzard_DeathRecap")

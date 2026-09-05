@@ -37,7 +37,6 @@ local messageData = {
 	ERR_RAID_DIFFICULTY_CHANGED_S = {
 		message = L["Raid difficulty set to >> %s <<"],
 		isDifficultyChange = true,
-		notMatch = gsub(_G.ERR_LEGACY_RAID_DIFFICULTY_CHANGED_S, "%%s", ".+"),
 		ignoreOn = { "partyLeaderChanged", "justChangedGroupType" },
 		throttleKey = "ANNRaidDifficultyChanged",
 	},

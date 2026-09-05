@@ -10,7 +10,9 @@ local wipe = wipe
 
 local Mixin = Mixin
 
-local C_Timer_NewTicker = C_Timer.NewTicker
+local function C_Timer_NewTicker(...)
+	return C_Timer:NewTicker(...)
+end
 
 ---@class CacheConfig Configuration for cache instance
 ---@field defaultTTL number Default time-to-live in seconds (0 = no expiration)

@@ -7,9 +7,8 @@
 ## Notes-ruRU: Добавляет множество улучшенных функций в ElvUI и даёт возможность их гибко настраивать.
 ## RequiredDeps: ElvUI
 ## OptionalDeps: SharedMedia, MythicDungeonTools, Myslot, Details, WeakAuras, BigWigs, WorldQuestTab, BtWQuests
-## AddonCompartmentFunc: WindTools_OnAddonCompartmentClick
-## IconTexture: Interface\Addons\ElvUI_WindTools\Media\Textures\WindToolsAddonIcon.png
 
+Core\SirusCompat.lua
 Libraries\Load_Libraries.xml
 Initialize.lua
 Locales\Load_Locales.xml

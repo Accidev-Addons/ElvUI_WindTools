@@ -55,18 +55,20 @@ S.texturePathFetcher = E.UIParent:CreateTexture(nil, "ARTWORK")
 S.texturePathFetcher:Hide()
 
 -- Override Settings.RegisterCanvasLayoutCategory to track setting frames
-local RegisterCanvasLayoutCategory = Settings.RegisterCanvasLayoutCategory
----@diagnostic disable-next-line: duplicate-set-field
-Settings.RegisterCanvasLayoutCategory = function(frame, name)
-	if frame and name then
-		S.settingFrames[name] = frame
-		if S.waitSettingFrames[name] then
-			S.waitSettingFrames[name](frame)
-			S.waitSettingFrames[name] = nil
+if Settings then
+	local RegisterCanvasLayoutCategory = Settings.RegisterCanvasLayoutCategory
+	---@diagnostic disable-next-line: duplicate-set-field
+	Settings.RegisterCanvasLayoutCategory = function(frame, name)
+		if frame and name then
+			S.settingFrames[name] = frame
+			if S.waitSettingFrames[name] then
+				S.waitSettingFrames[name](frame)
+				S.waitSettingFrames[name] = nil
+			end
 		end
-	end
 
-	return RegisterCanvasLayoutCategory(frame, name)
+		return RegisterCanvasLayoutCategory(frame, name)
+	end
 end
 
 ---Check if the texture path is equal to the given path

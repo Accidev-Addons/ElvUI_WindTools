@@ -13,9 +13,6 @@ local UIErrorsFrame = UIErrorsFrame
 
 local MenuUtil_CreateContextMenu = MenuUtil.CreateContextMenu
 
-local dropdown =
-	CreateFrame("DropdownButton", "WTMicroMenuDatatextMenuDropDown", E.UIParent, "WowStyle1DropdownTemplate")
-
 local function GenerateDayContextMenu(owner, rootDescription)
 	rootDescription:SetTag("WT_MICRO_MENU")
 

@@ -3,7 +3,7 @@ local M = W.Modules.Misc ---@class Misc
 
 local CreateFrame = CreateFrame
 
-local C_PartyInfo_LeaveParty = C_PartyInfo.LeaveParty
+local LeaveParty = LeaveParty
 
 local function createInvisibleButton(name, buttonType, content)
 	local button = CreateFrame("Button", name, E.UIParent, "SecureActionButtonTemplate")
@@ -26,10 +26,8 @@ function M:ExtraBindingButtons()
 	self.ExtraBindingButtons.Logout = createInvisibleButton("WTExtraBindingButtonLogout", "macro", "/logout")
 
 	self.ExtraBindingButtons.LeaveParty = createInvisibleButton("WTExtraBindingButtonLeaveGroup", "onclick", function()
-		C_PartyInfo_LeaveParty()
+		LeaveParty()
 	end)
-	self.ExtraBindingButtons.LeaveDelve =
-		createInvisibleButton("WTExtraBindingButtonLeaveDelve", "macro", "/run C_PartyInfo.DelveTeleportOut()")
 end
 
 M:AddCallback("ExtraBindingButtons")

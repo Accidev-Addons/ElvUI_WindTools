@@ -3,7 +3,6 @@
 	<Script file='AchievementTracker.lua' />
 	<Script file='AutoCollapse.lua' />
 	<Script file='ObjectiveTracker.lua' />
-	<Script file='PreyHunt.lua' />
 	<Script file='Progress.lua' />
 	<Script file='SwitchButtons.lua' />
 	<Script file='TurnIn.lua' />

@@ -2,13 +2,9 @@
 	<!-- Core -->
 	<Script file='Core.lua' />
 	<!-- Submodule -->
-	<Script file='AddCNFilter.lua' />
 	<Script file='AntiOverride.lua' />
 	<Script file='AutoToggleChatBubble.lua' />
-	<Script file='DisableTalkingHead.lua' />
-	<Script file='ExitPhaseDiving.lua' />
 	<Script file='ExtraBindingButtons.lua' />
-	<Script file='GuildNewsItemLevel.lua' />
 	<Script file='HideCrafter.lua' />
 	<Script file='KeybindAlias.lua' />
 	<Script file='KeybindTextAbove.lua' />
@@ -16,8 +12,6 @@
 	<Script file='Math.lua' />
 	<Script file='Mute.lua' />
 	<Script file='PauseToSlash.lua' />
-	<Script file='ReshiiWrapsUpgrade.lua' />
-	<Script file='SkipCutScene.lua' />
 	<!-- Others -->
 	<Script file='Automation.lua' />
 	<Script file='LFGList.lua' />

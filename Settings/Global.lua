@@ -49,5 +49,4 @@ G.misc = {
 }
 
 G.maps = {
-	eventTracker = {},
 }

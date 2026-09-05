@@ -96,7 +96,9 @@ function KI:CheckPlayerKeystone(skipEmit)
 			self:SendMessage("WINDTOOLS_PLAYER_KEYSTONE_CHANGED", mapID, level, link)
 		end
 
-		KS.Request("GUILD")
+		if KS then
+			KS.Request("GUILD")
+		end
 	end
 
 	self.PlayerKeystone.mapID, self.PlayerKeystone.level = mapID, level
@@ -113,21 +115,25 @@ function KI.RequestData()
 		return
 	end
 
-	if not OR.RequestKeystoneDataFromRaid() then
-		if IsInGroup(LE_PARTY_CATEGORY_HOME) then
+	if not (OR and OR.RequestKeystoneDataFromRaid and OR.RequestKeystoneDataFromRaid()) then
+		if KS and IsInGroup(LE_PARTY_CATEGORY_HOME) then
 			KS.Request("PARTY")
 		end
-		OR.RequestKeystoneDataFromParty()
+		if OR and OR.RequestKeystoneDataFromParty then
+			OR.RequestKeystoneDataFromParty()
+		end
 	end
 end
 
-KS.Register(KI, function(keyLevel, keyChallengeMapID, playerRating, sender)
-	KI.LibKeystoneInfo[sender] = {
-		level = keyLevel,
-		challengeMapID = keyChallengeMapID,
-		rating = playerRating,
-	}
-end)
+if KS then
+	KS.Register(KI, function(keyLevel, keyChallengeMapID, playerRating, sender)
+		KI.LibKeystoneInfo[sender] = {
+			level = keyLevel,
+			challengeMapID = keyChallengeMapID,
+			rating = playerRating,
+		}
+	end)
+end
 
 ---@param unit UnitToken
 ---@return KeystoneInfoData?

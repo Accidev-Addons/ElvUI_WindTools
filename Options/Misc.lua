@@ -44,39 +44,6 @@ options.general = {
 			name = L["Math Without Kanji"],
 			desc = L["Use alphabet rather than kanji (Only for Chinese players)"],
 		},
-		disableTalkingHead = {
-			order = 3,
-			type = "toggle",
-			name = L["Disable Talking Head"],
-			desc = L["Disable Blizzard Talking Head."],
-			get = function(info)
-				return E.db.WT.misc[info[#info]]
-			end,
-			set = function(info, value)
-				E.db.WT.misc[info[#info]] = value
-			end,
-		},
-		skipCutScene = {
-			order = 4,
-			type = "toggle",
-			name = L["Skip Cut Scene"],
-			set = function(info, value)
-				E.private.WT.misc[info[#info]] = value
-				M:SkipCutScene()
-			end,
-		},
-		onlyStopWatched = {
-			order = 5,
-			type = "toggle",
-			name = L["Only Watched"],
-			desc = L["Only skip watched cut scene. (some cut scenes can't be skipped)"],
-			hidden = function()
-				return not E.private.WT.misc.skipCutScene
-			end,
-			set = function(info, value)
-				E.private.WT.misc[info[#info]] = value
-			end,
-		},
 		hideCrafter = {
 			order = 6,
 			type = "toggle",
@@ -112,18 +79,6 @@ options.general = {
 				C.StringWithRGB(L["Only works with ElvUI action bar and ElvUI cooldowns."], E.db.general.valuecolor)
 			),
 		},
-		guildNewsItemLevel = {
-			order = 9,
-			type = "toggle",
-			name = L["Guild News IL"],
-			desc = L["Show item level of each item in guild news."],
-		},
-		addCNFilter = {
-			order = 10,
-			type = "toggle",
-			name = L["View SC Group"],
-			desc = L["Let you can view the group created by Simplified Chinese players."],
-		},
 		antiOverride = {
 			order = 11,
 			type = "toggle",
@@ -138,12 +93,6 @@ options.general = {
 			name = L["Auto Toggle Chat Bubble"],
 			desc = L["Only show chat bubble in instance."],
 			width = 1.5,
-		},
-		reshiiWrapsUpgrade = {
-			order = 13,
-			type = "toggle",
-			name = L["Reshii Wraps Upgrade"],
-			desc = L["Middle click the character back slot to open the Reshii Wraps upgrade menu."],
 		},
 	},
 }
@@ -2129,68 +2078,6 @@ options.keybindAlias = {
 			end,
 			disabled = function()
 				return not E.db.WT.misc.keybindAlias.enable
-			end,
-		},
-	},
-}
-
-options.exitPhaseDiving = {
-	order = 12,
-	type = "group",
-	name = L["Exit Phase Diving"],
-	get = function(info)
-		return E.db.WT.misc.exitPhaseDiving[info[#info]]
-	end,
-	set = function(info, value)
-		E.db.WT.misc.exitPhaseDiving[info[#info]] = value
-		M:UpdateExitPhaseDivingButton()
-	end,
-	args = {
-		desc = {
-			order = 1,
-			type = "group",
-			inline = true,
-			name = L["Description"],
-			args = {
-				feature = {
-					order = 1,
-					type = "description",
-					name = L["Add a button to exit phase diving."]
-						.. "\n"
-						.. L["You can use ElvUI Mover to reposition it."]
-						.. C.StringByTemplate(
-							L["Due to Blizzard restrictions, the button area cannot be clicked through even when the button is hidden."],
-							"yellow-400"
-						),
-					fontSize = "medium",
-				},
-			},
-		},
-		enable = {
-			order = 2,
-			type = "toggle",
-			name = L["Enable"],
-		},
-		width = {
-			order = 3,
-			type = "range",
-			name = L["Width"],
-			min = 5,
-			max = 1000,
-			step = 1,
-			disabled = function()
-				return not E.db.WT.misc.exitPhaseDiving.enable
-			end,
-		},
-		height = {
-			order = 4,
-			type = "range",
-			name = L["Height"],
-			min = 5,
-			max = 1000,
-			step = 1,
-			disabled = function()
-				return not E.db.WT.misc.exitPhaseDiving.enable
 			end,
 		},
 	},

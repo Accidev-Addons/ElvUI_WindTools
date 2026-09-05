@@ -19,7 +19,6 @@ A.EventList = {
 	"LFG_COMPLETION_REWARD",
 	"PARTY_LEADER_CHANGED",
 	"PLAYER_ENTERING_WORLD",
-	"SCENARIO_COMPLETED",
 	"UNIT_SPELLCAST_SUCCEEDED",
 }
 
@@ -45,15 +44,6 @@ end
 
 function A:CHAT_MSG_GUILD(event, ...)
 	self:KeystoneLink(event, ...)
-end
-
-function A:SCENARIO_COMPLETED(_, questID)
-	E:Delay(1, function()
-		-- Only say goodbye when in a LFG group
-		if questID and IsInGroup(LE_PARTY_CATEGORY_INSTANCE) and UnitName("party1") then
-			self:Goodbye()
-		end
-	end)
 end
 
 function A:LFG_COMPLETION_REWARD()

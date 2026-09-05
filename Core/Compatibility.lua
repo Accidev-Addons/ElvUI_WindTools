@@ -93,7 +93,7 @@ function W:ConstructCompatibilityFrame()
 	bottomDesc:Point("BOTTOMLEFT", frame, "BOTTOMLEFT", 10, 10)
 
 	local completeButton =
-		CreateFrame("Button", "WTCompatibilityFrameCompleteButton", frame, "UIPanelButtonTemplate, BackdropTemplate")
+		CreateFrame("Button", "WTCompatibilityFrameCompleteButton", frame, "UIPanelButtonTemplate")
 	---@cast completeButton Button
 	completeButton.Text:SetText(L["Complete"])
 	completeButton.Text:SetJustifyH("CENTER")
@@ -131,7 +131,7 @@ local function AddButtonToCompatibilityFrame(data)
 		"Button",
 		"WTCompatibilityFrameLeftButton" .. frame.numModules,
 		frame.scrollFrame,
-		"UIPanelButtonTemplate, BackdropTemplate"
+		"UIPanelButtonTemplate"
 	)
 	---@cast leftButton Button
 	leftButton.Text:SetText(format("%s\n%s", data.module1, data.plugin1))
@@ -164,7 +164,7 @@ local function AddButtonToCompatibilityFrame(data)
 		"Button",
 		"WTCompatibilityFrameRightButton" .. frame.numModules,
 		frame.scrollFrame,
-		"UIPanelButtonTemplate, BackdropTemplate"
+		"UIPanelButtonTemplate"
 	)
 	---@cast rightButton Button
 	rightButton.Text:SetText(format("%s\n%s", data.module2, data.plugin2))

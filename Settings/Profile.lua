@@ -595,158 +595,6 @@ P.item = {
 
 ---@class ProfileDB.maps
 P.maps = {
-	---@class ProfileDB.maps.eventTracker
-	eventTracker = {
-		enable = true,
-		style = {
-			backdrop = true,
-			backdropYOffset = 3,
-			backdropSpacing = 6,
-			trackerWidth = 240,
-			trackerHeight = 30,
-			trackerHorizontalSpacing = 10,
-			trackerVerticalSpacing = 2,
-		},
-		font = {
-			name = E.db.general.font,
-			scale = 1,
-			outline = "OUTLINE",
-		},
-		weeklyMN = {
-			enable = true,
-			desaturate = true,
-		},
-		professionsWeeklyMN = {
-			enable = true,
-			desaturate = true,
-		},
-		stormarionAssault = {
-			enable = true,
-			desaturate = true,
-			alert = true,
-			sound = true,
-			soundFile = "OnePlus Surprise",
-			second = 300,
-			stopAlertIfCompleted = true,
-			stopAlertIfPlayerNotEnteredMidnight = true,
-		},
-		cursedSurges = {
-			enable = true,
-			desaturate = false,
-			alert = true,
-			sound = true,
-			soundFile = "OnePlus Surprise",
-			second = 300,
-		},
-		weeklyTWW = {
-			enable = false,
-			desaturate = true,
-		},
-		ecologicalSuccession = {
-			enable = false,
-			desaturate = true,
-		},
-		nightFall = {
-			enable = false,
-			desaturate = true,
-			alert = true,
-			sound = false,
-			soundFile = "OnePlus Surprise",
-			second = 600,
-			stopAlertIfCompleted = true,
-		},
-		theaterTroupe = {
-			enable = false,
-			desaturate = true,
-			alert = true,
-			sound = false,
-			soundFile = "OnePlus Surprise",
-			second = 600,
-			stopAlertIfCompleted = true,
-		},
-		ringingDeeps = {
-			enable = false,
-			desaturate = true,
-		},
-		spreadingTheLight = {
-			enable = false,
-			desaturate = true,
-		},
-		underworldOperative = {
-			enable = false,
-			desaturate = true,
-		},
-		radiantEchoes = {
-			enable = false,
-			desaturate = false,
-			alert = false,
-			sound = false,
-			soundFile = "OnePlus Surprise",
-			second = 600,
-			stopAlertIfCompleted = true,
-			stopAlertIfPlayerNotEnteredDragonlands = true,
-		},
-		communityFeast = {
-			enable = false,
-			desaturate = false,
-			alert = false,
-			sound = false,
-			soundFile = "OnePlus Surprise",
-			second = 600,
-			stopAlertIfCompleted = true,
-			stopAlertIfPlayerNotEnteredDragonlands = true,
-		},
-		siegeOnDragonbaneKeep = {
-			enable = false,
-			desaturate = false,
-			alert = false,
-			sound = false,
-			soundFile = "OnePlus Surprise",
-			second = 600,
-			stopAlertIfCompleted = true,
-			stopAlertIfPlayerNotEnteredDragonlands = true,
-		},
-		researchersUnderFire = {
-			enable = false,
-			desaturate = false,
-			alert = false,
-			sound = false,
-			soundFile = "OnePlus Surprise",
-			second = 600,
-			stopAlertIfCompleted = true,
-			stopAlertIfPlayerNotEnteredDragonlands = true,
-		},
-		timeRiftThaldraszus = {
-			enable = false,
-			desaturate = false,
-			alert = false,
-			sound = false,
-			soundFile = "OnePlus Surprise",
-			second = 600,
-			stopAlertIfCompleted = false,
-			stopAlertIfPlayerNotEnteredDragonlands = true,
-		},
-		superBloom = {
-			enable = false,
-			desaturate = false,
-			alert = false,
-			sound = false,
-			soundFile = "OnePlus Surprise",
-			second = 600,
-			stopAlertIfCompleted = true,
-			stopAlertIfPlayerNotEnteredDragonlands = true,
-		},
-		bigDig = {
-			enable = false,
-			desaturate = false,
-			alert = false,
-			sound = false,
-			soundFile = "OnePlus Surprise",
-			second = 600,
-			stopAlertIfCompleted = false,
-			stopAlertIfPlayerNotEnteredDragonlands = true,
-		},
-	},
 	rectangleMinimap = {
 		enable = false,
 		heightPercentage = 0.8,
@@ -1131,41 +979,6 @@ P.quest = {
 		pauseModifier = "SHIFT",
 		customIgnoreNPCs = {},
 	},
-	preyHunt = {
-		enable = true,
-		progressWidget = {
-			hide = false,
-			stageText = {
-				enable = true,
-				name = E.db.general.font,
-				size = 14,
-				style = "OUTLINE",
-				color = { r = 1, g = 1, b = 1 },
-				label = true,
-				template = "%d/4",
-				xOffset = 0,
-				yOffset = 0,
-			},
-			vignetteText = {
-				enable = true,
-				name = E.db.general.font,
-				size = 12,
-				style = "OUTLINE",
-				xOffset = 0,
-				yOffset = 0,
-				ids = {
-					[7667] = true,
-					[7443] = true,
-				},
-			},
-		},
-		autoTrack = {
-			enable = true,
-			worldQuest = true,
-			stageQuest = true,
-			notify = true,
-		},
-	},
 	achievementScreenshot = {
 		enable = false,
 		hideCombatAlert = true,
@@ -1288,7 +1101,6 @@ P.unitFrames = {
 
 ---@class ProfileDB.misc
 P.misc = {
-	disableTalkingHead = false,
 	hideCrafter = false,
 	noLootPanel = false,
 	---@class ProfileDB.misc.spellActivationAlert
@@ -1397,11 +1209,5 @@ P.misc = {
 	keybindAlias = {
 		enable = false,
 		list = {},
-	},
-	---@class ProfileDB.misc.exitPhaseDiving
-	exitPhaseDiving = {
-		enable = false,
-		width = 81,
-		height = 50,
 	},
 }

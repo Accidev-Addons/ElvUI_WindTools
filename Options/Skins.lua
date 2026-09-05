@@ -1641,45 +1641,15 @@ options.blizzard = {
 			type = "toggle",
 			name = L["AddOn Manager"],
 		},
-		adventureMap = {
-			order = 10,
-			type = "toggle",
-			name = L["Adventure Map"],
-		},
 		alerts = {
 			order = 10,
 			type = "toggle",
 			name = L["Alert Frames"],
 		},
-		animaDiversion = {
-			order = 10,
-			type = "toggle",
-			name = L["Anima Diversion"],
-		},
-		artifact = {
-			order = 10,
-			type = "toggle",
-			name = L["Artifact"],
-		},
 		auctionHouse = {
 			order = 10,
 			type = "toggle",
 			name = L["Auction House"],
-		},
-		azerite = {
-			order = 10,
-			type = "toggle",
-			name = L["Azerite"],
-		},
-		azeriteEssence = {
-			order = 10,
-			type = "toggle",
-			name = L["Azerite Essence"],
-		},
-		azeriteRespec = {
-			order = 10,
-			type = "toggle",
-			name = L["Azerite Respec"],
 		},
 		bags = {
 			order = 10,
@@ -1711,11 +1681,6 @@ options.blizzard = {
 			type = "toggle",
 			name = L["Calendar"],
 		},
-		catalogShop = {
-			order = 10,
-			type = "toggle",
-			name = L["Shop"],
-		},
 		challenges = {
 			order = 10,
 			type = "toggle",
@@ -1731,55 +1696,15 @@ options.blizzard = {
 			type = "toggle",
 			name = L["Character"],
 		},
-		chromieTime = {
-			order = 10,
-			type = "toggle",
-			name = L["Chromie Time"],
-		},
 		collections = {
 			order = 10,
 			type = "toggle",
 			name = L["Collections"],
 		},
-		clickBinding = {
-			order = 10,
-			type = "toggle",
-			name = L["Click Binding"],
-		},
-		communities = {
-			order = 10,
-			type = "toggle",
-			name = L["Communities"],
-		},
-		cooldownViewer = {
-			order = 10,
-			type = "toggle",
-			name = F.GetWindStyleText(L["Cooldown Viewer"]),
-		},
-		covenantRenown = {
-			order = 10,
-			type = "toggle",
-			name = L["Covenant Renown"],
-		},
-		covenantPreview = {
-			order = 10,
-			type = "toggle",
-			name = L["Covenant Preview"],
-		},
-		covenantSanctum = {
-			order = 10,
-			type = "toggle",
-			name = L["Covenant Sanctum"],
-		},
 		debugTools = {
 			order = 10,
 			type = "toggle",
 			name = L["Debug Tools"],
-		},
-		delves = {
-			order = 10,
-			type = "toggle",
-			name = L["Delves"],
 		},
 		dressingRoom = {
 			order = 10,
@@ -1801,16 +1726,6 @@ options.blizzard = {
 			type = "toggle",
 			name = L["Event Trace"],
 		},
-		expansionLandingPage = {
-			order = 10,
-			type = "toggle",
-			name = L["Expansion Landing Page"],
-		},
-		flightMap = {
-			order = 10,
-			type = "toggle",
-			name = L["Flight Map"],
-		},
 		friends = {
 			order = 10,
 			type = "toggle",
@@ -1820,11 +1735,6 @@ options.blizzard = {
 			order = 10,
 			type = "toggle",
 			name = L["Game Menu"],
-		},
-		garrison = {
-			order = 10,
-			type = "toggle",
-			name = L["Garrison"],
 		},
 		genericTrait = {
 			order = 10,
@@ -1846,25 +1756,10 @@ options.blizzard = {
 			type = "toggle",
 			name = L["Help Frame"],
 		},
-		housing = {
-			order = 10,
-			type = "toggle",
-			name = L["Housing"],
-		},
-		inputMethodEditor = {
-			order = 10,
-			type = "toggle",
-			name = L["Input Method Editor"],
-		},
 		inspect = {
 			order = 10,
 			type = "toggle",
 			name = L["Inspect"],
-		},
-		itemInteraction = {
-			order = 10,
-			type = "toggle",
-			name = L["Item Interaction"],
 		},
 		itemSocketing = {
 			order = 10,
@@ -1901,11 +1796,6 @@ options.blizzard = {
 			type = "toggle",
 			name = L["Mail Frame"],
 		},
-		majorFactions = {
-			order = 10,
-			type = "toggle",
-			name = L["Major Factions"],
-		},
 		merchant = {
 			order = 10,
 			type = "toggle",
@@ -1931,26 +1821,6 @@ options.blizzard = {
 			type = "toggle",
 			name = L["Objective Tracker"],
 		},
-		orderHall = {
-			order = 10,
-			type = "toggle",
-			name = L["Orderhall"],
-		},
-		perksProgram = {
-			order = 10,
-			type = "toggle",
-			name = L["Perks Program"],
-		},
-		petBattle = {
-			order = 10,
-			type = "toggle",
-			name = L["Pet Battle"],
-		},
-		playerChoice = {
-			order = 10,
-			type = "toggle",
-			name = L["Player Choice"],
-		},
 		playerSpells = {
 			order = 10,
 			type = "toggle",
@@ -1966,11 +1836,6 @@ options.blizzard = {
 			type = "toggle",
 			name = L["Professions Book"],
 		},
-		professionsCustomerOrders = {
-			order = 10,
-			type = "toggle",
-			name = L["Professions Customer Orders"],
-		},
 		quest = {
 			order = 10,
 			type = "toggle",
@@ -1981,30 +1846,15 @@ options.blizzard = {
 			type = "toggle",
 			name = L["Raid Info"],
 		},
-		remixArtifact = {
-			order = 10,
-			type = "toggle",
-			name = L["Remix Artifact"],
-		},
 		scenario = {
 			order = 10,
 			type = "toggle",
 			name = L["Scenario"],
 		},
-		scrappingMachine = {
-			order = 10,
-			type = "toggle",
-			name = L["Scrapping Machine"],
-		},
 		settingsPanel = {
 			order = 10,
 			type = "toggle",
 			name = L["Setting Panel"],
-		},
-		soulbinds = {
-			order = 10,
-			type = "toggle",
-			name = L["Soulbinds"],
 		},
 		stable = {
 			order = 10,
@@ -2015,16 +1865,6 @@ options.blizzard = {
 			order = 10,
 			type = "toggle",
 			name = L["Static Popup"],
-		},
-		subscriptionInterstitial = {
-			order = 10,
-			type = "toggle",
-			name = L["Subscription Interstitial"],
-		},
-		talkingHead = {
-			order = 10,
-			type = "toggle",
-			name = L["Talking Head"],
 		},
 		taxi = {
 			order = 10,
@@ -2075,11 +1915,6 @@ options.blizzard = {
 			order = 10,
 			type = "toggle",
 			name = L["Warboard"],
-		},
-		weeklyRewards = {
-			order = 10,
-			type = "toggle",
-			name = L["Weekly Rewards"],
 		},
 		worldMap = {
 			order = 10,
@@ -2580,12 +2415,6 @@ options.addons = {
 			name = " ",
 			width = "full",
 		},
-		addonProfiler = {
-			order = 10,
-			type = "toggle",
-			name = L["Addon Profiler"],
-			addonName = "!!AddonProfiler",
-		},
 		angleur = {
 			order = 10,
 			type = "toggle",
@@ -2636,12 +2465,6 @@ options.addons = {
 			addonName = "BugSack",
 			addonskinsKey = "BugSack",
 		},
-		collectionator = {
-			order = 10,
-			type = "toggle",
-			name = L["Collectionator"],
-			addonName = "Collectionator",
-		},
 		extraQuestButton = {
 			order = 10,
 			type = "toggle",
@@ -2660,18 +2483,6 @@ options.addons = {
 			name = L["Immersion"],
 			addonName = "Immersion",
 			addonskinsKey = "Immersion",
-		},
-		manuscriptsJournal = {
-			order = 10,
-			type = "toggle",
-			name = L["Manuscripts Journal"],
-			addonName = "ManuscriptsJournal",
-		},
-		mountRoutePlanner = {
-			order = 10,
-			type = "toggle",
-			name = L["Mount Route Planner"],
-			addonName = "MountRoutePlanner",
 		},
 		meetingStone = {
 			order = 10,
@@ -2737,18 +2548,6 @@ options.addons = {
 			end,
 			addonName = "OmniCD",
 		},
-		paragonReputation = {
-			order = 10,
-			type = "toggle",
-			name = L["Paragon Reputation"],
-			addonName = "ParagonReputation",
-		},
-		plumber = {
-			order = 10,
-			type = "toggle",
-			name = L["Plumber"],
-			addonName = "Plumber",
-		},
 		postal = {
 			order = 10,
 			type = "toggle",
@@ -2763,25 +2562,11 @@ options.addons = {
 			addonName = "PremadeGroupsFilter",
 			addonskinsKey = "PremadeGroupsFilter",
 		},
-		raiderIO = {
-			order = 10,
-			type = "toggle",
-			name = L["RaiderIO"],
-			addonName = "RaiderIO",
-			addonskinsKey = "RaiderIO",
-		},
 		rareScanner = {
 			order = 10,
 			type = "toggle",
 			name = L["RareScanner"],
 			addonName = "RareScanner",
-		},
-		rematch = {
-			order = 10,
-			type = "toggle",
-			name = L["Rematch"],
-			addonName = "Rematch",
-			addonskinsKey = "Rematch",
 		},
 		silverDragon = {
 			order = 10,
@@ -2794,25 +2579,6 @@ options.addons = {
 			type = "toggle",
 			name = L["Simple Addon Manager"],
 			addonName = "SimpleAddonManager",
-		},
-		simulationcraft = {
-			order = 10,
-			type = "toggle",
-			name = L["Simulationcraft"],
-			addonName = "Simulationcraft",
-			addonskinsKey = "Simulationcraft",
-		},
-		talentLoadoutsEx = {
-			order = 10,
-			type = "toggle",
-			name = L["Talent Loadouts Ex"],
-			addonName = "TalentLoadoutsEx",
-		},
-		tomCats = {
-			order = 10,
-			type = "toggle",
-			name = L["TomCat's Tours"],
-			addonName = "TomCats",
 		},
 		tomTom = {
 			order = 10,
@@ -2833,12 +2599,6 @@ options.addons = {
 			name = L["WhisperPop"],
 			addonName = "WhisperPop",
 			addonskinsKey = "WhisperPop",
-		},
-		worldQuestTab = {
-			order = 10,
-			type = "toggle",
-			name = L["World Quest Tab"],
-			addonName = "WorldQuestTab",
 		},
 	},
 }
