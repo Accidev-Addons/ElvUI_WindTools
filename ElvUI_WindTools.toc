@@ -1,0 +1,21 @@
+## Interface: 30300
+## Author: fang2hou
+## Version: 4.21
+## X-Version: 4.21
+## Title: |cff1784d1ElvUI|r |cff5385edW|r|cff5094eai|r|cff4da4e7n|r|cff4ab4e4d|r|cff47c0e1T|r|cff44cbdfo|r|cff41d7ddo|r|cff41d7ddl|r|cff41d7dds|r
+## Notes: Customizable enhancements for ElvUI.
+## Notes-ruRU: Добавляет множество улучшенных функций в ElvUI и даёт возможность их гибко настраивать.
+## RequiredDeps: ElvUI
+## OptionalDeps: SharedMedia, MythicDungeonTools, Myslot, Details, WeakAuras, BigWigs, WorldQuestTab, BtWQuests
+## AddonCompartmentFunc: WindTools_OnAddonCompartmentClick
+## IconTexture: Interface\Addons\ElvUI_WindTools\Media\Textures\WindToolsAddonIcon.png
+
+Libraries\Load_Libraries.xml
+Initialize.lua
+Locales\Load_Locales.xml
+Media\Load_Media.xml
+Core\Metadata.lua
+Core\Load_Core.xml
+Settings\Load_Settings.xml
+Modules\Load_Modules.xml
+Options\Load_Options.xml
