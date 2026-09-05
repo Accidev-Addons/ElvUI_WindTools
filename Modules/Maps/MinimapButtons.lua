@@ -957,5 +957,7 @@ function MB:Initialize()
 	end)
 end
 
-MB:RawHook(EM, "HandleExpansionButton")
+if EM.HandleExpansionButton then
+	MB:RawHook(EM, "HandleExpansionButton")
+end
 W:RegisterModule(MB:GetName())

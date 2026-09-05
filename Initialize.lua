@@ -102,14 +102,6 @@ function W:Initialize()
 		return
 	end
 
-	for _, module in self:IterateModules() do
-		addon[2].Developer.InjectLogger(module)
-	end
-
-	hooksecurefunc(W, "NewModule", function(_, name)
-		addon[2].Developer.InjectLogger(name)
-	end)
-
 	self.initialized = true
 
 	self:AddCustomLinkSupport()

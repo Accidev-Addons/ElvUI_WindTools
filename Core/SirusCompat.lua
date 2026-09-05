@@ -85,10 +85,48 @@ Fill(Namespace("C_LootJournal"), {
 	end,
 })
 
+Fill(Namespace("ChatFrameUtil"), {
+	ActivateChat = _G.ChatEdit_ActivateChat,
+	AddMessageEventFilter = _G.ChatFrame_AddMessageEventFilter,
+	ChooseBoxForSend = _G.ChatEdit_ChooseBoxForSend,
+	GetChatCategory = _G.Chat_GetChatCategory,
+	InsertLink = _G.ChatEdit_InsertLink,
+	OpenChat = _G.ChatFrame_OpenChat,
+	SetLastTellTarget = _G.ChatEdit_SetLastTellTarget,
+})
+
+Fill(Namespace("C_SummonInfo"), {
+	ConfirmSummon = _G.ConfirmSummon,
+})
+
+Fill(Namespace("C_GuildInfo"), {
+	Invite = _G.GuildInvite,
+	IsGuildOfficer = _G.CanEditOfficerNote,
+})
+
 Namespace("C_EncodingUtil")
 Namespace("C_EquipmentSet")
 Namespace("C_QuestLog")
 Namespace("C_PlayerInfo")
+Namespace("C_AchievementInfo")
+Namespace("C_BattleNet")
+Namespace("C_ChatBubbles")
+Namespace("C_ChatInfo")
+Namespace("C_Club")
+Namespace("C_ContentTracking")
+Namespace("C_Covenants")
+Namespace("C_Garrison")
+Namespace("C_GossipInfo")
+Namespace("C_Housing")
+Namespace("C_MapExplorationInfo")
+Namespace("C_Minimap")
+Namespace("C_QuestInfoSystem")
+Namespace("C_ScenarioInfo")
+Namespace("C_Soulbinds")
+Namespace("C_SpecializationInfo")
+Namespace("C_TooltipInfo")
+Namespace("C_TransmogSets")
+Namespace("TimerunningUtil")
 
 local Enum = Namespace("Enum")
 
@@ -150,6 +188,108 @@ if not Enum.TooltipDataType then
 	}
 end
 
+if not Enum.ScreenLocationType then
+	Enum.ScreenLocationType = {
+		Left = "LEFT",
+		Right = "RIGHT",
+		Top = "TOP",
+		Bottom = "BOTTOM",
+		LeftOutside = "TOPLEFT",
+		RightOutside = "TOPRIGHT",
+	}
+end
+
+if not Enum.QuestFrequency then
+	Enum.QuestFrequency = {
+		Default = 0,
+		Daily = 1,
+		Weekly = 2,
+	}
+end
+
+if not Enum.QuestClassification then
+	Enum.QuestClassification = {
+		Calling = 0,
+		Meta = 1,
+		Recurring = 2,
+	}
+end
+
+if not Enum.GossipOptionRecFlags then
+	Enum.GossipOptionRecFlags = { QuestLabelPrepend = 0 }
+end
+
+if not Enum.ChatChannelRuleset then
+	Enum.ChatChannelRuleset = {
+		None = 0,
+		Mentor = 1,
+	}
+end
+
+if not Enum.TitleIconVersion then
+	Enum.TitleIconVersion = {
+		Small = 0,
+		Medium = 1,
+		Large = 2,
+	}
+end
+
+if not Enum.ContentTrackingType then
+	Enum.ContentTrackingType = {
+		Achievement = 0,
+		Collectable = 1,
+		Recipe = 2,
+	}
+end
+
+if not Enum.CovenantType then
+	Enum.CovenantType = {
+		None = 0,
+		Kyrian = 1,
+		Venthyr = 2,
+		NightFae = 3,
+		Necrolord = 4,
+	}
+end
+
+if not Enum.GarrisonFollowerType then
+	Enum.GarrisonFollowerType = {
+		FollowerType_6_0_GarrisonFollower = 1,
+		FollowerType_6_2_GarrisonFollower = 2,
+		FollowerType_7_0_GarrisonFollower = 4,
+		FollowerType_8_0_GarrisonFollower = 22,
+		FollowerType_9_0_GarrisonFollower = 123,
+	}
+end
+
+if not Enum.StatusBarInterpolation then
+	Enum.StatusBarInterpolation = {
+		Immediate = 0,
+		ExponentialEaseOut = 1,
+	}
+end
+
+if not Enum.ContentTrackingStopType then
+	Enum.ContentTrackingStopType = {
+		Manual = 0,
+		Removed = 1,
+	}
+end
+
+local Constants = Namespace("Constants")
+
+if not Constants.PartyCountdownConstants then
+	Constants.PartyCountdownConstants = { MaxCountdownSeconds = 10 }
+end
+
+if not Constants.ChatFrameConstants then
+	Constants.ChatFrameConstants = { MaxChatWindows = _G.NUM_CHAT_WINDOWS or 10 }
+end
+
+if not Constants.ContentTrackingConsts then
+	Constants.ContentTrackingConsts = { MaxTrackedAchievements = _G.MAX_TRACKED_ACHIEVEMENTS or 10 }
+end
+
 if not _G.CurveConstants then
 	_G.CurveConstants = { ScaleTo100 = 1 }
 end
@@ -178,6 +318,14 @@ if not _G.GenerateFlatClosure then
 			return func(unpack(args, 1, count))
 		end
 	end
+end
+
+if not _G.GetServerExpansionLevel then
+	_G.GetServerExpansionLevel = _G.GetAccountExpansionLevel
+end
+
+if not _G.PVP_ITEM_LEVEL_TOOLTIP then
+	_G.PVP_ITEM_LEVEL_TOOLTIP = "PvP Item Level %d"
 end
 
 if not _G.GetMaxLevelForPlayerExpansion then

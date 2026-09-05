@@ -36,29 +36,39 @@ local C_MountJournal_GetMountFromItem = C_MountJournal.GetMountFromItem
 local C_MountJournal_GetMountInfoByID = C_MountJournal.GetMountInfoByID
 local C_PetJournal_GetNumCollectedInfo = C_PetJournal.GetNumCollectedInfo
 local C_PetJournal_GetPetInfoByItemID = C_PetJournal.GetPetInfoByItemID
-local C_TooltipInfo_GetGuildBankItem = C_TooltipInfo.GetGuildBankItem
-local C_TooltipInfo_GetHyperlink = C_TooltipInfo.GetHyperlink
+local C_TooltipInfo_GetGuildBankItem = C_TooltipInfo and C_TooltipInfo.GetGuildBankItem
+local C_TooltipInfo_GetHyperlink = C_TooltipInfo and C_TooltipInfo.GetHyperlink
 local C_ToyBox_GetToyInfo = C_ToyBox.GetToyInfo
 local C_TransmogCollection_PlayerHasTransmogByItemInfo = C_TransmogCollection.PlayerHasTransmogByItemInfo
-local C_TransmogSets_GetSetInfo = C_TransmogSets.GetSetInfo
+local C_TransmogSets_GetSetInfo = C_TransmogSets and C_TransmogSets.GetSetInfo
 local C_Transmog_GetAllSetAppearancesByID = C_Transmog.GetAllSetAppearancesByID
 
-local Enum_ItemClass_Battlepet = Enum.ItemClass.Battlepet
+local Enum_ItemClass = Enum.ItemClass
+	or {
+		Consumable = 0,
+		Weapon = 2,
+		Armor = 4,
+		ItemEnhancement = 8,
+		Recipe = 9,
+		Miscellaneous = 15,
+		Battlepet = 17,
+	}
+local Enum_ItemClass_Battlepet = Enum_ItemClass.Battlepet
 local BUYBACK_ITEMS_PER_PAGE = BUYBACK_ITEMS_PER_PAGE
 local COLLECTED = COLLECTED
 local ITEM_SPELL_KNOWN = ITEM_SPELL_KNOWN
-local PET_SEARCH_PATTERN = strmatch(ITEM_PET_KNOWN, "[^%(（]+")
+local PET_SEARCH_PATTERN = ITEM_PET_KNOWN and strmatch(ITEM_PET_KNOWN, "[^%(（]+")
 local MAX_GUILDBANK_SLOTS_PER_TAB = 98
 local NUM_SLOTS_PER_GUILDBANK_GROUP = 14
 
 local knowables = {
-	[Enum.ItemClass.Consumable] = true,
-	[Enum.ItemClass.Weapon] = true,
-	[Enum.ItemClass.Armor] = true,
-	[Enum.ItemClass.ItemEnhancement] = true,
-	[Enum.ItemClass.Recipe] = true,
-	[Enum.ItemClass.Miscellaneous] = true,
-	[Enum.ItemClass.Battlepet] = true,
+	[Enum_ItemClass.Consumable] = true,
+	[Enum_ItemClass.Weapon] = true,
+	[Enum_ItemClass.Armor] = true,
+	[Enum_ItemClass.ItemEnhancement] = true,
+	[Enum_ItemClass.Recipe] = true,
+	[Enum_ItemClass.Miscellaneous] = true,
+	[Enum_ItemClass.Battlepet] = true,
 }
 
 local transmogInventoryTypes = {
@@ -355,6 +365,11 @@ end
 function AK:Initialize()
 	if C_AddOns_IsAddOnLoaded("AlreadyKnown") then
 		self.StopRunning = "AlreadyKnown"
+		return
+	end
+
+	if not C_MerchantFrame_GetItemInfo or not C_Item_GetItemInfoInstant then
+		self.StopRunning = "Sirus 3.3.5"
 		return
 	end
 

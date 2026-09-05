@@ -155,3 +155,11 @@ function F.Developer.DevTool(obj, name)
 		_G.DevTool:AddData(obj, name)
 	end
 end
+
+for _, module in W:IterateModules() do
+	F.Developer.InjectLogger(module)
+end
+
+hooksecurefunc(W, "NewModule", function(_, name)
+	F.Developer.InjectLogger(name)
+end)
