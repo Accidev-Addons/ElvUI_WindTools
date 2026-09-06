@@ -15,6 +15,7 @@ local xpcall = xpcall
 
 local CanInspect = CanInspect
 local GameTooltip = GameTooltip
+local GetMouseFocus = GetMouseFocus
 local InCombatLockdown = InCombatLockdown
 local IsAltKeyDown = IsAltKeyDown
 local IsControlKeyDown = IsControlKeyDown
@@ -67,6 +68,8 @@ function T:ClearInspectInfo(tt)
 		return
 	end
 
+	tt.windInspectData = nil
+
 	-- Run all registered callbacks (clear)
 	for _, func in next, self.clearInspect do
 		xpcall(function() func(self, tt) end, F.Developer.ThrowError)
@@ -106,7 +109,7 @@ function T:InspectInfo(tt, data, triedTimes)
 		return
 	end
 
-	if tt.windInspectLoaded then
+	if tt.windInspectLoaded or triedTimes and (not tt:IsShown() or tt.windInspectData ~= data) then
 		return
 	end
 
@@ -115,7 +118,7 @@ function T:InspectInfo(tt, data, triedTimes)
 	local _, unit = tt:GetUnit()
 
 	if not unit then
-		local GMF = E:GetMouseFocus()
+		local GMF = GetMouseFocus()
 		local focusUnit = GMF and GMF.GetAttribute and GMF:GetAttribute("unit")
 		if focusUnit then
 			unit = focusUnit
@@ -125,10 +128,18 @@ function T:InspectInfo(tt, data, triedTimes)
 		end
 	end
 
-	data = data or { guid = unit and UnitGUID(unit) }
-	if E:IsSecretValue(unit) or not unit or not data.guid then
+	if E:IsSecretValue(unit) or not unit then
 		return
 	end
+
+	local guid = UnitGUID(unit)
+	if not guid or data and data.guid ~= guid then
+		return
+	end
+
+	data = data or { guid = guid }
+	-- [SIRUS] A delayed inspect belongs to this tooltip's current unit display.
+	tt.windInspectData = data
 
 	-- Run all registered callbacks (normal)
 	for _, func in next, self.normalInspect do
@@ -199,12 +210,12 @@ function T:Event(event, ...)
 	end
 end
 
-T:SecureHook(ET, "GameTooltip_OnTooltipSetUnit", function(...)
+T:SecureHook(ET, "GameTooltip_OnTooltipSetUnit", function(tt, data)
 	if not T or not T.initialized then
 		return
 	end
 
-	T:InspectInfo(...)
+	T:InspectInfo(tt, data)
 end)
 
 function T:Initialize()

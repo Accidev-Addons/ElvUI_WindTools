@@ -54,6 +54,7 @@ options.enable = {
 }
 
 options.quest = {
+	hidden = function() return not not QP.StopRunning end,
 	order = 3,
 	type = "group",
 	name = L["Quest"],

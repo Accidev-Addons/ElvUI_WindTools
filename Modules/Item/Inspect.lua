@@ -560,7 +560,9 @@ end
 
 local function GetUnitSpecializationInfo(unit)
 	if unit == "player" then
-		local _, name, _, icon = C_SpecializationInfo_GetSpecializationInfo(C_SpecializationInfo_GetSpecialization())
+		-- [SIRUS] GetSpecialization also returns the name and spent points.
+		local specIndex = C_SpecializationInfo_GetSpecialization()
+		local _, name, _, icon = C_SpecializationInfo_GetSpecializationInfo(specIndex)
 		return { icon = icon, name = name }
 	end
 
@@ -716,16 +718,16 @@ function I:CreatePanel(parent)
 
 	MF:InternalHandle(frame, MF:GetMoveTarget(parent) or parent)
 
-	-- Portrait
-	frame.PortraitFrame = CreateFrame("Frame", nil, frame, "GarrisonFollowerPortraitTemplate") --[[@as GarrisonFollowerPortraitMixin]]
-	frame.PortraitFrame:StripTextures()
+	-- [SIRUS] The follower portrait template is unavailable; only its portrait and level are needed.
+	frame.PortraitFrame = CreateFrame("Frame", nil, frame)
+	frame.PortraitFrame:Size(50)
 	frame.PortraitFrame:Point("TOPLEFT", frame, "TOPLEFT", 16, -12)
 	frame.PortraitFrame:SetScale(0.9)
-
+	frame.PortraitFrame.Portrait = frame.PortraitFrame:CreateTexture(nil, "ARTWORK")
+	frame.PortraitFrame.Portrait:SetAllPoints()
+	frame.PortraitFrame.Level = frame.PortraitFrame:CreateFontString(nil, "OVERLAY")
 	F.SetFont(frame.PortraitFrame.Level, F.GetCompatibleFont("Chivo Mono"), 18)
-	frame.PortraitFrame.Level:ClearAllPoints()
 	frame.PortraitFrame.Level:Point("BOTTOMRIGHT", frame.PortraitFrame, "BOTTOMRIGHT")
-	frame.PortraitFrame.LevelBorder:SetAlpha(0)
 
 	frame.PortraitBorder = frame:CreateTexture(nil, "BORDER")
 	frame.PortraitBorder:SetTexture(W.Media.Textures.round)
@@ -741,12 +743,15 @@ function I:CreatePanel(parent)
 	frame.PlayerName:Point("TOPLEFT", frame, "TOPLEFT", 75, -17)
 	frame.PlayerItemLevel:Point("TOPLEFT", frame, "TOPLEFT", 75, -42)
 
-	frame.SpecIcon = frame:CreateTexture(nil, "ARTWORK")
+	-- [SIRUS] Mouse scripts belong to a frame, not a texture.
+	frame.SpecIcon = CreateFrame("Button", nil, frame)
 	frame.SpecIcon:Size(38)
 	frame.SpecIcon:Point("TOPRIGHT", frame, "TOPRIGHT", -28, -17)
-	frame.SpecIcon:SetTexCoords()
 	frame.SpecIcon:SetShown(false)
 	frame.SpecIcon:CreateBackdrop()
+	frame.SpecIcon.Texture = frame.SpecIcon:CreateTexture(nil, "ARTWORK")
+	frame.SpecIcon.Texture:SetAllPoints()
+	frame.SpecIcon.Texture:SetTexCoords()
 
 	frame.SpecIcon:SetScript("OnEnter", function()
 		if frame.specName and frame.specName ~= "" then
@@ -872,7 +877,7 @@ function I:ShowPanel(unit, parent, ilevel)
 	end
 	local classColor = E:ClassColor(class, true) --[[@as ClassColor]]
 
-	frame.PortraitFrame:SetLevel(UnitLevel(unit))
+	frame.PortraitFrame.Level:SetText(UnitLevel(unit))
 	SetPortraitTexture(frame.PortraitFrame.Portrait, unit)
 	frame.PortraitBorder:SetVertexColor(classColor.r, classColor.g, classColor.b)
 
@@ -884,7 +889,7 @@ function I:ShowPanel(unit, parent, ilevel)
 	frame.specName = specInfo and specInfo.name
 	if specInfo and specInfo.icon then
 		frame.SpecIcon.backdrop:SetBackdropBorderColor(classColor.r, classColor.g, classColor.b)
-		frame.SpecIcon:SetTexture(specInfo.icon)
+		frame.SpecIcon.Texture:SetTexture(specInfo.icon)
 		frame.SpecIcon:SetShown(true)
 	else
 		frame.SpecIcon:SetShown(false)

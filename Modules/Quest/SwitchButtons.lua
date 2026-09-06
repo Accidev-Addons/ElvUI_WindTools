@@ -82,13 +82,17 @@ function SB:UpdateButton(button, enable)
 end
 
 function SB:UpdateLayout()
-	if not self.db and not self.bar then
+	if not self.db or not self.bar then
 		return
 	end
 
 	local xOffset = 0
+	-- [SIRUS] Unavailable modules must not expose a switch or consume bar space.
+	local turnIn = W:GetModule("TurnIn")
+	local turnInAvailable = not turnIn.StopRunning
+	local announcementAvailable = not W:GetModule("QuestProgress").StopRunning
 
-	if not self.bar.announcement then
+	if announcementAvailable and not self.bar.announcement then
 		self.bar.announcement =
 			self:CreateButton(L["[ABBR] Announcement"], L["Announce your quest progress to other players."])
 		self.bar.announcement:SetScript("OnClick", function()
@@ -99,24 +103,24 @@ function SB:UpdateLayout()
 		end)
 	end
 
-	if not self.bar.turnIn then
+	if turnInAvailable and not self.bar.turnIn then
 		self.bar.turnIn = self:CreateButton(L["[ABBR] Turn In"], L["Auto accept and turn in quests."])
 		self.bar.turnIn:SetScript("OnClick", function()
 			E.db.WT.quest.turnIn.enable = self.bar.turnIn:GetChecked()
-			W:GetModule("TurnIn"):ProfileUpdate()
+			turnIn:ProfileUpdate()
 		end)
 	end
 
-	self:UpdateButton(self.bar.announcement, self.db.announcement)
-	self:UpdateButton(self.bar.turnIn, self.db.turnIn)
+	self:UpdateButton(self.bar.announcement, announcementAvailable and self.db.announcement)
+	self:UpdateButton(self.bar.turnIn, turnInAvailable and self.db.turnIn)
 
-	if self.db.announcement then
+	if announcementAvailable and self.db.announcement then
 		self.bar.announcement:Point("LEFT", xOffset, 0)
 		xOffset = xOffset + self.bar.announcement.buttonSize
 		self.bar.announcement:SetChecked(E.db.WT.announcement.quest.enable and not E.db.WT.announcement.quest.paused)
 	end
 
-	if self.db.turnIn then
+	if turnInAvailable and self.db.turnIn then
 		self.bar.turnIn:Point("LEFT", xOffset, 0)
 		xOffset = xOffset + self.bar.turnIn.buttonSize
 		self.bar.turnIn:SetChecked(E.db.WT.quest.turnIn.enable)
@@ -124,18 +128,18 @@ function SB:UpdateLayout()
 
 	if self.db.backdrop then
 		self.bar.backdrop:Show()
-		if self.bar.announcement.backdrop.shadow then
+		if self.bar.announcement and self.bar.announcement.backdrop.shadow then
 			self.bar.announcement.backdrop.shadow:Hide()
 		end
-		if self.bar.turnIn.backdrop.shadow then
+		if self.bar.turnIn and self.bar.turnIn.backdrop.shadow then
 			self.bar.turnIn.backdrop.shadow:Hide()
 		end
 	else
 		self.bar.backdrop:Hide()
-		if self.bar.announcement.backdrop.shadow then
+		if self.bar.announcement and self.bar.announcement.backdrop.shadow then
 			self.bar.announcement.backdrop.shadow:Show()
 		end
-		if self.bar.turnIn.backdrop.shadow then
+		if self.bar.turnIn and self.bar.turnIn.backdrop.shadow then
 			self.bar.turnIn.backdrop.shadow:Show()
 		end
 	end

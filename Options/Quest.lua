@@ -1237,6 +1237,7 @@ options.autoCollapse = {
 }
 
 options.switchButtons = {
+	hidden = function() return not not (QP.StopRunning and TI.StopRunning) end,
 	order = 3,
 	type = "group",
 	name = L["Switch Buttons"],
@@ -1375,12 +1376,14 @@ options.switchButtons = {
 			end,
 			args = {
 				announcement = {
+					hidden = function() return not not QP.StopRunning end,
 					order = 1,
 					type = "toggle",
 					name = L["Announcement"] .. " (" .. L["Quest"] .. ")",
 					width = 1.667,
 				},
 				turnIn = {
+					hidden = function() return not not TI.StopRunning end,
 					order = 2,
 					type = "toggle",
 					name = L["Turn In"],

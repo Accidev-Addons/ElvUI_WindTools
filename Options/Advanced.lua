@@ -1090,6 +1090,16 @@ do
 	}
 
 	options.profiles = {
+		hidden = function()
+			local encoding = _G.C_EncodingUtil
+			return type(encoding) ~= "table"
+				or type(encoding.SerializeCBOR) ~= "function"
+				or type(encoding.DeserializeCBOR) ~= "function"
+				or type(encoding.CompressString) ~= "function"
+				or type(encoding.DecompressString) ~= "function"
+				or type(encoding.EncodeBase64) ~= "function"
+				or type(encoding.DecodeBase64) ~= "function"
+		end,
 		order = 5,
 		type = "group",
 		name = L["Profiles"],
