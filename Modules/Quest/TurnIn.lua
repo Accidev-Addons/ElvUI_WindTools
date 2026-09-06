@@ -1,6 +1,12 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local TI = W:NewModule("TurnIn", "AceEvent-3.0") ---@class TurnIn: AceModule, AceEvent-3.0
 
+-- [SIRUS] Keep the native UI until this enhancement has a native API port.
+if not (C_GossipInfo and C_GossipInfo.GetActiveQuests and C_GossipInfo.GetOptions) then
+	TI.StopRunning = "Sirus: gossip structures unavailable"
+	return
+end
+
 local _G = _G
 local format = format
 local ipairs = ipairs

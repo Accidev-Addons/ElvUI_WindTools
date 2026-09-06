@@ -1,160 +1,98 @@
-local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
+local W, F, E = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI
 local S = W.Modules.Skins ---@type Skins
 local A = E:GetModule("Auras")
 local UF = E:GetModule("UnitFrames")
+local NP = E:GetModule("NamePlates")
 
-local hooksecurefunc = hooksecurefunc
-local next = next
+local ipairs = ipairs
 local pairs = pairs
 
-local UNITFRAME_AURA_KEYS = { "Buffs", "Debuffs", "Auras", "AuraBars" }
-
-local function ShouldSkinAuraContainer(container)
-	if not container then
-		return false
+local function SkinAuraButton(button, setting)
+	local skins = E.private.WT.skins
+	if not (skins.enable and skins.elvui.enable and skins.elvui[setting]) then
+		return
 	end
-
-	local privateWT = E.private and E.private.WT
-	local skins = privateWT and privateWT.skins
-	if not skins or not skins.enable then
-		return false
-	end
-
-	local elvuiSkins = skins.elvui
-	if not elvuiSkins or not elvuiSkins.enable then
-		return false
-	end
-
-	if container.isTopAura then
-		return elvuiSkins.auras
-	end
-	if container.isUnitframe or container.isAuraBar then
-		return elvuiSkins.unitFrames
-	end
-	if container.isNameplate then
-		return elvuiSkins.nameplates
-	end
-
-	return false
-end
-
-local function BindAuraButtonShadowColor(button)
-	local shadow = button.shadow
-	local borderTexture = button.dispelBorder or button.border
-	if not shadow or not shadow.__wind or not borderTexture or not borderTexture.SetVertexColor then
+	if not button or button.__windSkin or not F.CanAccessWidget(button) then
 		return
 	end
 
-	if not F.CanAccessWidget(borderTexture) then
-		return
-	end
-
-	hooksecurefunc(borderTexture, "SetVertexColor", function(_, r, g, b)
-		if E:IsSecretValue(r) or E:IsSecretValue(g) or E:IsSecretValue(b) or not r or not g or not b then
-			return
-		end
-
-		if r == E.db.general.bordercolor.r and g == E.db.general.bordercolor.g and b == E.db.general.bordercolor.b then
-			S:UpdateShadowColor(shadow)
-		else
-			S:UpdateShadowColor(shadow, r, g, b)
-		end
-	end)
-end
-
-function S:ElvUI_Auras_SkinAuraButton(_, container, button)
-	button = button or container
-	if not button or button.__windSkin then
-		return
-	end
-
-	if not F.CanAccessWidget(button) then
-		return
-	end
-
-	container = (button ~= container and container) or button.container or button:GetParent()
-	if not ShouldSkinAuraContainer(container) then
-		return
-	end
-
-	self:CreateShadow(button)
-	BindAuraButtonShadowColor(button)
+	S:CreateShadow(button)
+	S:BindShadowColorWithBorder(button)
 	button.__windSkin = true
 end
 
-local function SkinAuraButtonsOnContainer(container)
-	if not container or not container.buttons then
-		return
-	end
-
-	for button in next, container.buttons do
-		S:ElvUI_Auras_SkinAuraButton(nil, container, button)
+local function SkinAuraContainer(container, setting)
+	if not container then return end
+	-- [SIRUS] Top auras have an indexed buttons list; oUF/nameplates store icons on the container.
+	for _, button in ipairs(container.buttons or container) do
+		SkinAuraButton(button, setting)
 	end
 end
 
-local function SkinAuraButtonsOnUnitFrame(frame)
-	if not frame then
-		return
-	end
-
-	for index = 1, #UNITFRAME_AURA_KEYS do
-		SkinAuraButtonsOnContainer(frame[UNITFRAME_AURA_KEYS[index]])
-	end
+local function SkinUnitFrame(frame, setting)
+	if not frame then return end
+	SkinAuraContainer(frame.Buffs, setting)
+	SkinAuraContainer(frame.Debuffs, setting)
 end
 
 function S:ElvUI_Auras_SkinExistingButtons()
-	if E.AuraPreviewFrames then
-		for container in next, E.AuraPreviewFrames do
-			SkinAuraButtonsOnContainer(container)
+	SkinAuraContainer(A.BuffFrame, "auras")
+	SkinAuraContainer(A.DebuffFrame, "auras")
+	if A.BuffFrame then
+		for _, button in ipairs(A.BuffFrame.consolidated or {}) do
+			SkinAuraButton(button, "auras")
 		end
 	end
 
-	SkinAuraButtonsOnContainer(A.BuffFrame)
-	SkinAuraButtonsOnContainer(A.DebuffFrame)
-
-	for _, frame in pairs(UF.units) do
-		SkinAuraButtonsOnUnitFrame(frame)
+	-- [SIRUS] UF.units contains unit names, not frames.
+	for unit in pairs(UF.units) do
+		SkinUnitFrame(UF[unit], "unitFrames")
 	end
-
 	for unit in pairs(UF.groupunits) do
-		SkinAuraButtonsOnUnitFrame(UF[unit])
+		SkinUnitFrame(UF[unit], "unitFrames")
 	end
-
 	for groupName in pairs(UF.headers) do
 		local group = UF[groupName]
-		if group and group.GetNumChildren then
-			for _, child in next, { group:GetChildren() } do
+		if group and group.GetChildren then
+			for _, child in ipairs({ group:GetChildren() }) do
 				if child.Health then
-					SkinAuraButtonsOnUnitFrame(child)
+					SkinUnitFrame(child, "unitFrames")
 				elseif child.GetChildren then
-					for _, nested in next, { child:GetChildren() } do
-						if nested.Health then
-							SkinAuraButtonsOnUnitFrame(nested)
-						end
+					for _, nested in ipairs({ child:GetChildren() }) do
+						SkinUnitFrame(nested, "unitFrames")
 					end
 				end
 			end
 		end
 	end
-end
-
-function S:ElvUI_Auras_Hook()
-	if not self:IsHooked(E, "Auras_UpdateButton") then
-		self:SecureHook(E, "Auras_UpdateButton", "ElvUI_Auras_SkinAuraButton")
+	for frame in pairs(NP.CreatedPlates) do
+		SkinUnitFrame(frame.ElvUIFrame, "nameplates")
 	end
 end
 
 function S:ElvUI_Auras()
-	if not E.private.WT.skins.elvui.enable then
+	local skins = E.private.WT.skins.elvui
+	if not skins.enable or not (skins.auras or skins.unitFrames or skins.nameplates) then
 		return
 	end
 
-	local elvuiSkins = E.private.WT.skins.elvui
-	if not (elvuiSkins.auras or elvuiSkins.unitFrames or elvuiSkins.nameplates) then
-		return
+	-- [SIRUS] ElvUI 9.07 has separate constructors instead of E.Auras_UpdateButton.
+	if not self:IsHooked(A, "CreateIcon") then
+		self:SecureHook(A, "CreateIcon", function(_, button)
+			SkinAuraButton(button, "auras")
+		end)
 	end
-
-	self:ElvUI_Auras_Hook()
+	if not self:IsHooked(UF, "UpdateAuraSettings") then
+		-- Existing oUF PostCreateIcon callbacks retain the original constructor reference.
+		self:SecureHook(UF, "UpdateAuraSettings", function(_, container, button)
+			SkinAuraButton(button, "unitFrames")
+		end)
+	end
+	if not self:IsHooked(NP, "Construct_AuraIcon") then
+		self:SecureHook(NP, "Construct_AuraIcon", function(_, container, index)
+			SkinAuraButton(container[index], "nameplates")
+		end)
+	end
 	self:ElvUI_Auras_SkinExistingButtons()
 end
 

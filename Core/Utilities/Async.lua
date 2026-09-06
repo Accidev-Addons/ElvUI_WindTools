@@ -7,10 +7,63 @@ local pairs = pairs
 local type = type
 
 local GetAchievementInfo = GetAchievementInfo
-local Item = Item
-local Spell = Spell
+local GetSpellInfo = GetSpellInfo
+local GetInventoryItemLink = GetInventoryItemLink
+local GetItemInfo = C_Item.GetItemInfo
+local setmetatable = setmetatable
+local select = select
+local tonumber = tonumber
 
-local C_Item_GetItemInfoInstant = C_Item.GetItemInfoInstant
+-- [SIRUS] Keep the small item/spell interface private to WindTools.
+local ItemMethods = {}
+ItemMethods.__index = ItemMethods
+function ItemMethods:IsItemEmpty() return not self.id end
+function ItemMethods:GetItemID() return self.id end
+function ItemMethods:GetItemName() return (select(1, GetItemInfo(self.link))) end
+function ItemMethods:GetItemIcon() return (select(10, GetItemInfo(self.link))) end
+function ItemMethods:GetItemQuality() return (select(3, GetItemInfo(self.link))) end
+function ItemMethods:GetCurrentItemLevel() return (select(4, GetItemInfo(self.link))) end
+function ItemMethods:GetItemQualityColor()
+	return ITEM_QUALITY_COLORS[self:GetItemQuality() or 1]
+end
+function ItemMethods:GetItemQualityColorRGB()
+	local color = self:GetItemQualityColor()
+	return color.r, color.g, color.b
+end
+function ItemMethods:ContinueOnItemLoad(callback)
+	if GetItemInfo(self.link) then
+		callback()
+	else
+		C_Item.RequestServerCache(self.id, function()
+			if GetItemInfo(self.link) then callback() end
+		end)
+	end
+end
+local Item = {}
+function Item:CreateFromItemID(itemID)
+	return setmetatable({ id = itemID, link = itemID }, ItemMethods)
+end
+function Item:CreateFromItemLink(link)
+	return setmetatable({ id = tonumber(link:match("item:(%d+)")), link = link }, ItemMethods)
+end
+function Item:CreateFromEquipmentSlot(slot)
+	local link = GetInventoryItemLink("player", slot)
+	return self:CreateFromItemLink(link or "")
+end
+
+local SpellMethods = {}
+SpellMethods.__index = SpellMethods
+function SpellMethods:IsSpellEmpty() return not GetSpellInfo(self.id) end
+function SpellMethods:GetSpellID() return self.id end
+function SpellMethods:GetSpellName() return (GetSpellInfo(self.id)) end
+function SpellMethods:GetSpellTexture() return (select(3, GetSpellInfo(self.id))) end
+function SpellMethods:ContinueOnSpellLoad(callback)
+	if not self:IsSpellEmpty() then callback() end
+end
+local Spell = {}
+function Spell:CreateFromSpellID(spellID)
+	return setmetatable({ id = spellID }, SpellMethods)
+end
 
 ---@cast F Functions
 
@@ -43,7 +96,7 @@ function W.Utilities.Async.WithItemID(itemID, callback)
 	end
 
 	if cache.item[itemID] then
-		callback(cache.item[itemID])
+		cache.item[itemID]:ContinueOnItemLoad(function() callback(cache.item[itemID]) end)
 		return cache.item[itemID]
 	end
 
@@ -79,13 +132,10 @@ function W.Utilities.Async.WithItemLink(itemLink, callback)
 		return
 	end
 
-	local itemID = C_Item_GetItemInfoInstant(itemLink)
-	if not itemID then
-		F.Developer.LogDebug("Failed to get itemID for itemLink: " .. itemLink)
-		return
-	end
-
-	return W.Utilities.Async.WithItemID(itemID, callback)
+	local item = Item:CreateFromItemLink(itemLink)
+	if item:IsItemEmpty() then return end
+	item:ContinueOnItemLoad(function() callback(item) end)
+	return item
 end
 
 ---@alias SpellCallback fun(spellInstance:SpellMixin)

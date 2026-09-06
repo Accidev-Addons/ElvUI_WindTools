@@ -27,8 +27,8 @@ local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local C_BattleNet_GetFriendAccountInfo = C_BattleNet.GetFriendAccountInfo
 local C_BattleNet_GetFriendGameAccountInfo = C_BattleNet.GetFriendGameAccountInfo
 local C_BattleNet_GetFriendNumGameAccounts = C_BattleNet.GetFriendNumGameAccounts
-local C_FriendList_GetFriendInfoByIndex = C_FriendList.GetFriendInfoByIndex
-local C_FriendList_GetNumOnlineFriends = C_FriendList.GetNumOnlineFriends
+local GetFriendInfo = GetFriendInfo
+local GetNumFriends = GetNumFriends
 
 local LOCALIZED_CLASS_NAMES_FEMALE = LOCALIZED_CLASS_NAMES_FEMALE
 local LOCALIZED_CLASS_NAMES_MALE = LOCALIZED_CLASS_NAMES_MALE
@@ -538,23 +538,28 @@ function CT:BuildFriendsData()
 	data = {}
 
 	local tempKey = {}
-	local numWoWFriend = C_FriendList_GetNumOnlineFriends()
+	local numWoWFriend = GetNumFriends()
 	for i = 1, numWoWFriend do
-		local info = C_FriendList_GetFriendInfoByIndex(i)
-		if info.connected then
-			local name, realm = F.Strings.Split(info.name, "-")
+		local friendName, _, className, _, connected = GetFriendInfo(i)
+		if connected and friendName then
+			local name, realm = F.Strings.Split(friendName, "-")
 			realm = realm or E.myrealm
 			tinsert(data, {
 				name = name,
 				realm = realm,
-				class = GetNonLocalizedClass(info.className),
+				class = GetNonLocalizedClass(className),
 				dType = "friend",
 			})
 			tempKey[name .. "-" .. realm] = true
 		end
 	end
 
-	local numBNOnlineFriend = select(2, BNGetNumFriends())
+	if not BNGetNumFriends or not C_BattleNet_GetFriendAccountInfo
+		or not C_BattleNet_GetFriendGameAccountInfo or not C_BattleNet_GetFriendNumGameAccounts then
+		return
+	end
+
+	local numBNOnlineFriend = select(2, BNGetNumFriends()) or 0
 
 	for i = 1, numBNOnlineFriend do
 		local accountInfo = C_BattleNet_GetFriendAccountInfo(i)
@@ -564,7 +569,8 @@ function CT:BuildFriendsData()
 				for j = 1, numGameAccounts do
 					local gameAccountInfo = C_BattleNet_GetFriendGameAccountInfo(i, j) --[[@as BNetGameAccountInfo]]
 					if
-						gameAccountInfo.clientProgram
+						gameAccountInfo
+						and gameAccountInfo.clientProgram
 						and gameAccountInfo.clientProgram == "WoW"
 						and gameAccountInfo.wowProjectID == 1
 						and gameAccountInfo.factionName

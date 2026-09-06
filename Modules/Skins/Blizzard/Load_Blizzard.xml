@@ -13,7 +13,6 @@
 	<Script file='Channels.lua' />
 	<Script file='Character.lua' />
 	<Script file='Collections.lua' />
-	<Script file='DamageMeter.lua' />
 	<Script file='DebugTools.lua' />
 	<Script file='DressingRoom.lua' />
 	<Script file='EditModeManager.lua' />

@@ -22,7 +22,6 @@ local pcall = pcall
 local select = select
 local strfind = strfind
 local strmatch = strmatch
-local tAppendAll = tAppendAll
 local tContains = tContains
 local tinsert = tinsert
 local tonumber = tonumber
@@ -34,8 +33,7 @@ local wipe = wipe
 local AbbreviateNumbers = AbbreviateNumbers
 local CreateFrame = CreateFrame
 local GetInventoryItemLink = GetInventoryItemLink
-local GetServerExpansionLevel = GetServerExpansionLevel
-local GetSpecializationInfoByID = GetSpecializationInfoByID
+local GetSpecializationInfoByID = E.GetSpecializationInfoByID
 local ItemLocation = ItemLocation
 local Mixin = Mixin
 local SetPortraitTexture = SetPortraitTexture
@@ -48,18 +46,13 @@ local UnitName = UnitName
 local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local C_Item_GetCurrentItemLevel = C_Item.GetCurrentItemLevel
 local C_Item_GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo
-local C_Item_GetItemGem = C_Item.GetItemGem
+local C_Item_GetItemGem = GetItemGem
 local C_Item_GetItemInfo = C_Item.GetItemInfo
-local C_Item_GetItemNumSockets = C_Item.GetItemNumSockets
-local C_Item_GetItemQualityColor = C_Item.GetItemQualityColor
-local C_Item_GetItemStats = C_Item.GetItemStats
-local C_Item_IsCorruptedItem = C_Item.IsCorruptedItem
-local C_SpecializationInfo_GetInspectSpecialization = C_SpecializationInfo.GetInspectSpecialization
-local C_SpecializationInfo_GetSpecialization = C_SpecializationInfo.GetSpecialization
-local C_SpecializationInfo_GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
-local C_TooltipInfo_GetHyperlink = C_TooltipInfo.GetHyperlink
-local C_TradeSkillUI_GetItemCraftedQualityByItemInfo = C_TradeSkillUI.GetItemCraftedQualityByItemInfo
-local C_TradeSkillUI_GetItemReagentQualityByItemInfo = C_TradeSkillUI.GetItemReagentQualityByItemInfo
+local C_Item_GetItemQualityColor = GetItemQualityColor
+local C_Item_GetItemStats = GetItemStats
+local C_SpecializationInfo_GetInspectSpecialization = E.GetInspectSpecialization
+local C_SpecializationInfo_GetSpecialization = E.GetSpecialization
+local C_SpecializationInfo_GetSpecializationInfo = E.GetSpecializationInfo
 local ChatFrameUtil_ActivateChat = ChatFrameUtil.ActivateChat
 local ChatFrameUtil_ChooseBoxForSend = ChatFrameUtil.ChooseBoxForSend
 local ChatFrameUtil_InsertLink = ChatFrameUtil.InsertLink
@@ -73,7 +66,6 @@ local INVSLOT_OFFHAND = INVSLOT_OFFHAND
 
 local MISSING_ICON = "Interface\\Cursor\\Quest"
 local CIRCLE_MASK = "Interface\\FriendsFrame\\Battlenet-Portrait"
-local CURRENT_EXPANSION_ID = GetServerExpansionLevel()
 local LABEL_COLOR = C.GetRGBFromTemplate("cyan-300")
 local PANEL_MIN_WIDTH = 250
 local PANEL_COMPONENT_SPACING = 4
@@ -84,7 +76,6 @@ local SECRET_VALUE_WIDTH = 80
 local ITEM_LEVEL_CHECK_INTERVAL = 0.08
 local INSPECT_WAIT_MAX_SECONDS = 3
 local INSPECT_WAIT_MAX_ROUNDS = floor(INSPECT_WAIT_MAX_SECONDS / ITEM_LEVEL_CHECK_INTERVAL)
-local PVP_ITEM_LEVEL_PATTERN = gsub(_G.PVP_ITEM_LEVEL_TOOLTIP, "%%d", "(%%d+)")
 
 local RETRIEVING_ITEM_INFO = RETRIEVING_ITEM_INFO
 local ITEM_LEVEL = ITEM_LEVEL
@@ -93,28 +84,21 @@ local ITEM_MIN_LEVEL = ITEM_MIN_LEVEL
 
 local MATCH_ITEM_LEVEL = ITEM_LEVEL:gsub("%%d", "(%%d+)")
 local MATCH_MIN_LEVEL = ITEM_MIN_LEVEL:gsub("%%d", "(%%d+)")
-local MATCH_ITEM_LEVEL_ALT = ITEM_LEVEL_ALT:gsub("%%d(%s?)%(%%d%)", "%%d+%1%%((%%d+)%%)")
+local MATCH_ITEM_LEVEL_ALT = ITEM_LEVEL_ALT and ITEM_LEVEL_ALT:gsub("%%d(%s?)%(%%d%)", "%%d+%1%%((%%d+)%%)")
 
 local DISPLAY_SLOTS = {}
 for index, localizedName in ipairs(W.EquipmentSlots) do
-	if not tContains({ INVSLOT_BODY, INVSLOT_RANGED, INVSLOT_TABARD }, index) then
+	if not tContains({ INVSLOT_BODY, INVSLOT_TABARD }, index) then
 		tinsert(DISPLAY_SLOTS, { index = index, name = gsub(localizedName, "%d", "") })
 	end
 end
-
-local INVSLOT_PVP_SOCKET_ITEM = 257535
-local INVSLOT_NONPVP_SOCKET_ITEM = 263897
-
-local INVSLOT_ADDABLE_SOCKET_SLOTS = {
-	[INVSLOT_HEAD] = true,
-	[INVSLOT_WRIST] = true,
-	[INVSLOT_WAIST] = true,
-}
 
 local INVSLOT_ENCHANT = {
 	[INVSLOT_HEAD] = true,
 	[INVSLOT_SHOULDER] = true,
 	[INVSLOT_CHEST] = true,
+	[INVSLOT_WRIST] = true,
+	[INVSLOT_HAND] = true,
 	[INVSLOT_LEGS] = true,
 	[INVSLOT_FEET] = true,
 	[INVSLOT_FINGER1] = true,
@@ -269,15 +253,7 @@ function circleIconPrototype:AsGemSocket(data)
 			return self:Reset()
 		end
 
-		local level = C_TradeSkillUI_GetItemReagentQualityByItemInfo(data.link)
-			or C_TradeSkillUI_GetItemCraftedQualityByItemInfo(data.link)
-
-		local db = I.db.gemIcon.craftingTier
-		if level and (level > db.maxTierToShow or level < db.minTierToShow) then
-			level = nil
-		end
-
-		self:UpdateStyle(tex, quality or Enum_ItemQuality.Common, nil, level)
+		self:UpdateStyle(tex, quality or Enum_ItemQuality.Common)
 	end)
 end
 
@@ -302,15 +278,7 @@ function circleIconPrototype:AsEnchant(data)
 				return self:Reset()
 			end
 
-			local level = C_TradeSkillUI_GetItemReagentQualityByItemInfo(data.itemID)
-				or C_TradeSkillUI_GetItemCraftedQualityByItemInfo(data.itemID)
-
-			local db = I.db.enchantIcon.craftingTier
-			if level and (level > db.maxTierToShow or level < db.minTierToShow) then
-				level = nil
-			end
-
-			self:UpdateStyle(tex, quality or Enum_ItemQuality.Common, nil, level)
+			self:UpdateStyle(tex, quality or Enum_ItemQuality.Common)
 		end)
 	elseif data.spellID then
 		async.WithSpellID(data.spellID, function(spell)
@@ -337,13 +305,14 @@ end
 ---@param craftingTier number? The crafting quality level for the overlay
 function circleIconPrototype:UpdateStyle(texture, quality, colorTemplate, craftingTier)
 	self.Texture:SetTexture(texture)
-	self.Texture:SetMask(CIRCLE_MASK)
+	self.Texture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
 	if texture == MISSING_ICON then
 		self.Texture:SetRotation(-math_pi / 18)
 		self.Texture:SetScale(0.92)
 	else
 		self.Texture:SetRotation(0)
+		self.Texture:SetScale(1)
 	end
 
 	local r, g, b, a
@@ -382,7 +351,7 @@ function circleIconPool:CreateIcon()
 
 	frame.Texture = frame:CreateTexture(nil, "ARTWORK")
 	frame.Texture:Point("CENTER")
-	frame.Texture:SetMask(CIRCLE_MASK)
+	frame.Texture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
 	frame.CraftingTierText = frame:CreateFontString(nil, "OVERLAY")
 	frame.CraftingTierText:Point("CENTER", frame.Texture, "BOTTOM")
@@ -456,38 +425,16 @@ local function GetItemGemInfo(itemLink)
 	return info
 end
 
----Gets the PvP item level from an item's tooltip
----Modified from TinyInspect
----@param itemLink string The item link to check
----@return number? pvpItemLevel The PvP item level if found, nil otherwise
-local function GetPvPItemLevel(itemLink)
-	local tooltipData = C_TooltipInfo_GetHyperlink(itemLink, nil, nil, true)
-	if not tooltipData then
-		return
-	end
-
-	local text, level
-	for _, lineData in ipairs(tooltipData.lines) do
-		text = lineData.leftText
-		level = text and strmatch(text, PVP_ITEM_LEVEL_PATTERN)
-		if level then
-			break
-		end
-	end
-
-	return tonumber(level)
-end
-
 local function ParseItemLevelFromTooltipLine(text)
 	if not text or text == "" then
 		return
 	end
-	local ilvl = strmatch(text, MATCH_ITEM_LEVEL_ALT)
+	local ilvl = (MATCH_ITEM_LEVEL_ALT and strmatch(text, MATCH_ITEM_LEVEL_ALT))
 		or (not strmatch(text, MATCH_MIN_LEVEL) and strmatch(text, MATCH_ITEM_LEVEL))
-	return ilvl and tonumber(ilvl)
+	return ilvl and tonumber(ilvl) or nil
 end
 
---- Item level as shown on the item tooltip (post-squish display), not C_Item.GetDetailedItemLevelInfo.
+--- Item level as shown on the item tooltip.
 ---@param link string
 ---@return number?
 local function GetDisplayedItemLevelFromHyperlink(link)
@@ -515,36 +462,6 @@ local function GetDisplayedItemLevelFromHyperlink(link)
 	end
 end
 
----Gets additional socket items that can be added to an item
----Modified from TinyInspect
----@param itemLink string The item link to check
----@param slotIndex number The inventory slot index
----@param itemLevel number? The item's current item level
----@return SocketGemInfo[]? socketItems Array of item IDs that can be socketed, nil if not eligible
-local function GetItemAddableSockets(itemLink, slotIndex, itemLevel)
-	if not INVSLOT_ADDABLE_SOCKET_SLOTS[slotIndex] then
-		return
-	end
-
-	if type(itemLevel) ~= "number" then
-		return
-	end
-
-	if itemLevel < 86 or itemLevel > 170 then
-		return
-	end
-
-	local numSockets = C_Item_GetItemNumSockets(itemLink)
-	if numSockets > 0 then
-		return
-	end
-
-	local pvpItemLevel = GetPvPItemLevel(itemLink)
-	local isPvPItem = pvpItemLevel and pvpItemLevel > 0
-
-	return { { socketItemID = isPvPItem and INVSLOT_PVP_SOCKET_ITEM or INVSLOT_NONPVP_SOCKET_ITEM } }
-end
-
 ---@alias EnchantInfo { enchantID: string?, itemID: number?, spellID: number? }
 
 ---Gets enchantment information from an item link
@@ -553,7 +470,7 @@ end
 local function GetItemEnchantInfo(itemInfo)
 	local enchantID = tonumber(strmatch(itemInfo.link, "item:%d+:(%d+):"))
 
-	if not enchantID then
+	if not enchantID or enchantID == 0 then
 		local isMissing = CheckEnchantmentSlot(itemInfo.slotIndex, itemInfo.quality, itemInfo.classID)
 		return isMissing and { name = L["Enchant Missing"] } or nil
 	end
@@ -569,13 +486,10 @@ end
 --- classID: Enum.ItemClass,
 --- cleanLink: string,
 --- craftingAtlas: string?,
---- expansionID: number,
---- isCraftingReagent: boolean,
 --- level: number,
 --- link: string,
 --- name: string,
 --- quality: Enum.ItemQuality,
---- set: number?,
 --- slotIndex: number,
 --- subType: string,
 --- texture: string,
@@ -592,12 +506,12 @@ local function GetUnitSlotItemInfo(unit, slotIndex)
 		return
 	end
 
-	local itemName, _, itemQuality, _, _, itemType, itemSubType, _, _, itemTexture, _, itemClassID, _, _, expansionID, setID, isCraftingReagent =
+	local itemName, _, itemQuality, baseItemLevel, _, itemType, itemSubType, _, _, itemTexture, _, _, itemClassID =
 		C_Item_GetItemInfo(link)
 
-	local actualItemLevel
+	local actualItemLevel = baseItemLevel
 
-	if E:NotSecretValue(unit) and unit == "player" then
+	if C_Item_GetCurrentItemLevel and unit == "player" then
 		local itemLocation = ItemLocation:CreateFromEquipmentSlot(slotIndex) --[[@as ItemLocation]]
 		actualItemLevel = C_Item_GetCurrentItemLevel(itemLocation)
 	end
@@ -607,7 +521,7 @@ local function GetUnitSlotItemInfo(unit, slotIndex)
 		actualItemLevel = slotInfo.iLvl
 	end
 
-	if not actualItemLevel or actualItemLevel <= 0 then
+	if C_Item_GetDetailedItemLevelInfo and (not actualItemLevel or actualItemLevel <= 0) then
 		local detailedItemLevel, _, sparseItemLevel = C_Item_GetDetailedItemLevelInfo(link)
 		if detailedItemLevel and detailedItemLevel > 0 then
 			actualItemLevel = detailedItemLevel
@@ -633,13 +547,10 @@ local function GetUnitSlotItemInfo(unit, slotIndex)
 		classID = itemClassID,
 		cleanLink = cleanLink,
 		craftingAtlas = craftingAtlas,
-		expansionID = expansionID,
-		isCraftingReagent = isCraftingReagent,
 		level = actualItemLevel,
 		link = link,
 		name = itemName,
 		quality = itemQuality,
-		set = setID,
 		slotIndex = slotIndex,
 		subType = itemSubType,
 		texture = itemTexture,
@@ -1027,35 +938,11 @@ function I:ShowPanel(unit, parent, ilevel)
 			line.ItemTextureFrame:Hide()
 		end
 
-		if self.db.itemIcon.enable and self.db.itemIcon.indicator and itemInfo then
-			if itemInfo.set and itemInfo.set > 0 then
-				line.ItemTextureFrame.Indicator:SetText("*")
-				local colorTemplate = "gray-400"
-				if W.CurrentTierSetTable[itemInfo.set] then
-					colorTemplate = "pink-500"
-				elseif itemInfo.expansionID >= CURRENT_EXPANSION_ID then
-					colorTemplate = "sky-600"
-				end
-				line.ItemTextureFrame.Indicator:SetTextColor(C.ExtractRGBFromTemplate(colorTemplate))
-				line.ItemTextureFrame.Indicator:Show()
-			elseif itemInfo.craftingAtlas then
-				line.ItemTextureFrame.Indicator:SetText("|A:" .. itemInfo.craftingAtlas .. ":8:8|a")
-				line.ItemTextureFrame.Indicator:Show()
-			else
-				line.ItemTextureFrame.Indicator:Hide()
-			end
-		else
-			line.ItemTextureFrame.Indicator:Hide()
-		end
-
-		-- Update colors for some expansion special items
-		if itemInfo and itemInfo.link then
-			local colorTemplate = C_Item_IsCorruptedItem(itemInfo.link) and "indigo-400" or "neutral-100"
-			line.ItemLevel:SetTextColor(C.ExtractRGBFromTemplate(colorTemplate))
-		end
+		line.ItemTextureFrame.Indicator:Hide()
+		line.ItemLevel:SetTextColor(C.ExtractRGBFromTemplate("neutral-100"))
 
 		if slotInfo.index == 16 or slotInfo.index == 17 then
-			line:SetAlpha(itemInfo and itemInfo.level > 0 and 1 or 0.4)
+			line:SetAlpha(itemInfo and itemInfo.level and itemInfo.level > 0 and 1 or 0.4)
 		end
 
 		-- Icons
@@ -1095,14 +982,7 @@ function I:ShowPanel(unit, parent, ilevel)
 
 		if self.db.gemIcon.enable then
 			local gemSocketInfo = itemInfo and GetItemGemInfo(itemInfo.link) or {}
-			local addableSockets = self.db.gemIcon.showAddableSockets
-					and itemInfo
-					and itemInfo.link
-					and type(itemInfo.level) == "number"
-					and GetItemAddableSockets(itemInfo.link, slotInfo.index, itemInfo.level)
-				or {}
 
-			tAppendAll(gemSocketInfo, addableSockets)
 			for _, data in ipairs(gemSocketInfo) do
 				local icon = circleIconPool:Acquire()
 				icon:SetParent(line)

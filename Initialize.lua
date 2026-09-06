@@ -92,7 +92,6 @@ W.Utilities = {}
 
 -- Pre-register libs into ElvUI
 E:AddLib("Deflate", "LibDeflate")
-E:AddLib("ObjectiveProgressWT", "LibObjectiveProgress-WT")
 E:AddLib("RangeCheck", "LibRangeCheck-2.0", true)
 E:AddLib("WTItemEnchant", "LibItemEnchant-WT")
 
@@ -113,7 +112,7 @@ function W:Initialize()
 	self:SecureHook(E, "UpdateAll", "UpdateModules")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	-- Init Modules
-	self:RegisterEvent("PLAYER_LOGIN")
+	self:InitializeModules()
 end
 
 function W:AutoCopyPrivateProfile()

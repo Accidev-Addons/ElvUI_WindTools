@@ -25,12 +25,10 @@ local tonumber = tonumber
 local tostring = tostring
 local type = type
 
-local BNGetNumFriends = BNGetNumFriends
 local CloseAllWindows = CloseAllWindows
 local CloseMenus = CloseMenus
 local CreateFrame = CreateFrame
 local GenerateClosure = GenerateClosure
-local GetAchievementCriteriaInfo = GetAchievementCriteriaInfo
 local GetBindLocation = GetBindLocation
 local GetGameTime = GetGameTime
 local GetNumGuildMembers = GetNumGuildMembers
@@ -53,27 +51,18 @@ local ToggleTimeManager = ToggleTimeManager
 local UnregisterStateDriver = UnregisterStateDriver
 
 local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-local C_BattleNet_GetFriendAccountInfo = C_BattleNet.GetFriendAccountInfo
-local C_BattleNet_GetFriendGameAccountInfo = C_BattleNet.GetFriendGameAccountInfo
-local C_BattleNet_GetFriendNumGameAccounts = C_BattleNet.GetFriendNumGameAccounts
 local C_CVar_GetCVar = C_CVar.GetCVar
 local C_CVar_GetCVarBool = C_CVar.GetCVarBool
 local C_CVar_SetCVar = C_CVar.SetCVar
-local C_Covenants_GetActiveCovenantID = C_Covenants.GetActiveCovenantID
-local C_FriendList_GetNumFriends = C_FriendList.GetNumFriends
-local C_Garrison_GetCompleteMissions = C_Garrison.GetCompleteMissions
-local C_Housing_GetPlayerOwnedHouses = C_Housing.GetPlayerOwnedHouses
-local C_Item_GetItemCooldown = C_Item.GetItemCooldown
-local C_Item_GetItemCount = C_Item.GetItemCount
-local C_SpellBook_IsSpellKnown = C_SpellBook.IsSpellKnown
-local C_Spell_GetSpellCooldown = C_Spell.GetSpellCooldown
-local C_Timer_NewTicker = C_Timer.NewTicker
-local C_ToyBox_IsToyUsable = C_ToyBox.IsToyUsable
+local C_Item_GetItemCooldown = GetItemCooldown
+local C_Item_GetItemCount = GetItemCount
+local C_SpellBook_IsSpellKnown = IsSpellKnown
+local C_Spell_GetSpellCooldown = GetSpellCooldown
+local function C_Timer_NewTicker(delay, callback)
+	return C_Timer:NewTicker(delay, callback)
+end
 local C_UI_Reload = C_UI.Reload
 
-local Enum_CovenantType = Enum.CovenantType
-local FollowerType_8_0 = Enum.GarrisonFollowerType.FollowerType_8_0_GarrisonFollower
-local FollowerType_9_0 = Enum.GarrisonFollowerType.FollowerType_9_0_GarrisonFollower
 local RED_FONT_COLOR = RED_FONT_COLOR
 
 local NUM_PANEL_BUTTONS = 7
@@ -109,7 +98,6 @@ local friendOnline = gsub(_G.ERR_FRIEND_ONLINE_SS, "\124Hplayer:%%s\124h%[%%s%]\
 local friendOffline = gsub(_G.ERR_FRIEND_OFFLINE_S, "%%s", "")
 
 GB.AnimationManager = { frame = nil, groups = nil }
-GB.playerHouseList = nil
 
 local hearthstones = {
 	6948, -- 炉石
@@ -363,6 +351,8 @@ local function IsHearthstoneActionUsable(actionData)
 
 	if actionData.actionType == "spell" then
 		return C_SpellBook_IsSpellKnown(actionData.actionID)
+	elseif actionData.actionType == "toy" then
+		return PlayerHasToy(actionData.actionID)
 	elseif actionData.actionType == "random" then
 		return availableHearthstones and #availableHearthstones > 0
 	elseif actionData.actionType == "item" then
@@ -405,12 +395,14 @@ local function AddDoubleLineForItem(actionData, prefix, button, side)
 
 	-- For random hearthstones, use the icon of the actual selected hearthstone
 	local iconID = actionData.icon
+	local cooldownAction = actionData
 	if actionData.actionType == "random" and button and side and availableHearthstones then
 		local randomIndex = button["randomHearthstoneIndex" .. side]
 		if randomIndex then
 			local actualItemID = availableHearthstones[randomIndex]
 			if actualItemID and hearthstonesAndToysData and hearthstonesAndToysData[tostring(actualItemID)] then
-				iconID = hearthstonesAndToysData[tostring(actualItemID)].icon
+				cooldownAction = hearthstonesAndToysData[tostring(actualItemID)]
+				iconID = cooldownAction.icon
 			end
 		end
 	end
@@ -418,15 +410,13 @@ local function AddDoubleLineForItem(actionData, prefix, button, side)
 	local icon = format(ICON_STRING .. ":255:255:255|t", iconID)
 
 	local startTime, duration = 0, 0
-	if actionData.actionType == "spell" then
-		local cooldownInfo = C_Spell_GetSpellCooldown(actionData.actionID)
-		startTime = cooldownInfo and cooldownInfo.startTime or 0
-		duration = cooldownInfo and cooldownInfo.duration or 0
+	if cooldownAction.actionType == "spell" or cooldownAction.actionType == "toy" then
+		startTime, duration = C_Spell_GetSpellCooldown(cooldownAction.spellID or cooldownAction.actionID)
 	else
-		startTime, duration = C_Item_GetItemCooldown(actionData.actionID)
+		startTime, duration = C_Item_GetItemCooldown(cooldownAction.actionID)
 	end
 
-	local cooldownTime = startTime + duration - GetTime()
+	local cooldownTime = (startTime or 0) + (duration or 0) - GetTime()
 	local canUse = cooldownTime <= 0
 	local cooldownTimeString
 	if not canUse then
@@ -583,11 +573,9 @@ local ButtonTypes = {
 		icon = W.Media.Icons.barEncounterJournal,
 		macro = {
 			LeftButton = "/click EJMicroButton",
-			RightButton = "/run WeeklyRewards_ShowUI()",
 		},
 		tooltips = {
 			LEFT_BUTTON_ICON .. " " .. L["Encounter Journal"],
-			RIGHT_BUTTON_ICON .. " " .. L["Weekly Rewards"],
 		},
 	},
 	FRIENDS = {
@@ -597,35 +585,13 @@ local ButtonTypes = {
 			LeftButton = "/cleartarget\n/friends",
 		},
 		additionalText = function()
-			local numBNOnline, numWoWOnline = 0, 0
-
-			for i = 1, BNGetNumFriends() do
-				local accountInfo = C_BattleNet_GetFriendAccountInfo(i)
-				if accountInfo and accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.isOnline then
-					local numGameAccounts = C_BattleNet_GetFriendNumGameAccounts(i)
-					numBNOnline = numBNOnline + 1
-					if numGameAccounts and numGameAccounts > 0 then
-						for j = 1, numGameAccounts do
-							local gameAccountInfo = C_BattleNet_GetFriendGameAccountInfo(i, j) --[[@as BNetGameAccountInfo]]
-							if gameAccountInfo.clientProgram and gameAccountInfo.clientProgram == "WoW" then
-								numWoWOnline = numWoWOnline + 1
-							end
-						end
-					elseif accountInfo.gameAccountInfo.clientProgram == "WoW" then
-						numWoWOnline = numWoWOnline + 1
-					end
+			local online = 0
+			for index = 1, GetNumFriends() do
+				if select(5, GetFriendInfo(index)) then
+					online = online + 1
 				end
 			end
-
-			local result
-			if GB and GB.db and GB.db.friends and GB.db.friends.showAllFriends then
-				local friendsOnline = C_FriendList_GetNumFriends() or 0
-				result = friendsOnline + numBNOnline
-			else
-				result = numWoWOnline
-			end
-
-			return result > 0 and result or ""
+			return online > 0 and online or ""
 		end,
 		tooltips = "Friends",
 		events = {
@@ -733,43 +699,6 @@ local ButtonTypes = {
 			end
 		end,
 	},
-	HOME = {
-		name = L["Home"],
-		icon = W.Media.Icons.barHome,
-		click = {
-			LeftButton = function()
-				_G.UIErrorsFrame:AddMessage(L["House data cannot be updated in combat."], RED_FONT_COLOR:GetRGBA())
-			end,
-			RightButton = function()
-				if not InCombatLockdown() then
-					_G.HousingFramesUtil.ToggleHousingDashboard()
-				else
-					_G.UIErrorsFrame:AddMessage(_G.ERR_NOT_IN_COMBAT, RED_FONT_COLOR:GetRGBA())
-				end
-			end,
-		},
-		tooltips = {
-			L["Home"],
-			"\n",
-			LEFT_BUTTON_ICON .. " " .. L["Teleport to Home"],
-			RIGHT_BUTTON_ICON .. " " .. L["Housing Dashboard"],
-		},
-	},
-	MISSION_REPORTS = {
-		name = L["Mission Reports"],
-		icon = W.Media.Icons.barMissionReports,
-		click = {
-			LeftButton = function(button)
-				DT.RegisteredDataTexts["Missions"].onClick(button)
-			end,
-		},
-		additionalText = function()
-			local numMissions = #C_Garrison_GetCompleteMissions(FollowerType_9_0)
-				+ #C_Garrison_GetCompleteMissions(FollowerType_8_0)
-			return tostring(numMissions == 0 and "" or numMissions)
-		end,
-		tooltips = "Missions",
-	},
 	NONE = {
 		name = L["None"],
 	},
@@ -793,7 +722,7 @@ local ButtonTypes = {
 		click = {
 			LeftButton = function()
 				if not InCombatLockdown() then
-					_G.ToggleProfessionsBook()
+					_G.ToggleSpellBook("professions")
 				else
 					_G.UIErrorsFrame:AddMessage(_G.ERR_NOT_IN_COMBAT, RED_FONT_COLOR:GetRGBA())
 				end
@@ -830,7 +759,7 @@ local ButtonTypes = {
 		click = {
 			LeftButton = function()
 				if not InCombatLockdown() then
-					_G.PlayerSpellsUtil.ToggleSpellBookFrame()
+					_G.ToggleSpellBook(_G.BOOKTYPE_SPELL)
 				else
 					_G.UIErrorsFrame:AddMessage(_G.ERR_NOT_IN_COMBAT, RED_FONT_COLOR:GetRGBA())
 				end
@@ -846,7 +775,7 @@ local ButtonTypes = {
 		click = {
 			LeftButton = function()
 				if not InCombatLockdown() then
-					_G.PlayerSpellsUtil.ToggleClassTalentFrame()
+					_G.ToggleTalentFrame()
 				else
 					_G.UIErrorsFrame:AddMessage(_G.ERR_NOT_IN_COMBAT, RED_FONT_COLOR:GetRGBA())
 				end
@@ -860,7 +789,7 @@ local ButtonTypes = {
 		name = L["Toy Box"],
 		icon = W.Media.Icons.barToyBox,
 		macro = {
-			LeftButton = "/click CollectionsJournalCloseButton\n/click CollectionsMicroButton\n/click CollectionsJournalTab3",
+			LeftButton = "/click CollectionsJournalCloseButton\n/click CollectionsMicroButton\n/click CollectionsJournalTab4",
 		},
 		tooltips = {
 			L["Toy Box"],
@@ -1247,7 +1176,7 @@ function GB:ButtonOnEnter(button)
 		elseif type(button.tooltips) == "string" then
 			local DTModule = DT.RegisteredDataTexts[button.tooltips]
 
-			if VirtualDT[button.tooltips] and DTModule.eventFunc then
+			if VirtualDT[button.tooltips] and DTModule and DTModule.eventFunc then
 				DTModule.eventFunc(VirtualDT[button.tooltips], VirtualDTEvent[button.tooltips])
 			end
 
@@ -1266,9 +1195,6 @@ function GB:ButtonOnEnter(button)
 		end
 	end
 
-	if button.type == "HOME" and not InCombatLockdown() then
-		self:UpdateHouseAttributes(button)
-	end
 end
 
 function GB:ButtonOnLeave(button)
@@ -1334,6 +1260,9 @@ function GB:UpdateButton(button, buttonType)
 		return
 	end
 
+	if not ButtonTypes[buttonType] then
+		buttonType = "NONE"
+	end
 	local config = ButtonTypes[buttonType]
 	button:Size(self.db.buttonSize, self.db.buttonSize)
 	button.type = buttonType
@@ -1357,16 +1286,12 @@ function GB:UpdateButton(button, buttonType)
 		button:SetAttribute("macrotext3", "")
 	elseif config.click then
 		button.Click = function(_, mouseButton)
-			local func = mouseButton and config.click[mouseButton] or config.click.LeftButton
+			local func = config.click[mouseButton] or config.click.LeftButton
 			func(GB.bar.middlePanel)
 		end
 		button:SetAttribute("type*", "click")
 		button:SetAttribute("clickbutton", button)
 
-		if buttonType == "HOME" then
-			button:SetAttribute("type1", "teleporthome")
-			button:SetAttribute("type2", "click")
-		end
 	elseif config.item then
 		button:SetAttribute("type*", "item")
 		button:SetAttribute("item1", config.item.item1 or "")
@@ -1456,20 +1381,6 @@ function GB:UpdateButtons()
 	end
 
 	self:UpdateGuildButton()
-end
-
-function GB:UpdateHouseAttributes(button)
-	if not GB.playerHouseList or #GB.playerHouseList == 0 then
-		C_Housing_GetPlayerOwnedHouses()
-		return
-	end
-
-	local house = GB.playerHouseList[1]
-	if house.neighborhoodGUID and house.houseGUID and house.plotID then
-		button:SetAttribute("house-neighborhood-guid", house.neighborhoodGUID)
-		button:SetAttribute("house-guid", house.houseGUID)
-		button:SetAttribute("house-plot-id", house.plotID)
-	end
 end
 
 function GB:UpdateLayout()
@@ -1568,45 +1479,12 @@ function GB:NEW_TOY_ADDED(_, toyID)
 	end
 end
 
-function GB:PLAYER_REGEN_ENABLED()
-	for i = 1, 2 * NUM_PANEL_BUTTONS do
-		local button = self.buttons[i]
-		if button.type == "HOME" then
-			button:SetAttribute("type1", "teleporthome")
-		end
-	end
-end
-
-function GB:PLAYER_REGEN_DISABLED()
-	for i = 1, 2 * NUM_PANEL_BUTTONS do
-		local button = self.buttons[i]
-
-		if button.type == "HOME" then
-			if not button:GetAttribute("house-guid") then
-				button:SetAttribute("type1", "click")
-			end
-		end
-	end
-end
-
 function GB:PLAYER_ENTERING_WORLD()
 	E:Delay(1, function()
 		F.TaskManager:OutOfCombat(function()
 			self:ProfileUpdate()
-
-			-- Try update house attributes once after entering world
-			for i = 1, 2 * NUM_PANEL_BUTTONS do
-				local button = self.buttons[i]
-				if button.type == "HOME" then
-					self:UpdateHouseAttributes(button)
-				end
-			end
 		end)
 	end)
-end
-
-function GB:PLAYER_HOUSE_LIST_UPDATED(_, houseInfoList)
-	self.playerHouseList = houseInfoList
 end
 
 function GB:Initialize()
@@ -1641,12 +1519,9 @@ function GB:Initialize()
 	self:UpdateBar()
 	self:RegisterEvent("NEW_TOY_ADDED")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
-	self:RegisterEvent("PLAYER_REGEN_DISABLED")
-	self:RegisterEvent("PLAYER_REGEN_ENABLED")
-	self:RegisterEvent("COVENANT_CHOSEN", "UpdateHearthStoneTable")
-	self:RegisterEvent("PLAYER_HOUSE_LIST_UPDATED")
-	C_Housing_GetPlayerOwnedHouses()
-	self:SecureHook(_G.GuildMicroButton, "UpdateNotificationIcon", "UpdateGuildButton")
+	if _G.GuildMicroButton and _G.GuildMicroButton.UpdateNotificationIcon then
+		self:SecureHook(_G.GuildMicroButton, "UpdateNotificationIcon", "UpdateGuildButton")
+	end
 	self.initialized = true
 end
 
@@ -1736,12 +1611,19 @@ function GB:GetNextRandomHearthstone(currentIndex, times)
 
 	local randomIndex = random(1, #availableHearthstones)
 	local itemID = availableHearthstones[randomIndex]
-	local isToyNotUsable = PlayerHasToy(itemID) and not C_ToyBox_IsToyUsable(itemID)
-	if isToyNotUsable or currentIndex and randomIndex == currentIndex then
+	if currentIndex and randomIndex == currentIndex then
 		return self:GetNextRandomHearthstone(currentIndex, (times or 0) + 1)
 	end
 
 	return randomIndex, itemID
+end
+
+-- [SIRUS] Learned toys are secure spell actions, as in the native ToyBox.
+local function HearthstoneMacro(actionData)
+	if actionData.actionType == "spell" or actionData.actionType == "toy" then
+		return "/cast " .. actionData.name
+	end
+	return format("/use item:%d", actionData.actionID)
 end
 
 function GB:UpdateHearthstoneButtonMacro(button, mouseButton)
@@ -1766,11 +1648,12 @@ function GB:UpdateHearthstoneButtonMacro(button, mouseButton)
 		local currentIndex = button["randomHearthstoneIndex" .. side]
 		local randomIndex, itemID = self:GetNextRandomHearthstone(currentIndex)
 		button["randomHearthstoneIndex" .. side] = randomIndex
-		macro = format("/use item:%d\n/run _G.WTGameBar_UpdateHearthstoneButtons()", itemID)
-	elseif actionData and actionData.actionType == "spell" then
-		macro = "/cast " .. actionData.name
-	elseif actionData and actionData.actionType == "item" then
-		macro = format("/use item:%d", actionData.actionID)
+		local selected = hearthstonesAndToysData[tostring(itemID)]
+		if selected then
+			macro = HearthstoneMacro(selected) .. "\n/run _G.WTGameBar_UpdateHearthstoneButtons()"
+		end
+	elseif actionData then
+		macro = HearthstoneMacro(actionData)
 	end
 
 	button:SetAttribute(attribute, macro)
@@ -1792,7 +1675,7 @@ function GB:UpdateHearthStoneTable()
 	hearthstonesAndToysData = {
 		["RANDOM"] = {
 			name = L["Random Hearthstone"],
-			icon = 1669494,
+			icon = "Interface\\Icons\\INV_Misc_Rune_01",
 			actionType = "random",
 			actionID = 6948,
 		},
@@ -1818,32 +1701,6 @@ function GB:UpdateHearthStoneTable()
 		hearthstonesTable[itemID] = true
 	end
 
-	local covenantHearthstones = {
-		[184353] = { covenantID = Enum_CovenantType.Kyrian, achievementCriteriaNum = 1 },
-		[183716] = { covenantID = Enum_CovenantType.Venthyr, achievementCriteriaNum = 4 },
-		[180290] = { covenantID = Enum_CovenantType.NightFae, achievementCriteriaNum = 3 },
-		[182773] = { covenantID = Enum_CovenantType.Necrolord, achievementCriteriaNum = 2 },
-	}
-
-	local activeCovenantID = C_Covenants_GetActiveCovenantID()
-
-	for toyID, config in pairs(covenantHearthstones) do
-		local criteriaCompleted = select(3, GetAchievementCriteriaInfo(15646, config.achievementCriteriaNum))
-		hearthstonesTable[toyID] = criteriaCompleted or activeCovenantID == config.covenantID
-	end
-
-	local raceHeartstones = {
-		[210455] = {
-			-- 德萊尼全像寶石
-			["Draenei"] = true,
-			["LightforgedDraenei"] = true,
-		},
-	}
-
-	for itemID, acceptableRaces in pairs(raceHeartstones) do
-		hearthstonesTable[itemID] = acceptableRaces[E.myrace] and true or false
-	end
-
 	availableHearthstones = {}
 
 	async.WithItemIDTable(hearthstoneAndToyIDList, "value", function(item)
@@ -1858,11 +1715,16 @@ function GB:UpdateHearthStoneTable()
 			end
 		end
 
+		local toyItemID, toySpellID, toyName, toyIcon
+		if PlayerHasToy(id) then
+			toyItemID, toySpellID, toyName, toyIcon = C_ToyBox.GetToyInfo(id)
+		end
 		hearthstonesAndToysData[tostring(id)] = {
-			name = item:GetItemName(),
-			icon = item:GetItemIcon(),
-			actionType = "item",
+			name = toySpellID and toyName or item:GetItemName(),
+			icon = toySpellID and toyIcon or item:GetItemIcon(),
+			actionType = toySpellID and "toy" or "item",
 			actionID = id,
+			spellID = toySpellID,
 		}
 	end, function()
 		self:UpdateHearthstoneButton()

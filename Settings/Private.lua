@@ -118,11 +118,6 @@ V.maps = {
 	},
 	worldMap = {
 		enable = true,
-		reveal = {
-			enable = true,
-			useColor = false,
-			color = { r = 1, g = 1, b = 1, a = 1 },
-		},
 		scale = {
 			enable = true,
 			size = 1.24,
@@ -606,32 +601,6 @@ V.skins = {
 			useCustomColor = false,
 		},
 	},
-	damageMeter = {
-		enable = true,
-		windowBackdrop = "always", ---@type "always"|"mouseover"|"hide"
-		headerPart = "always", ---@type "always"|"mouseover"
-		headerBackdrop = "hide", ---@type "always"|"hide"
-		sessionTimer = true,
-		minimizeButton = true,
-		scrollBar = "default", ---@type "hide"|"default"|"mouseover"
-		fadeTime = 0.2,
-		bar = {
-			texture = "WindTools Glow",
-			alpha = 1,
-			font = {
-				name = {
-					name = E.db.general.font,
-					size = E.db.general.fontSize + 1,
-					style = "OUTLINE",
-				},
-				value = {
-					name = E.db.general.font,
-					size = E.db.general.fontSize + 1,
-					style = "OUTLINE",
-				},
-			},
-		},
-	},
 	addons = {
 		advancedInterfaceOptions = true,
 		angleur = true,
@@ -773,10 +742,6 @@ V.tooltips = {
 	petIcon = true,
 	petId = true,
 	tierSet = true,
-	objectiveProgress = {
-		enable = true,
-		accuracy = 1,
-	},
 	progression = {
 		enable = true,
 		disableInCombat = true,

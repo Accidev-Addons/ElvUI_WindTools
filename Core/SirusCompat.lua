@@ -79,12 +79,6 @@ Fill(Namespace("C_StringUtil"), {
 	end,
 })
 
-Fill(Namespace("C_LootJournal"), {
-	GetItemSetItems = function()
-		return {}
-	end,
-})
-
 Fill(Namespace("ChatFrameUtil"), {
 	ActivateChat = _G.ChatEdit_ActivateChat,
 	AddMessageEventFilter = _G.ChatFrame_AddMessageEventFilter,

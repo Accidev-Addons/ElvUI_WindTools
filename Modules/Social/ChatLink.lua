@@ -21,7 +21,6 @@ local C_Item_GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo
 local C_Item_GetItemIconByID = C_Item.GetItemIconByID
 local C_Item_GetItemInfoInstant = C_Item.GetItemInfoInstant
 local C_Item_GetItemNameByID = C_Item.GetItemNameByID
-local C_Soulbinds_GetConduitCollectionData = C_Soulbinds.GetConduitCollectionData
 local C_Spell_GetSpellTexture = C_Spell.GetSpellTexture
 
 local RETRIEVING_ITEM_INFO = RETRIEVING_ITEM_INFO
@@ -182,32 +181,10 @@ local function AddKeystoneIcon(link)
 
 	if CL.db.icon then
 		local mapIDNum = tonumber(mapID)
-		local texture = mapIDNum and select(4, C_ChallengeMode_GetMapUIInfo(mapIDNum))
+		local texture = mapIDNum and select(6, C_ChallengeMode_GetMapUIInfo(mapIDNum))
 		local icon = texture and F.GetIconString(texture, CL.db.iconHeight, CL.db.iconWidth, CL.db.keepRatio)
 		if icon then
 			link = icon .. " " .. link
-		end
-	end
-
-	return link
-end
-
-local function AddConduitIcon(link)
-	local conduitID = strmatch(link, "Hconduit:(%d-):")
-	if not conduitID then
-		return
-	end
-
-	if CL.db.icon then
-		local conduitCollectionData = C_Soulbinds_GetConduitCollectionData(conduitID)
-		local conduitItemID = conduitCollectionData and conduitCollectionData.conduitItemID
-
-		if conduitItemID then
-			local texture = C_Item_GetItemIconByID(conduitItemID)
-			local icon = texture and F.GetIconString(texture, CL.db.iconHeight, CL.db.iconWidth, CL.db.keepRatio)
-			if icon then
-				link = icon .. " " .. link
-			end
 		end
 	end
 
@@ -331,7 +308,6 @@ end
 
 function CL:Filter(event, msg, ...)
 	if CL.db.enable and E:NotSecretValue(msg) then
-		msg = gsub(msg, "(|cff71d5ff|Hconduit:%d+:.-|h.-|h|r)", AddConduitIcon)
 		msg = gsub(msg, "(|cffa335ee|Hkeystone:%d+:.-|h.-|h|r)", AddKeystoneIcon)
 		msg = gsub(msg, "(|Hitem:%d+:.-|h.-|h)", AddItemInfo)
 		msg = gsub(msg, "(|Hcurrency:%d+:.-|h.-|h)", AddCurrencyInfo)

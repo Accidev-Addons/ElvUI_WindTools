@@ -12,13 +12,12 @@ local CreateFrame = CreateFrame
 local GetInstanceInfo = GetInstanceInfo
 local IsInInstance = IsInInstance
 
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local C_ChallengeMode_GetActiveKeystoneInfo = C_ChallengeMode.GetActiveKeystoneInfo
 
 function ID:UpdateFrame()
 	local inInstance, instanceType = IsInInstance()
 	local difficulty = select(3, GetInstanceInfo())
-	local numplayers = select(9, GetInstanceInfo())
+	local numplayers = select(5, GetInstanceInfo()) or 0
 	local mplusdiff = select(1, C_ChallengeMode_GetActiveKeystoneInfo()) or ""
 
 	if difficulty == 0 then
@@ -125,7 +124,7 @@ function ID:ConstructFrame()
 		nil,
 		"ALL,WINDTOOLS",
 		function()
-			return E.private.WT.maps.difficulty.enable
+			return E.private.WT.maps.instanceDifficulty.enable
 		end,
 		"WindTools,maps"
 	)
@@ -141,17 +140,6 @@ function ID:HideBlizzardDifficulty(difficultyFrame, isShown)
 	difficultyFrame:Hide()
 end
 
-function ID:ADDON_LOADED(_, addon)
-	if addon == "Blizzard_Minimap" then
-		self:UnregisterEvent("ADDON_LOADED")
-
-		local difficulty = _G.MinimapCluster.InstanceDifficulty
-		for _, frame in pairs({ difficulty.Default, difficulty.Guild, difficulty.ChallengeMode }) do
-			frame:SetAlpha(0)
-		end
-	end
-end
-
 function ID:Initialize()
 	self.db = E.private.WT.maps.instanceDifficulty
 
@@ -165,14 +153,12 @@ function ID:Initialize()
 	self:RegisterEvent("CHALLENGE_MODE_COMPLETED", "UpdateFrame")
 	self:RegisterEvent("CHALLENGE_MODE_RESET", "UpdateFrame")
 	self:RegisterEvent("PLAYER_DIFFICULTY_CHANGED", "UpdateFrame")
-	self:RegisterEvent("GUILD_PARTY_STATE_UPDATED", "UpdateFrame")
+	self:RegisterEvent("RAID_ROSTER_UPDATE", "UpdateFrame")
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "UpdateFrame")
-	self:RegisterEvent("GROUP_ROSTER_UPDATE", "UpdateFrame")
+	self:RegisterEvent("PARTY_MEMBERS_CHANGED", "UpdateFrame")
 
-	if C_AddOns_IsAddOnLoaded("Blizzard_Minimap") then
-		self:ADDON_LOADED(nil, "Blizzard_Minimap")
-	else
-		self:RegisterEvent("ADDON_LOADED")
+	if self.db.hideBlizzard then
+		_G.MiniMapInstanceDifficulty:SetAlpha(0)
 	end
 end
 

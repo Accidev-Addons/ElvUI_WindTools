@@ -6,7 +6,7 @@ local _G = _G
 local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local C_Container_GetContainerItemID = C_Container.GetContainerItemID
 local C_Container_GetContainerNumSlots = C_Container.GetContainerNumSlots
-local C_Container_UseContainerItem = C_Container.UseContainerItem
+local C_Container_UseContainerItem = UseContainerItem
 local C_Item_IsItemKeystoneByID = C_Item.IsItemKeystoneByID
 
 local NUM_BAG_SLOTS = NUM_BAG_SLOTS

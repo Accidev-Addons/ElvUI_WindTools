@@ -89,32 +89,14 @@ local BlizzardFramesOnDemand = {
 			"AchievementFrame.SearchResults",
 		},
 	},
-	["Blizzard_AnimaDiversionUI"] = {
-		["AnimaDiversionFrame"] = {
-			"AnimaDiversionFrame.ScrollContainer",
-			"AnimaDiversionFrame.ReinforceProgressFrame",
-		},
-	},
 	["Blizzard_AlliedRacesUI"] = {
 		"AlliedRacesFrame",
 	},
 	["Blizzard_ArchaeologyUI"] = {
 		"ArchaeologyFrame",
 	},
-	["Blizzard_ArtifactUI"] = {
-		"ArtifactFrame",
-	},
 	["Blizzard_AuctionHouseUI"] = {
 		"AuctionHouseFrame",
-	},
-	["Blizzard_AzeriteEssenceUI"] = {
-		"AzeriteEssenceUI",
-	},
-	["Blizzard_AzeriteRespecUI"] = {
-		"AzeriteRespecFrame",
-	},
-	["Blizzard_AzeriteUI"] = {
-		"AzeriteEmpoweredItemUI",
 	},
 	["Blizzard_BehavioralMessaging"] = {
 		"BehavioralMessagingDetails",
@@ -173,24 +155,8 @@ local BlizzardFramesOnDemand = {
 	["Blizzard_Contribution"] = {
 		"ContributionCollectionFrame",
 	},
-	["Blizzard_CovenantPreviewUI"] = {
-		"CovenantPreviewFrame",
-	},
-	["Blizzard_CovenantRenown"] = {
-		"CovenantRenownFrame",
-	},
-	["Blizzard_CovenantSanctum"] = {
-		"CovenantSanctumFrame",
-	},
 	["Blizzard_DeathRecap"] = {
 		"DeathRecapFrame",
-	},
-	["Blizzard_DelvesCompanionConfiguration"] = {
-		"DelvesCompanionConfigurationFrame",
-		"DelvesCompanionAbilityListFrame",
-	},
-	["Blizzard_DelvesDifficultyPicker"] = {
-		"DelvesDifficultyPickerFrame",
 	},
 	["Blizzard_EncounterJournal"] = {
 		["EncounterJournal"] = {
@@ -204,30 +170,6 @@ local BlizzardFramesOnDemand = {
 	},
 	["Blizzard_FlightMap"] = {
 		"FlightMapFrame",
-	},
-	["Blizzard_GarrisonUI"] = {
-		"GarrisonBuildingFrame",
-		"GarrisonCapacitiveDisplayFrame",
-		"GarrisonMissionFrame",
-		"GarrisonMonumentFrame",
-		"GarrisonRecruiterFrame",
-		"GarrisonRecruitSelectFrame",
-		"GarrisonShipyardFrame",
-		"OrderHallMissionFrame",
-		"BFAMissionFrame",
-		["CovenantMissionFrame"] = {
-			"CovenantMissionFrame.MissionTab",
-			"CovenantMissionFrame.MissionTab.MissionPage",
-			"CovenantMissionFrame.MissionTab.MissionPage.CostFrame",
-			"CovenantMissionFrame.MissionTab.MissionPage.StartMissionFrame",
-			"CovenantMissionFrame.MissionTab.MissionList.MaterialFrame",
-			"CovenantMissionFrame.FollowerList.listScroll",
-			"CovenantMissionFrame.FollowerList.MaterialFrame",
-		},
-		["GarrisonLandingPage"] = {
-			"GarrisonLandingPageReportListListScrollFrame",
-			"GarrisonLandingPageFollowerListListScrollFrame",
-		},
 	},
 	["Blizzard_GenericTraitUI"] = {
 		["GenericTraitFrame"] = {
@@ -245,42 +187,6 @@ local BlizzardFramesOnDemand = {
 	},
 	["Blizzard_GuildRename"] = {
 		"GuildRenameFrame",
-	},
-	["Blizzard_HouseList"] = {
-		"HouseListFrame",
-	},
-	["Blizzard_HousingBulletinBoard"] = {
-		"HousingBulletinBoardFrame",
-		"HousingInviteResidentFrame",
-		"NeighborhoodChangeNameDialog",
-	},
-	["Blizzard_HousingCharter"] = {
-		"HousingCharterRequestSignatureDialog",
-	},
-	["Blizzard_HousingCornerstone"] = {
-		"HousingCornerstoneFrame",
-		"HousingCornerstoneHouseInfoFrame",
-		"HousingCornerstonePurchaseFrame",
-		"HousingCornerstoneVisitorFrame",
-		"ImportHouseConfirmationDialog",
-		"MoveHouseConfirmationDialog",
-	},
-	["Blizzard_HousingCreateNeighborhood"] = {
-		"HousingCreateCharterNeighborhoodConfirmationFrame",
-		"HousingCreateNeighborhoodCharterFrame",
-	},
-	["Blizzard_HousingDashboard"] = {
-		"HousingDashboardFrame",
-	},
-	["Blizzard_HousingHouseFinder"] = {
-		"HouseFinderFrame",
-	},
-	["Blizzard_HousingHouseSettings"] = {
-		"AbandonHouseConfirmationDialog",
-		"HousingHouseSettingsFrame",
-	},
-	["Blizzard_HousingModelPreview"] = {
-		"HousingModelPreviewFrame",
 	},
 	["Blizzard_InspectUI"] = {
 		"InspectFrame",
@@ -314,9 +220,6 @@ local BlizzardFramesOnDemand = {
 	},
 	["Blizzard_MatchCelebrationPartyPoseUI"] = {
 		"MatchCelebrationPartyPoseFrame",
-	},
-	["Blizzard_OrderHallUI"] = {
-		"OrderHallTalentFrame",
 	},
 	["Blizzard_PlayerSpells"] = {
 		"HeroTalentsSelectionDialog",
@@ -360,9 +263,6 @@ local BlizzardFramesOnDemand = {
 	["Blizzard_ScrappingMachineUI"] = {
 		"ScrappingMachineFrame",
 	},
-	["Blizzard_Soulbinds"] = {
-		"SoulbindViewer",
-	},
 	["Blizzard_StableUI"] = {
 		"StableFrame",
 	},
@@ -377,9 +277,6 @@ local BlizzardFramesOnDemand = {
 	},
 	["Blizzard_TokenUI"] = {
 		"CurrencyTransferMenu",
-	},
-	["Blizzard_TorghastLevelPicker"] = {
-		"TorghastLevelPickerFrame",
 	},
 	["Blizzard_TrainerUI"] = {
 		"ClassTrainerFrame",

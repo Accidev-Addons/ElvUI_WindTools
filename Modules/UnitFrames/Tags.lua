@@ -15,16 +15,26 @@ local GetNumClasses = GetNumClasses
 local UnitClass = UnitClass
 local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs
 local UnitGetTotalHealAbsorbs = UnitGetTotalHealAbsorbs
-local UnitHealthPercent = UnitHealthPercent
+local UnitHealth = UnitHealth
+local UnitHealthMax = UnitHealthMax
 local UnitIsConnected = UnitIsConnected
 local UnitIsUnit = UnitIsUnit
 local UnitPower = UnitPower
-local UnitPowerPercent = UnitPowerPercent
+local UnitPowerMax = UnitPowerMax
 local UnitPowerType = UnitPowerType
 
 local C_StringUtil_TruncateWhenZero = C_StringUtil.TruncateWhenZero
-local CurveConstants_ScaleTo100 = CurveConstants.ScaleTo100
 local Enum_PowerType_Mana = Enum.PowerType.Mana
+
+local function HealthPercent(unit)
+	local maximum = UnitHealthMax(unit)
+	return maximum > 0 and UnitHealth(unit) / maximum * 100 or 0
+end
+
+local function PowerPercent(unit)
+	local maximum = UnitPowerMax(unit)
+	return maximum > 0 and UnitPower(unit) / maximum * 100 or 0
+end
 
 local function GetClassColorString(class)
 	local hexString = select(4, GetClassColor(class))
@@ -156,15 +166,15 @@ function Tags:Initialize()
 
 	-- Health Percentage
 	E:AddTag("perhp1f", "UNIT_HEALTH UNIT_MAXHEALTH", function(unit)
-		return format("%.1f", UnitHealthPercent(unit, true, CurveConstants_ScaleTo100) --[[@as number]])
+		return format("%.1f", HealthPercent(unit))
 	end)
 
 	E:AddTag("perhp2f", "UNIT_HEALTH UNIT_MAXHEALTH", function(unit)
-		return format("%.2f", UnitHealthPercent(unit, true, CurveConstants_ScaleTo100) --[[@as number]])
+		return format("%.2f", HealthPercent(unit))
 	end)
 
 	E:AddTag("perhp3f", "UNIT_HEALTH UNIT_MAXHEALTH", function(unit)
-		return format("%.3f", UnitHealthPercent(unit, true, CurveConstants_ScaleTo100) --[[@as number]])
+		return format("%.3f", HealthPercent(unit))
 	end)
 
 	-- Absorbs autohide
@@ -178,15 +188,15 @@ function Tags:Initialize()
 
 	-- Range
 	E:AddTag("range", 0.1, function(unit)
-		if UnitIsConnected(unit) and not UnitIsUnit(unit, "player") then
-			local minRange, maxRange = RangeCheck and RangeCheck:GetRange(unit, true)
+		if RangeCheck and UnitIsConnected(unit) and not UnitIsUnit(unit, "player") then
+			local minRange, maxRange = RangeCheck:GetRange(unit, true)
 			return minRange and maxRange and format("%s - %s", minRange, maxRange) or ""
 		end
 	end)
 
 	E:AddTag("range:expectation", 0.1, function(unit)
-		if UnitIsConnected(unit) and not UnitIsUnit(unit, "player") then
-			local minRange, maxRange = RangeCheck and RangeCheck:GetRange(unit, true)
+		if RangeCheck and UnitIsConnected(unit) and not UnitIsUnit(unit, "player") then
+			local minRange, maxRange = RangeCheck:GetRange(unit, true)
 			return minRange and maxRange and format("%s", floor((minRange + maxRange) / 2)) or ""
 		end
 	end)
@@ -194,7 +204,7 @@ function Tags:Initialize()
 	-- Smart power
 	E:AddTag("smart-power", "UNIT_DISPLAYPOWER UNIT_POWER_FREQUENT UNIT_MAXPOWER", function(unit)
 		if UnitPowerType(unit) == Enum_PowerType_Mana then
-			return format("%d%%", UnitPowerPercent(unit, nil, true, CurveConstants_ScaleTo100) --[[@as number]])
+			return format("%d%%", PowerPercent(unit))
 		end
 
 		return UnitPower(unit)
@@ -202,7 +212,7 @@ function Tags:Initialize()
 
 	E:AddTag("smart-power-nosign", "UNIT_DISPLAYPOWER UNIT_POWER_FREQUENT UNIT_MAXPOWER", function(unit)
 		if UnitPowerType(unit) == Enum_PowerType_Mana then
-			return format("%d", UnitPowerPercent(unit, nil, true, CurveConstants_ScaleTo100) --[[@as number]])
+			return format("%d", PowerPercent(unit))
 		end
 
 		return UnitPower(unit)

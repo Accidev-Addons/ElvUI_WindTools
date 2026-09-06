@@ -1392,6 +1392,7 @@ options.switchButtons = {
 }
 
 options.progress = {
+	hidden = function() return not not QP.StopRunning end,
 	order = 4,
 	type = "group",
 	name = L["Progress"],
@@ -2493,6 +2494,7 @@ options.progress = {
 }
 
 options.turnIn = {
+	hidden = function() return not not TI.StopRunning end,
 	order = 5,
 	type = "group",
 	name = L["Turn In"],
@@ -2818,6 +2820,7 @@ options.achievementScreenshot = {
 }
 
 options.achievementTracker = {
+	hidden = function() return not not AT.StopRunning end,
 	order = 8,
 	type = "group",
 	name = L["Achievement Tracker"],

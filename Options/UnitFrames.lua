@@ -301,13 +301,6 @@ options.absorb = {
 				return not E.db.WT.unitFrames.absorb.enable
 			end,
 			args = {
-				blizzardOverAbsorbGlow = {
-					order = 1,
-					type = "toggle",
-					name = L["Over Absorb Glow"],
-					desc = L["Add a glow at the end of health bars to indicate that damage absorb has exceeded the unit's missing health."],
-					width = 1.5,
-				},
 				blizzardAbsorbOverlay = {
 					order = 2,
 					type = "toggle",

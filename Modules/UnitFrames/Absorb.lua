@@ -3,89 +3,58 @@ local A = W:NewModule("Absorb", "AceHook-3.0") ---@class Absorb: AceModule, AceH
 local LSM = E.Libs.LSM
 local UF = E.UnitFrames
 
-local rad = rad
-
 function A:UpdateStatusBarTexture(bar, texture, dbKey)
-	if not self.db[dbKey] or not self.db[dbKey].enable or not bar then
+	if not bar then
 		return
 	end
 
-	local tex
-	if self.db[dbKey].blizzardStyle then
-		tex = "Interface/RaidFrame/Shield-Fill"
-	elseif self.db[dbKey].custom then
-		tex = LSM:Fetch("statusbar", self.db[dbKey].custom)
+	local db = self.db and self.db.enable and self.db[dbKey]
+	local custom
+	if db and db.enable then
+		if db.blizzardStyle then
+			custom = "Interface/RaidFrame/Shield-Fill"
+		elseif db.custom then
+			custom = LSM:Fetch("statusbar", db.custom)
+		end
 	end
-
-	if tex and tex ~= texture then
-		bar:SetStatusBarTexture(tex)
-	end
+	bar:SetStatusBarTexture(custom or texture)
 end
 
-function A:SetTexture_HealComm(module, obj, texture)
-	self.hooks[module].SetTexture_HealComm(module, obj, texture)
-	if not self.db or not self.db.enable or not obj then
+-- [SIRUS] ElvUI 9.07 owns HealComm4 bars and the over-absorb glow.
+function A:Configure_HealComm(_, frame)
+	local obj = frame.HealCommBar
+	if not obj then
 		return
 	end
 
-	self:UpdateStatusBarTexture(obj.damageAbsorb, texture, "damageAbsorb")
-	self:UpdateStatusBarTexture(obj.healAbsorb, texture, "healAbsorb")
-	self:UpdateStatusBarTexture(obj.healingPlayer, texture, "healPrediction")
-	self:UpdateStatusBarTexture(obj.healingOther, texture, "healPrediction")
+	local health = frame.Health
+	if not health then
+		return
+	end
+	local healthTexture = health:GetStatusBarTexture()
+	local texture = not health.isTransparent and healthTexture and healthTexture:GetTexture() or E.media.blankTex
+	self:UpdateStatusBarTexture(obj.absorbBar, texture, "damageAbsorb")
+	self:UpdateStatusBarTexture(obj.healAbsorbBar, texture, "healAbsorb")
+	self:UpdateStatusBarTexture(obj.myBar, texture, "healPrediction")
+	self:UpdateStatusBarTexture(obj.otherBar, texture, "healPrediction")
 
-	-- Overlay
-	if self.db.blizzardAbsorbOverlay and obj.damageAbsorb then
-		if not obj.damageAbsorb.__shieldOverlay then
-			local overlay = obj.damageAbsorb:CreateTexture(nil, "ARTWORK", nil, 1)
-			overlay:SetAllPoints(obj.damageAbsorb:GetStatusBarTexture())
+	local bar = obj.absorbBar
+	if not bar then
+		return
+	end
+
+	if self.db and self.db.enable and self.db.blizzardAbsorbOverlay then
+		if not bar.__shieldOverlay then
+			local overlay = bar:CreateTexture(nil, "ARTWORK", nil, 1)
 			overlay:SetTexture("Interface/RaidFrame/Shield-Overlay", true, true)
 			overlay:SetHorizTile(true)
 			overlay:SetVertTile(true)
-			obj.damageAbsorb.__shieldOverlay = overlay
+			bar.__shieldOverlay = overlay
 		end
-	elseif obj.damageAbsorb and obj.damageAbsorb.__shieldOverlay then
-		obj.damageAbsorb.__shieldOverlay:Hide()
-	end
-
-	-- Glow
-	if self.db.blizzardOverAbsorbGlow and obj.health then
-		if not obj.__shieldGlow then
-			local glow = obj.health:CreateTexture(nil, "OVERLAY")
-			glow:SetTexture("Interface/RaidFrame/Shield-Overshield")
-			glow:SetBlendMode("ADD")
-			glow:SetWidth(16)
-			obj.__shieldGlow = glow
-			obj.overDamageAbsorbIndicator = obj.__shieldGlow -- Let oUF change the alpha
-		end
-
-		local isHorizontal = obj.health:GetOrientation() == "HORIZONTAL"
-		local isReverse = obj.health:GetReverseFill()
-
-		obj.__shieldGlow:ClearAllPoints()
-
-		if isHorizontal then
-			local offset = isReverse and -3 or 3
-			local anchor = isReverse and "LEFT" or "RIGHT"
-			obj.__shieldGlow:Point("TOP", obj.health, "TOP" .. anchor, offset, 2)
-			obj.__shieldGlow:Point("BOTTOM", obj.health, "BOTTOM" .. anchor, offset, -2)
-			obj.__shieldGlow:SetRotation(rad(isReverse and 180 or 0))
-		else
-			local offset = isReverse and 2 or -2
-			local anchor = isReverse and "BOTTOM" or "TOP"
-			local healthBarWidth = obj.health:GetWidth()
-			local halfWidth = healthBarWidth / 2
-
-			obj.__shieldGlow:Point("TOP", obj.health, anchor, 0, halfWidth + 2 + offset)
-			obj.__shieldGlow:Point("BOTTOM", obj.health, anchor, 0, offset - 1 - halfWidth)
-			obj.__shieldGlow:SetRotation(rad(isReverse and 90 or 270))
-		end
-
-		obj.__shieldGlow:Show()
-	elseif obj.__shieldGlow then
-		if obj.overDamageAbsorbIndicator == obj.__shieldGlow then
-			obj.overDamageAbsorbIndicator = nil
-		end
-		obj.__shieldGlow:Hide()
+		bar.__shieldOverlay:SetAllPoints(bar:GetStatusBarTexture())
+		bar.__shieldOverlay:Show()
+	elseif bar.__shieldOverlay then
+		bar.__shieldOverlay:Hide()
 	end
 end
 
@@ -96,7 +65,7 @@ function A:Initialize()
 		return
 	end
 
-	self:RawHook(UF, "SetTexture_HealComm")
+	self:SecureHook(UF, "Configure_HealComm")
 
 	self.initialized = true
 	UF:Update_AllFrames()

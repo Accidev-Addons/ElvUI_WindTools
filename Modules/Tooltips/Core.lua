@@ -10,6 +10,7 @@ local select = select
 local strsplit = strsplit
 local tinsert = tinsert
 local type = type
+local unpack = unpack
 local xpcall = xpcall
 
 local CanInspect = CanInspect
@@ -18,11 +19,9 @@ local InCombatLockdown = InCombatLockdown
 local IsAltKeyDown = IsAltKeyDown
 local IsControlKeyDown = IsControlKeyDown
 local IsShiftKeyDown = IsShiftKeyDown
-local UnitClass = UnitClass
 local UnitExists = UnitExists
+local UnitGUID = UnitGUID
 local UnitIsPlayer = UnitIsPlayer
-
-local RAID_CLASS_COLORS_PRIEST = RAID_CLASS_COLORS.PRIEST
 
 T.load = {} -- functions that need to be called when module is loaded
 T.updateProfile = {} -- functions that need to be called when profile is updated
@@ -70,7 +69,7 @@ function T:ClearInspectInfo(tt)
 
 	-- Run all registered callbacks (clear)
 	for _, func in next, self.clearInspect do
-		xpcall(func, F.Developer.ThrowError, self, tt)
+		xpcall(function() func(self, tt) end, F.Developer.ThrowError)
 	end
 end
 
@@ -113,7 +112,7 @@ function T:InspectInfo(tt, data, triedTimes)
 
 	triedTimes = triedTimes or 0
 
-	local unit = ET:GetDisplayedUnit(tt)
+	local _, unit = tt:GetUnit()
 
 	if not unit then
 		local GMF = E:GetMouseFocus()
@@ -126,13 +125,14 @@ function T:InspectInfo(tt, data, triedTimes)
 		end
 	end
 
-	if E:IsSecretValue(unit) or not unit or not data or not data.guid then
+	data = data or { guid = unit and UnitGUID(unit) }
+	if E:IsSecretValue(unit) or not unit or not data.guid then
 		return
 	end
 
 	-- Run all registered callbacks (normal)
 	for _, func in next, self.normalInspect do
-		xpcall(func, F.Developer.ThrowError, self, tt, unit, data.guid)
+		xpcall(function() func(self, tt, unit, data.guid) end, F.Developer.ThrowError)
 	end
 
 	-- General
@@ -146,12 +146,7 @@ function T:InspectInfo(tt, data, triedTimes)
 
 	if self.profiledb.elvUITweaks.forceItemLevel and not isInspecting then
 		if not isShiftKeyDown and itemLevelAvailable and not tt.ItemLevelShown then
-			local _, class = UnitClass(unit)
-			local color = RAID_CLASS_COLORS_PRIEST
-			if E:NotSecretValue(class) and class then
-				color = E:ClassColor(class) or RAID_CLASS_COLORS_PRIEST
-			end
-			ET:AddInspectInfo(tt, unit, 0, color.r, color.g, color.b)
+			ET:AddItemLevelInfo(tt, unit)
 		end
 	end
 
@@ -161,7 +156,7 @@ function T:InspectInfo(tt, data, triedTimes)
 	end
 
 	-- It ElvUI Item Level is enabled, we need to delay the modifier callbacks
-	if self.db.forceItemLevel or isShiftKeyDown and itemLevelAvailable then
+	if self.profiledb.elvUITweaks.forceItemLevel or isShiftKeyDown and itemLevelAvailable then
 		if not tt.ItemLevelShown and triedTimes <= 4 then
 			E:Delay(0.33, T.InspectInfo, T, tt, data, triedTimes + 1)
 			return
@@ -170,7 +165,7 @@ function T:InspectInfo(tt, data, triedTimes)
 
 	-- Run all registered callbacks (modifier)
 	for _, func in next, self.modifierInspect do
-		xpcall(func, F.Developer.ThrowError, self, tt, unit, data.guid)
+		xpcall(function() func(self, tt, unit, data.guid) end, F.Developer.ThrowError)
 	end
 
 	tt.windInspectLoaded = true
@@ -197,8 +192,9 @@ end
 
 function T:Event(event, ...)
 	if self.eventCallback[event] then
+		local args, count = { ... }, select("#", ...)
 		for _, func in next, self.eventCallback[event] do
-			xpcall(func, F.Developer.ThrowError, self, event, ...)
+			xpcall(function() func(self, event, unpack(args, 1, count)) end, F.Developer.ThrowError)
 		end
 	end
 end
@@ -215,7 +211,7 @@ function T:Initialize()
 	self.db = E.private.WT.tooltips
 	self.profiledb = E.db.WT.tooltips
 	for index, func in next, self.load do
-		xpcall(func, F.Developer.ThrowError, self)
+		xpcall(function() func(self) end, F.Developer.ThrowError)
 		self.load[index] = nil
 	end
 
@@ -223,7 +219,6 @@ function T:Initialize()
 		self:RegisterEvent(name, "Event")
 	end
 
-	self:RawHook(ET, "AddMythicInfo")
 	self:SecureHook(ET, "SetUnitText", "SetUnitText")
 	self:SecureHook(ET, "RemoveTrashLines", "ElvUIRemoveTrashLines")
 	self:SecureHookScript(GameTooltip, "OnTooltipCleared", "ClearInspectInfo")
@@ -233,9 +228,8 @@ end
 
 function T:ProfileUpdate()
 	self.profiledb = E.db.WT.tooltips
-	for index, func in next, self.updateProfile do
-		xpcall(func, F.Developer.ThrowError, self)
-		self.updateProfile[index] = nil
+	for _, func in next, self.updateProfile do
+		xpcall(function() func(self) end, F.Developer.ThrowError)
 	end
 end
 

@@ -7,9 +7,9 @@ local format = format
 local ipairs = ipairs
 local strfind = strfind
 
-local GetCreatureDifficultyColor = GetCreatureDifficultyColor
+local GetCreatureDifficultyColor = GetQuestDifficultyColor
 local GetGuildInfo = GetGuildInfo
-local UnitEffectiveLevel = UnitEffectiveLevel
+local UnitEffectiveLevel = UnitLevel
 local UnitClass = UnitClass
 local UnitLevel = UnitLevel
 local UnitRace = UnitRace
@@ -46,10 +46,6 @@ function T:SetUnitText(_, tt, unit, isPlayerUnit)
 		local gender = UnitSex(unit)
 		if E:IsSecretValue(gender) then
 			gender = nil
-		end
-		local _, localizedFaction = E:GetUnitBattlefieldFaction(unit)
-		if localizedFaction and (englishRace == "Pandaren" or englishRace == "Dracthyr") then
-			race = localizedFaction .. " " .. race
 		end
 		local hexColor = E:RGBToHex(diffColor.r, diffColor.g, diffColor.b)
 		local unitGender = ET.db.gender and gender and genderTable[gender]
@@ -92,7 +88,7 @@ function T:SetUnitText(_, tt, unit, isPlayerUnit)
 				-- Because inspect need some extra time, we can extract the sepcialization info just from the text
 				if etdb.specIcon.enable and classID and W.SpecializationInfo[classID] then
 					for _, spec in ipairs(W.SpecializationInfo[classID]) do
-						if strfind(specText, spec.name) then
+						if strfind(specText, spec.name, 1, true) then
 							specIcon = spec.icon
 							break
 						end

@@ -12,11 +12,19 @@ local BNConnected = BNConnected
 local FriendsFrame_Update = FriendsFrame_Update
 local GetClassInfo = GetClassInfo
 local GetQuestDifficultyColor = GetQuestDifficultyColor
-local TimerunningUtil_AddSmallIcon = TimerunningUtil.AddSmallIcon
+local TimerunningUtil_AddSmallIcon = TimerunningUtil and TimerunningUtil.AddSmallIcon
 
-local C_BattleNet_GetFriendAccountInfo = C_BattleNet.GetFriendAccountInfo
-local C_ClassColor_GetClassColor = C_ClassColor.GetClassColor
-local C_FriendList_GetFriendInfoByIndex = C_FriendList.GetFriendInfoByIndex
+local C_BattleNet_GetFriendAccountInfo = C_BattleNet and C_BattleNet.GetFriendAccountInfo
+local function C_ClassColor_GetClassColor(class)
+	return E:ClassColor(class)
+end
+-- [SIRUS] The native friends API returns a tuple.
+local function C_FriendList_GetFriendInfoByIndex(index)
+	local name, level, className, area, connected, status, notes = GetFriendInfo(index)
+	if not name then return end
+	return { name = name, level = level, className = className, area = area,
+		connected = connected, notes = notes, afk = status == CHAT_FLAG_AFK, dnd = status == CHAT_FLAG_DND }
+end
 
 local BNET_FRIEND_TOOLTIP_WOW_CLASSIC = BNET_FRIEND_TOOLTIP_WOW_CLASSIC
 local FRIENDS_BUTTON_TYPE_BNET = FRIENDS_BUTTON_TYPE_BNET
@@ -30,7 +38,7 @@ local LOCALIZED_CLASS_NAMES_FEMALE = LOCALIZED_CLASS_NAMES_FEMALE
 local LOCALIZED_CLASS_NAMES_MALE = LOCALIZED_CLASS_NAMES_MALE
 local WOW_PROJECT_BURNING_CRUSADE_CLASSIC = 5
 local WOW_PROJECT_CLASSIC = 2
-local WOW_PROJECT_MAINLINE = WOW_PROJECT_MAINLINE
+local WOW_PROJECT_MAINLINE = 0 -- Local Sirus entry; never publish a fake project flag.
 local WOW_PROJECT_WRATH_CLASSIC = 11
 local WOW_PROJECT_CATACLYSM_CLASSIC = 14
 local WOW_PROJECT_MISTS_CLASSIC = 19
@@ -129,10 +137,10 @@ local timerunningSeasonIcon = {
 
 local expansionData = {
 	[WOW_PROJECT_MAINLINE] = {
-		name = "Retail",
+		name = "Sirus",
 		suffix = nil,
 		maxLevel = W.MaxLevelForPlayerExpansion,
-		icon = MediaPath .. "GameIcons\\WOW_Retail",
+		icon = MediaPath .. "GameIcons\\WOW_WotLK",
 	},
 	[WOW_PROJECT_CLASSIC] = {
 		name = "Classic",
@@ -229,6 +237,7 @@ function FL:UpdateFriendButton(button)
 		wowID = WOW_PROJECT_MAINLINE
 		gameName = projectCodes["WOW"]
 		local friendInfo = C_FriendList_GetFriendInfoByIndex(button.id)
+		if not friendInfo then return end
 		name, server = strsplit("-", friendInfo.name) -- server is nil if it's not a cross-realm friend
 		level = friendInfo.level
 		class = friendInfo.className
@@ -247,7 +256,7 @@ function FL:UpdateFriendButton(button)
 		else
 			status = "Offline"
 		end
-	elseif button.buttonType == FRIENDS_BUTTON_TYPE_BNET and BNConnected() then
+	elseif button.buttonType == FRIENDS_BUTTON_TYPE_BNET and C_BattleNet_GetFriendAccountInfo and BNConnected() then
 		-- Battle.net friends
 		local friendAccountInfo = C_BattleNet_GetFriendAccountInfo(button.id)
 		if friendAccountInfo then
@@ -322,7 +331,7 @@ function FL:UpdateFriendButton(button)
 		-- name
 		local classColor = self.db.useClassColor and GetClassColor(class)
 		local nameString = name and classColor and C.StringWithRGB(name, classColor) or name
-		if timerunningSeasonID and timerunningSeasonID ~= "" and nameString ~= nil then
+		if TimerunningUtil_AddSmallIcon and timerunningSeasonID and timerunningSeasonID ~= "" and nameString ~= nil then
 			nameString = TimerunningUtil_AddSmallIcon(nameString) or nameString -- add timerunning tag
 		end
 
@@ -422,7 +431,7 @@ function FL:UpdateFriendButton(button)
 	F.SetFontWithDB(button.info, self.db.infoFont)
 
 	-- favorite icon
-	if button.Favorite:IsShown() then
+	if button.Favorite and button.Favorite:IsShown() then
 		button.Favorite:ClearAllPoints()
 		button.Favorite:Point("LEFT", button.name, "LEFT", button.name:GetStringWidth(), 0)
 	end
@@ -549,7 +558,7 @@ function FL:Initialize()
 
 	self.db = E.db.WT.social.friendList
 
-	self:SecureHook("FriendsFrame_UpdateFriendButton", "UpdateFriendButton")
+	self:SecureHook("FriendsFrame_SetButton", "UpdateFriendButton")
 	if _G.RecentAlliesFrame and _G.RecentAlliesFrame.List and _G.RecentAlliesFrame.List.ScrollBox then
 		self:SecureHook(_G.RecentAlliesFrame.List.ScrollBox, "Update", function(scrollBox)
 			scrollBox:ForEachFrame(function(button)
@@ -569,9 +578,11 @@ function FL:ProfileUpdate()
 	end
 
 	FriendsFrame_Update()
-	_G.RecentAlliesFrame.List.ScrollBox:ForEachFrame(function(button)
-		self:UpdateRecentAllyButton(button)
-	end)
+	if _G.RecentAlliesFrame and _G.RecentAlliesFrame.List and _G.RecentAlliesFrame.List.ScrollBox then
+		_G.RecentAlliesFrame.List.ScrollBox:ForEachFrame(function(button)
+			self:UpdateRecentAllyButton(button)
+		end)
+	end
 end
 
 W:RegisterModule(FL:GetName())

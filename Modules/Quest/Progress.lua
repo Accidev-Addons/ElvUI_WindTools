@@ -1,5 +1,11 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local QP = W:GetModule("QuestProgress") ---@class QuestProgress : AceModule, AceEvent-3.0
+
+-- [SIRUS] Keep the native UI until this enhancement has a native API port.
+if not (C_QuestLog and C_QuestLog.GetInfo and C_QuestLog.GetQuestObjectives) then
+	QP.StopRunning = "Sirus: quest log structures unavailable"
+	return
+end
 local A = W:GetModule("Announcement") ---@class Announcement
 local C = W.Utilities.Color
 local cache = W.Utilities.Cache

@@ -8,7 +8,9 @@ local NUM_PET_ACTION_SLOTS = NUM_PET_ACTION_SLOTS or 10
 local NUM_ACTIONBAR_BUTTONS = NUM_ACTIONBAR_BUTTONS
 
 function S:ElvUI_ActionBar_SkinButton(button, useBackdrop)
+	if not button then return end
 	self:CreateLowerShadow(button)
+	if not button.shadow then return end
 
 	if not button.__windSkin then
 		if button.shadow and button.shadow.__wind then
@@ -134,13 +136,14 @@ function S:ElvUI_ActionBars()
 	end
 
 	-- Extra action bar
-	self:SecureHook(_G.ZoneAbilityFrame, "UpdateDisplayedZoneAbilities", "SkinZoneAbilities")
+	if _G.ZoneAbilityFrame and _G.ZoneAbilityFrame.UpdateDisplayedZoneAbilities then
+		self:SecureHook(_G.ZoneAbilityFrame, "UpdateDisplayedZoneAbilities", "SkinZoneAbilities")
+	end
 
-	for i = 1, _G.ExtraActionBarFrame:GetNumChildren() do
-		local button = _G["ExtraActionButton" .. i]
-		if button then
-			self:CreateShadow(button)
-		end
+	-- [SIRUS] Extra action buttons are exposed as a list; child count includes decorative frames.
+	local extraBar = _G.ExtraActionBarFrame
+	for _, button in ipairs(extraBar and (extraBar.Buttons or extraBar.ExtraButtons) or {}) do
+		self:CreateBackdropShadow(button, true)
 	end
 
 	-- Vehicle leave button
@@ -178,16 +181,12 @@ function S:ElvUI_ActionBars()
 		end
 	end
 
-	-- Extra action bar
-	for i = 1, _G.ExtraActionBarFrame:GetNumChildren() do
-		local button = _G["ExtraActionButton" .. i]
-		self:CreateBackdropShadow(button.backdrop, true)
+	-- [SIRUS] The retail flyout constructor is not part of ElvUI 9.07.
+	if AB.SetupFlyoutButton then
+		self:SecureHook(AB, "SetupFlyoutButton", function(_, button)
+			self:CreateShadow(button)
+		end)
 	end
-
-	-- Flyout
-	self:SecureHook(AB, "SetupFlyoutButton", function(_, button)
-		self:CreateShadow(button)
-	end)
 
 	-- Keybind
 	self:ElvUI_ActionBar_LoadKeyBinder()

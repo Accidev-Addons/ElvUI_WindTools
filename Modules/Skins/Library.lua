@@ -7,7 +7,7 @@ for libName in pairs(_G.LibStub.libs) do
 	if lib and S.libraryHandlers[libName] then
 		S.libraryHandledMinors[libName] = minor
 		for _, func in next, S.libraryHandlers[libName] do
-			if not xpcall(func, F.Developer.ThrowError, S, lib) then
+			if not xpcall(function() return func(S, lib) end, F.Developer.ThrowError) then
 				S:Log("debug", format("Failed to skin library %s", libName, minor))
 			end
 		end

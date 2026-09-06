@@ -3,6 +3,12 @@ local KI = W:GetModule("KeystoneInfo")
 local S = W.Modules.Skins ---@type Skins
 local MF = W.Modules.MoveFrames ---@type MoveFrames
 local LL = W:NewModule("LFGList", "AceHook-3.0", "AceEvent-3.0") ---@class LFGList : AceModule, AceHook-3.0, AceEvent-3.0
+
+-- [SIRUS] Keep the native UI until this enhancement has a native API port.
+if not (C_LFGList and C_LFGList.GetAdvancedFilter and C_LFGList.GetAvailableActivityGroups) then
+	LL.StopRunning = "Sirus: advanced group filters unavailable"
+	return
+end
 local LFGPI = W.Utilities.LFGPlayerInfo
 local C = W.Utilities.Color
 local LSM = E.Libs.LSM

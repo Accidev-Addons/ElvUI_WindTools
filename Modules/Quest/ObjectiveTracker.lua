@@ -57,13 +57,9 @@ local function OverrideColor(rgba, config, normal, highlight)
 	return rgba
 end
 
----Sort quest watches after waiting for C_QuestLog to be available
+---Sort the native Sirus quest watches.
 function OT:SortQuestWatches()
-	F.WaitFor(function()
-		return _G.C_QuestLog ~= nil
-	end, function()
-		_G.C_QuestLog.SortQuestWatches()
-	end)
+	SortQuestWatches()
 end
 
 ---Create and configure cosmetic bar for objective tracker header
@@ -494,7 +490,9 @@ function OT:Initialize()
 			self:ObjectiveTrackerModule_AddBlock(nil, block)
 		end)
 	end
-	self:SecureHook(_G.ScenarioObjectiveTracker, "UpdateCriteria", "ScenarioObjectiveTracker_UpdateCriteria")
+	if _G.ScenarioObjectiveTracker.UpdateCriteria then
+		self:SecureHook(_G.ScenarioObjectiveTracker, "UpdateCriteria", "ScenarioObjectiveTracker_UpdateCriteria")
+	end
 
 	self:HandleContainerHeader(_G.ObjectiveTrackerFrame.Header)
 	self:UpdateBackdrop()

@@ -353,16 +353,6 @@ options.reset = {
 						end)
 					end,
 				},
-				damageMeterLayout = {
-					order = 4,
-					type = "execute",
-					name = L["Damage Meter Layout"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Damage Meter Layout"], nil, function()
-							E.db.WT.combat.damageMeterLayout = P.combat.damageMeterLayout
-						end)
-					end,
-				},
 			},
 		},
 		item = {
@@ -766,16 +756,6 @@ options.reset = {
 					func = function()
 						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Group Info"], nil, function()
 							E.db.WT.tooltips.groupInfo = P.tooltips.groupInfo
-						end)
-					end,
-				},
-				objectiveProgress = {
-					order = 6,
-					type = "execute",
-					name = L["Objective Progress"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Objective Progress"], nil, function()
-							E.private.WT.tooltips.objectiveProgress = V.tooltips.objectiveProgress
 						end)
 					end,
 				},

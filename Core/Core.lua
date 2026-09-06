@@ -84,7 +84,6 @@ _G.BINDING_CATEGORY_ELVUI_WINDTOOLS_EXTRA = W.Title .. " - " .. L["Extra"]
 _G.BINDING_HEADER_WTEXTRABUTTONS = L["Extra Buttons"]
 _G["BINDING_NAME_CLICK WTExtraBindingButtonLogout:LeftButton"] = L["Logout"]
 _G["BINDING_NAME_CLICK WTExtraBindingButtonLeaveGroup:LeftButton"] = L["Leave Party"]
-_G["BINDING_NAME_CLICK WTExtraBindingButtonLeaveDelve:LeftButton"] = L["Leave Delve"]
 
 -- WindTools Link Operations
 -- 1. Print "|Hwtlink:feature:arg1:arg2:arg3:..." in the chat
@@ -167,14 +166,9 @@ function W:InitializeModules()
 	for _, moduleName in pairs(W.RegisteredModules) do
 		local module = self:GetModule(moduleName)
 		if module.Initialize then
-			xpcall(module.Initialize, F.Developer.LogDebug, module)
+			xpcall(GenerateFlatClosure(module.Initialize, module), geterrorhandler())
 		end
 	end
-end
-
--- Put the registration from the modules to the login event
-function W:PLAYER_LOGIN()
-	self:InitializeModules()
 end
 
 -- WindTools module update after profile switch
@@ -183,7 +177,7 @@ function W:UpdateModules()
 	for _, moduleName in pairs(self.RegisteredModules) do
 		local module = W:GetModule(moduleName)
 		if module.ProfileUpdate then
-			pcall(module.ProfileUpdate, module)
+			xpcall(GenerateFlatClosure(module.ProfileUpdate, module), geterrorhandler())
 		end
 	end
 end

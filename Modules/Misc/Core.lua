@@ -53,7 +53,7 @@ end
 ---@param object function[] Array of callback functions
 function M:CallLoadedAddon(addonName, object)
 	for _, func in next, object do
-		xpcall(func, F.Developer.LogDebug, self)
+		xpcall(function() func(self) end, geterrorhandler())
 	end
 
 	self.addonsToLoad[addonName] = nil
@@ -63,7 +63,7 @@ end
 ---@param _ any Unused parameter
 ---@param addonName string Addon name
 function M:ADDON_LOADED(_, addonName)
-	if not E.Initialized then
+	if not E.initialized then
 		return
 	end
 
@@ -75,22 +75,21 @@ end
 
 function M:Initialize()
 	for index, func in next, self.nonAddonsToLoad do
-		xpcall(func, F.Developer.LogDebug, self)
+		xpcall(function() func(self) end, geterrorhandler())
 		self.nonAddonsToLoad[index] = nil
 	end
 
 	for addonName, object in pairs(self.addonsToLoad) do
-		local isLoaded, isFinished = C_AddOns_IsAddOnLoaded(addonName)
-		if isLoaded and isFinished then
+		local isLoaded = C_AddOns_IsAddOnLoaded(addonName)
+		if isLoaded then
 			self:CallLoadedAddon(addonName, object)
 		end
 	end
 end
 
 function M:ProfileUpdate()
-	for index, func in next, self.updateProfile do
-		xpcall(func, F.Developer.LogDebug, self)
-		self.updateProfile[index] = nil
+	for _, func in next, self.updateProfile do
+		xpcall(function() func(self) end, geterrorhandler())
 	end
 end
 

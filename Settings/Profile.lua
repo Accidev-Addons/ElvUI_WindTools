@@ -10,7 +10,7 @@ local tinsert = tinsert
 
 ---@class ProfileDB.announcement
 P.announcement = {
-	enable = true,
+	enable = false,
 	emoteFormat = ": %s",
 	sameMessageInterval = 10,
 	goodbye = {
@@ -167,44 +167,6 @@ P.combat = {
 	},
 	quickKeystone = {
 		enable = true,
-	},
-	damageMeterLayout = {
-		enable = false,
-		width = 400,
-		height = 300,
-		backdrop = true,
-		shadow = true,
-		animation = {
-			enable = true,
-			duration = 0.37,
-		},
-		layouts = {
-			{
-				name = format(L["Layout %d"], 1),
-				direction = "VERTICAL",
-				outerPadding = 0,
-				innerPadding = 2,
-				meters = {
-					{ windowIndex = 1, weight = 7, hidden = false },
-					{ windowIndex = 2, weight = 10, hidden = false },
-				},
-			},
-			{
-				name = format(L["Layout %d"], 2),
-				direction = "VERTICAL",
-				outerPadding = 0,
-				innerPadding = 2,
-				meters = {
-					{ windowIndex = 1, weight = 1, hidden = true },
-					{ windowIndex = 2, weight = 1, hidden = false },
-				},
-			},
-		},
-		activeLayout = 1,
-		autoSwitch = {
-			enable = false,
-			rules = { combat = 1, outOfCombat = 2, mythicPlus = 1, raid = 1, delve = 2 },
-		},
 	},
 }
 
@@ -964,7 +926,7 @@ P.quest = {
 		turnIn = true,
 	},
 	turnIn = {
-		enable = true,
+		enable = false,
 		mode = "ALL",
 		enableCondition = {
 			accountCompleted = true,
@@ -1159,10 +1121,10 @@ P.misc = {
 		hearthstone = {
 			left = "6948",
 			leftFallback = "6948",
-			middle = "253629",
-			middleFallback = "253629",
-			right = "140192",
-			rightFallback = "140192",
+			middle = "6948",
+			middleFallback = "6948",
+			right = "6948",
+			rightFallback = "6948",
 			showBindLocation = true,
 		},
 		additionalText = {
@@ -1188,7 +1150,7 @@ P.misc = {
 		},
 		right = {
 			[1] = "HEARTHSTONE",
-			[2] = "HOME",
+			[2] = "COLLECTIONS",
 			[3] = "ACHIEVEMENTS",
 			[4] = "ENCOUNTER_JOURNAL",
 			[5] = "TOY_BOX",

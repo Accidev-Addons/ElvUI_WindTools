@@ -3,6 +3,4 @@
 ..\FrameXML\UI.xsd">
     <Script file="LibDeflate\LibDeflate.lua"/>
     <Script file="LibItemEnchant\LibItemEnchant.lua"/>
-    <Script file="LibObjectiveProgressWT\LibObjectiveProgress.lua"/>
-    <Script file="LibObjectiveProgressWT\ProgressWeightData.lua"/>
 </Ui>

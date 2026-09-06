@@ -1208,35 +1208,6 @@ options.gameBar = {
 				},
 			},
 		},
-		friends = {
-			order = 13,
-			type = "group",
-			name = L["Friends"],
-			disabled = function()
-				return not E.db.WT.misc.gameBar.enable
-			end,
-			get = function(info)
-				return E.db.WT.misc.gameBar.friends[info[#info]]
-			end,
-			set = function(info, value)
-				E.db.WT.misc.gameBar.friends[info[#info]] = value
-				GB:UpdateButtons()
-			end,
-			args = {
-				showAllFriends = {
-					order = 1,
-					type = "toggle",
-					name = L["Show All Friends"],
-					desc = L["Show all friends rather than only friends who are currently playing WoW."],
-				},
-				countSubAccounts = {
-					order = 2,
-					type = "toggle",
-					name = L["Count Sub Accounts"],
-					desc = L["Count active WoW sub accounts rather than Battle.net Accounts."],
-				},
-			},
-		},
 		hearthstone = {
 			order = 14,
 			type = "group",
@@ -1448,6 +1419,7 @@ do
 end
 
 options.lfgList = {
+	hidden = function() return not not LL.StopRunning end,
 	order = 8,
 	type = "group",
 	name = L["LFG List"],

@@ -31,15 +31,16 @@ local InCombatLockdown = InCombatLockdown
 local RegisterStateDriver = RegisterStateDriver
 local UnregisterStateDriver = UnregisterStateDriver
 
-local C_Item_GetItemCooldown = C_Item.GetItemCooldown
-local C_Item_GetItemCount = C_Item.GetItemCount
-local C_Item_GetItemInfoInstant = C_Item.GetItemInfoInstant
-local C_Item_IsItemInRange = C_Item.IsItemInRange
+local C_Item_GetItemCooldown = GetItemCooldown
+local C_Item_GetItemCount = GetItemCount
+local C_Item_GetItemInfoInstant = GetItemInfoInstant
+local C_Item_IsItemInRange = IsItemInRange
 local C_Item_IsUsableItem = C_Item.IsUsableItem
 local C_QuestLog_GetDistanceSqToQuest = C_QuestLog.GetDistanceSqToQuest
-local C_QuestLog_GetNumQuestLogEntries = C_QuestLog.GetNumQuestLogEntries
-local C_QuestLog_GetQuestIDForLogIndex = C_QuestLog.GetQuestIDForLogIndex
-local C_Timer_NewTicker = C_Timer.NewTicker
+local C_QuestLog_GetNumQuestLogEntries = GetNumQuestLogEntries
+local function C_Timer_NewTicker(...)
+	return C_Timer:NewTicker(...)
+end
 local C_TradeSkillUI_GetItemReagentQualityInfo = C_TradeSkillUI.GetItemReagentQualityInfo
 
 local questItemList = {}
@@ -49,8 +50,8 @@ local function UpdateQuestItemList()
 	for questLogIndex = 1, C_QuestLog_GetNumQuestLogEntries() do
 		local link = GetQuestLogSpecialItemInfo(questLogIndex)
 		if link then
-			local questID = C_QuestLog_GetQuestIDForLogIndex(questLogIndex)
-			local distance = questID and C_QuestLog_GetDistanceSqToQuest(questID)
+			local questID = select(9, GetQuestLogTitle(questLogIndex))
+			local distance = questID and C_QuestLog_GetDistanceSqToQuest and C_QuestLog_GetDistanceSqToQuest(questID)
 			local itemID = C_Item_GetItemInfoInstant(link)
 			tinsert(questItemList, { questLogIndex = questLogIndex, itemID = itemID, distance = distance or 1e8 })
 		end
@@ -62,8 +63,8 @@ local function UpdateQuestItemList()
 end
 
 local forceUsableItems = {
-	[193634] = true, -- 茂發種子
-	[206448] = true, --『夢境裂斧』菲拉雷斯
+	[193634] = true, -- иЊ‚з™јзЁ®е­ђ
+	[206448] = true, --гЂЋе¤ўеўѓиЈ‚ж–§гЂЏиЏІж‹‰й›·ж–Ї
 }
 
 local equipmentList = {}
@@ -182,7 +183,7 @@ function EB:CreateButton(name, barDB)
 	button.cooldown = cooldown
 
 	button.SetTier = function(_, itemIDOrLink)
-		local qualityInfo = C_TradeSkillUI_GetItemReagentQualityInfo(itemIDOrLink)
+		local qualityInfo = C_TradeSkillUI_GetItemReagentQualityInfo and C_TradeSkillUI_GetItemReagentQualityInfo(itemIDOrLink)
 
 		if not qualityInfo or not qualityInfo.icon or qualityInfo.icon == "" then
 			button.qualityTier:SetText("")
@@ -267,7 +268,7 @@ function EB:SetUpButton(button, itemData, slotID, waitGroup)
 			CooldownFrame_Set(button.cooldown, start, duration, enable)
 			if duration and duration > 0 and enable and enable == 0 then
 				button.tex:SetVertexColor(0.4, 0.4, 0.4)
-			elseif not InCombatLockdown() and C_Item_IsItemInRange(button.itemID, "target") == false then
+			elseif not InCombatLockdown() and C_Item_IsItemInRange(button.itemID, "target") == 0 then
 				button.tex:SetVertexColor(1, 0, 0)
 			else
 				button.tex:SetVertexColor(1, 1, 1)

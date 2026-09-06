@@ -44,7 +44,7 @@ end
 ---@param args table? Arguments to pass to the callback
 local function runTask(callback, args)
 	if callback and type(callback) == "function" then
-		xpcall(callback, F.Developer.ThrowError, unpack(args or {}))
+		xpcall(GenerateFlatClosure(callback, unpack(args or {})), geterrorhandler())
 	end
 end
 

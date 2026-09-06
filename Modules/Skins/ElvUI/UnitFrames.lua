@@ -48,7 +48,7 @@ function S:ElvUI_UnitFrames_Configure_Threat(_, f)
 		end
 		if parent.db and parent.db.threatStyle == "GLOW" then
 			if parent.Health and parent.Health.backdrop and parent.Health.backdrop.shadow then
-				parent.Health.backdrop.shadow:SetShown(not threat.MainGlow:IsShown())
+				parent.Health.backdrop.shadow:SetShown(not threat.glow:IsShown())
 			end
 			if
 				parent.Power
@@ -56,7 +56,7 @@ function S:ElvUI_UnitFrames_Configure_Threat(_, f)
 				and parent.Power.backdrop.shadow
 				and parent.USE_POWERBAR_OFFSET
 			then
-				parent.Power.backdrop.shadow:SetShown(not threat.MainGlow:IsShown())
+				parent.Power.backdrop.shadow:SetShown(not threat.glow:IsShown())
 			end
 		end
 	end
@@ -108,8 +108,9 @@ local function ApplyExistingUnitFrameSkins(frame)
 end
 
 function S:ElvUI_UnitFrames_ApplyExistingFrames()
-	for _, frame in pairs(UF.units) do
-		ApplyExistingUnitFrameSkins(frame)
+	-- [SIRUS] UF.units maps unit names to names; the actual frames are stored on UF.
+	for unit in pairs(UF.units) do
+		ApplyExistingUnitFrameSkins(UF[unit])
 	end
 
 	for unit in pairs(UF.groupunits) do

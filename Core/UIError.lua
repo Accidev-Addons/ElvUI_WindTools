@@ -65,7 +65,7 @@ function W:HookUIError()
 			---@type UIErrorHandlerParams
 			local params = { frame = frame, message = message, r = r, g = g, b = b, a = a }
 			for _, handlerData in ipairs(self.UIErrorHandlers) do
-				local success, result = xpcall(handlerData.handler, F.Developer.ThrowError, params)
+				local success, result = xpcall(GenerateFlatClosure(handlerData.handler, params), geterrorhandler())
 				if not success then
 					return
 				end

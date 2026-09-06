@@ -26,7 +26,6 @@ local xpcall = xpcall
 local CreateFrame = CreateFrame
 local GenerateClosure = GenerateClosure
 local RunNextFrame = RunNextFrame
-local Settings = Settings
 
 local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 
@@ -54,21 +53,19 @@ S.enteredLoad = {}
 S.texturePathFetcher = E.UIParent:CreateTexture(nil, "ARTWORK")
 S.texturePathFetcher:Hide()
 
--- Override Settings.RegisterCanvasLayoutCategory to track setting frames
-if Settings then
-	local RegisterCanvasLayoutCategory = Settings.RegisterCanvasLayoutCategory
-	---@diagnostic disable-next-line: duplicate-set-field
-	Settings.RegisterCanvasLayoutCategory = function(frame, name)
-		if frame and name then
-			S.settingFrames[name] = frame
-			if S.waitSettingFrames[name] then
-				S.waitSettingFrames[name](frame)
-				S.waitSettingFrames[name] = nil
-			end
-		end
-
-		return RegisterCanvasLayoutCategory(frame, name)
+-- [SIRUS] Addon options use InterfaceOptions categories, including already registered panels.
+local function TrackSettingFrame(frame)
+	if not frame or not frame.name then return end
+	S.settingFrames[frame.name] = frame
+	if S.waitSettingFrames[frame.name] then
+		S.waitSettingFrames[frame.name](frame)
+		S.waitSettingFrames[frame.name] = nil
 	end
+end
+
+hooksecurefunc("InterfaceOptions_AddCategory", TrackSettingFrame)
+for _, frame in ipairs(_G.INTERFACEOPTIONS_ADDONCATEGORIES or {}) do
+	TrackSettingFrame(frame)
 end
 
 ---Check if the texture path is equal to the given path
@@ -152,8 +149,7 @@ function S:CreateShadow(frame, size, r, g, b, force)
 	size = size or 4
 	size = size + (E.private.WT.skins.increasedSize or 0)
 
-	local shadow = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-	E:ReplaceSetupTextureCoordinates(shadow)
+	local shadow = CreateFrame("Frame", nil, frame)
 	shadow:SetFrameStrata(frame:GetFrameStrata())
 	shadow:SetFrameLevel(frame:GetFrameLevel() or 1)
 	shadow:SetOutside(frame, size, size)
@@ -265,7 +261,7 @@ do
 
 		S:CreateShadow(frame.backdrop)
 
-		if frame.backdrop.shadow.__wind then
+		if frame.backdrop.shadow and frame.backdrop.shadow.__wind then
 			frame.__windShadow = frame.backdrop.__windShadow + 1
 		end
 	end
@@ -465,12 +461,12 @@ end
 
 ---Event handler for PLAYER_ENTERING_WORLD
 function S:PLAYER_ENTERING_WORLD()
-	if not E.Initialized or not E.private.WT.skins.enable then
+	if not E.initialized or not E.private.WT.skins.enable then
 		return
 	end
 
 	for index, func in next, self.enteredLoad do
-		xpcall(func, F.Developer.ThrowError, self)
+		xpcall(function() return func(self) end, F.Developer.ThrowError)
 		self.enteredLoad[index] = nil
 	end
 end
@@ -487,7 +483,7 @@ end
 ---@param callbacks table The callback functions table
 function S:CallLoadedAddon(addonName, callbacks)
 	for _, callback in next, callbacks do
-		if not xpcall(callback, F.Developer.ThrowError, self) then
+		if not xpcall(function() return callback(self) end, F.Developer.ThrowError) then
 			self:Log("debug", format("Failed to run addon %s", addonName))
 		end
 	end
@@ -499,7 +495,7 @@ end
 ---@param _ any Unused parameter
 ---@param addonName string The name of the loaded addon
 function S:ADDON_LOADED(_, addonName)
-	if not E.Initialized or not E.private.WT.skins.enable then
+	if not E.initialized or not E.private.WT.skins.enable then
 		return
 	end
 
@@ -533,7 +529,7 @@ function S:LibStub_NewLibrary(_, major, minor)
 			return
 		end
 		for _, func in next, self.libraryHandlers[major] do
-			if not xpcall(func, F.Developer.ThrowError, self, lib) then
+			if not xpcall(function() return func(self, lib) end, F.Developer.ThrowError) then
 				self:Log("debug", format("Failed to skin library %s", major, minor))
 			end
 		end
@@ -817,7 +813,7 @@ function S:Initialize()
 
 	-- Run Blizzard skins
 	for index, func in next, self.nonAddonsToLoad do
-		if not xpcall(func, F.Developer.ThrowError, self) then
+		if not xpcall(function() return func(self) end, F.Developer.ThrowError) then
 			self:Log("debug", "Failed to run skin function")
 		end
 		self.nonAddonsToLoad[index] = nil
@@ -825,8 +821,8 @@ function S:Initialize()
 
 	-- Run addon skins, including some lazy-loading Blizzard skins
 	for addonName, object in pairs(self.addonsToLoad) do
-		local isLoaded, isFinished = C_AddOns_IsAddOnLoaded(addonName)
-		if isLoaded and isFinished then
+		local isLoaded = C_AddOns_IsAddOnLoaded(addonName)
+		if isLoaded then
 			self:CallLoadedAddon(addonName, object)
 		end
 	end

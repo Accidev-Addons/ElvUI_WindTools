@@ -394,7 +394,7 @@ options.worldMap = {
 							local errorMsg = format(L["Because of %s, this module will not be loaded."], WM.StopRunning)
 							return C.StringByTemplate(errorMsg, "rose-500")
 						else
-							return L["This module will help you to reveal and resize maps."]
+							return L["Resize world map."]
 						end
 					end,
 					fontSize = "medium",
@@ -405,56 +405,6 @@ options.worldMap = {
 			order = 2,
 			type = "toggle",
 			name = L["Enable"],
-		},
-		reveal = {
-			order = 3,
-			type = "group",
-			inline = true,
-			name = L["Reveal"],
-			get = function(info)
-				return E.private.WT.maps.worldMap.reveal[info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.maps.worldMap.reveal[info[#info]] = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-			args = {
-				enable = {
-					order = 1,
-					type = "toggle",
-					name = L["Enable"],
-					desc = L["Remove Fog of War from your world map."],
-				},
-				useColor = {
-					order = 2,
-					type = "toggle",
-					name = L["Use Colored Fog"],
-					disabled = function()
-						return not E.private.WT.maps.worldMap.reveal.enable
-					end,
-					desc = L["Style Fog of War with special color."],
-				},
-				color = {
-					order = 3,
-					type = "color",
-					hasAlpha = true,
-					name = L["Color"],
-					disabled = function()
-						return not E.private.WT.maps.worldMap.reveal.useColor
-							or not E.private.WT.maps.worldMap.reveal.enable
-					end,
-					get = function(info)
-						local db = E.private.WT.maps.worldMap.reveal[info[#info]]
-						local default = V.maps.worldMap.reveal[info[#info]]
-						return db.r, db.g, db.b, db.a, default.r, default.g, default.b, default.a
-					end,
-					set = function(info, r, g, b, a)
-						local db = E.private.WT.maps.worldMap.reveal[info[#info]]
-						db.r, db.g, db.b, db.a = r, g, b, a
-						E:StaticPopup_Show("PRIVATE_RL")
-					end,
-				},
-			},
 		},
 		scale = {
 			order = 4,
