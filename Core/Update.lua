@@ -38,6 +38,22 @@ local function UpdateMessage(text, from)
 end
 
 function W:UpdateScripts()
+	-- [SIRUS] Only replace old defaults: the unsupported petbattle condition hides these bars.
+	local profile = E.db.WT
+	local gameBar = profile.misc and profile.misc.gameBar
+	if gameBar and (gameBar.visibility == "[petbattle]hide;show" or gameBar.visibility == "[petbattle] hide; show") then
+		gameBar.visibility = "show"
+	end
+	local itemBars = profile.item and profile.item.extraItemsBar
+	if itemBars then
+		for i = 1, 5 do
+			local bar = itemBars["bar" .. i]
+			if bar and (bar.visibility == "[petbattle]hide;show" or bar.visibility == "[petbattle] hide; show") then
+				bar.visibility = "show"
+			end
+		end
+	end
+
 	local currentVersion = tonumber(W.Version) or 0 -- installed WindTools Version
 	local globalVersion = tonumber(E.global.WT.version)
 	if not globalVersion or globalVersion == 0 then

@@ -6,7 +6,6 @@ local C = W.Utilities.Color
 local _G = _G
 
 local CreateFrame = CreateFrame
-local RegisterStateDriver = RegisterStateDriver
 
 local GameTooltip = _G.GameTooltip
 
@@ -159,7 +158,6 @@ function SB:CreateBar()
 	frame:SetFrameStrata("LOW")
 	frame:SetFrameLevel(5)
 	frame:CreateBackdrop("Transparent")
-	RegisterStateDriver(frame, "visibility", "[petbattle] hide; show")
 
 	self.bar = frame
 

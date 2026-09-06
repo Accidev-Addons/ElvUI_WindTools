@@ -66,6 +66,9 @@ local C_UI_Reload = C_UI.Reload
 local RED_FONT_COLOR = RED_FONT_COLOR
 
 local NUM_PANEL_BUTTONS = 7
+local BUTTON_ACTION_ATTRIBUTES = {
+	"type*", "macrotext1", "macrotext2", "macrotext3", "item1", "item2", "clickbutton",
+}
 local ICON_STRING = "|T%s:16:18:0:0:64:64:4:60:7:57"
 local LEFT_BUTTON_ICON = "|TInterface\\TUTORIALFRAME\\UI-TUTORIAL-FRAME:13:11:0:-1:512:512:12:66:230:307|t"
 local RIGHT_BUTTON_ICON = "|TInterface\\TUTORIALFRAME\\UI-TUTORIAL-FRAME:13:11:0:-1:512:512:12:66:333:410|t"
@@ -559,7 +562,7 @@ local ButtonTypes = {
 		icon = W.Media.Icons.barCollections,
 		macro = {
 			LeftButton = "/click CollectionsJournalCloseButton\n/click CollectionsMicroButton\n/click CollectionsJournalTab1",
-			RightButton = "/run C_MountJournal.SummonByID(0)",
+			RightButton = "/click MountJournalSummonRandomFavoriteButton",
 		},
 		tooltips = {
 			L["Collections"],
@@ -572,7 +575,7 @@ local ButtonTypes = {
 		name = L["Encounter Journal"],
 		icon = W.Media.Icons.barEncounterJournal,
 		macro = {
-			LeftButton = "/click EJMicroButton",
+			LeftButton = "/click EncounterJournalMicroButton",
 		},
 		tooltips = {
 			LEFT_BUTTON_ICON .. " " .. L["Encounter Journal"],
@@ -707,7 +710,7 @@ local ButtonTypes = {
 		icon = W.Media.Icons.barPetJournal,
 		macro = {
 			LeftButton = "/click CollectionsJournalCloseButton\n/click CollectionsMicroButton\n/click CollectionsJournalTab2",
-			RightButton = "/run C_PetJournal.SummonRandomPet(C_PetJournal.HasFavoritePets());",
+			RightButton = "/click PetJournalSummonRandomFavoritePetButton",
 		},
 		tooltips = {
 			L["Pet Journal"],
@@ -987,6 +990,11 @@ function GB:ConstructTimeArea()
 	end
 
 	self:HookScript(self.bar.middlePanel, "OnEnter", function(panel)
+		if self.tooltipTimer then
+			self.tooltipTimer:Cancel()
+			self.tooltipTimer = nil
+		end
+
 		self:OnEnter()
 		self:AnimationOnEnter(panel)
 
@@ -998,7 +1006,9 @@ function GB:ConstructTimeArea()
 		if self.db.tooltipsAnchor == "ANCHOR_TOP" then
 			DT.tooltip:SetOwner(panel, "ANCHOR_TOP", 0, 10)
 		else
-			DT.tooltip:SetOwner(panel.text, "ANCHOR_BOTTOM", 0, -10)
+			DT.tooltip:SetOwner(panel, "ANCHOR_NONE")
+			DT.tooltip:ClearAllPoints()
+			DT.tooltip:SetPoint("TOP", panel.text, "BOTTOM", 0, -10)
 		end
 
 		if IsModifierKeyDown() then
@@ -1031,6 +1041,11 @@ function GB:ConstructTimeArea()
 	end)
 
 	self:HookScript(self.bar.middlePanel, "OnLeave", function(panel)
+		if self.tooltipTimer then
+			self.tooltipTimer:Cancel()
+			self.tooltipTimer = nil
+		end
+
 		self:OnLeave()
 		self:AnimationOnLeave(panel)
 
@@ -1040,7 +1055,6 @@ function GB:ConstructTimeArea()
 
 		DT.RegisteredDataTexts["System"].onLeave()
 		DT.tooltip:Hide()
-		self.tooltipTimer:Cancel()
 	end)
 
 	self.bar.middlePanel:SetScript("OnClick", function(_, mouseButton)
@@ -1270,7 +1284,11 @@ function GB:UpdateButton(button, buttonType)
 	button.tooltips = config.tooltips
 	button.tooltipsLeave = config.tooltipsLeave
 
-	button:ClearAttributes()
+	-- [SIRUS] Clear only the secure action fields owned by this button.
+	for _, attribute in ipairs(BUTTON_ACTION_ATTRIBUTES) do
+		button:SetAttribute(attribute, nil)
+	end
+	button.Click = nil
 
 	-- Click
 	if buttonType == "HEARTHSTONE" then

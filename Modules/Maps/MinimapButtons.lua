@@ -29,8 +29,6 @@ local wipe = wipe
 local ContainsIf = ContainsIf
 local CreateFrame = CreateFrame
 local InCombatLockdown = InCombatLockdown
-local RegisterStateDriver = RegisterStateDriver
-local UnregisterStateDriver = UnregisterStateDriver
 
 local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local C_Spell_GetSpellTexture = C_Spell.GetSpellTexture
@@ -820,10 +818,8 @@ function MB:UpdateLayout()
 
 		self.bar:Size(width, height)
 		self.barAnchor:Size(width, height)
-		RegisterStateDriver(self.bar, "visibility", "[petbattle]hide;show")
 		self.bar:Show()
 	else
-		UnregisterStateDriver(self.bar, "visibility")
 		self.bar:Hide()
 	end
 

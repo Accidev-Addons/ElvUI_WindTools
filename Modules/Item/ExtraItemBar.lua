@@ -17,13 +17,15 @@ local tonumber = tonumber
 local unpack = unpack
 local wipe = wipe
 
-local CooldownFrame_Set = CooldownFrame_Set
+local CooldownFrame_SetTimer = CooldownFrame_SetTimer
 local CreateAtlasMarkup = CreateAtlasMarkup
 local CreateFrame = CreateFrame
 local GameTooltip = _G.GameTooltip
 local GetBindingKey = GetBindingKey
 local GetInventoryItemCooldown = GetInventoryItemCooldown
 local GetInventoryItemID = GetInventoryItemID
+local GetInventoryItemLink = GetInventoryItemLink
+local GetItemSpell = GetItemSpell
 local GetQuestLogSpecialItemCooldown = GetQuestLogSpecialItemCooldown
 local GetQuestLogSpecialItemInfo = GetQuestLogSpecialItemInfo
 local GetTime = GetTime
@@ -35,7 +37,6 @@ local C_Item_GetItemCooldown = GetItemCooldown
 local C_Item_GetItemCount = GetItemCount
 local C_Item_GetItemInfoInstant = GetItemInfoInstant
 local C_Item_IsItemInRange = IsItemInRange
-local C_Item_IsUsableItem = C_Item.IsUsableItem
 local C_QuestLog_GetDistanceSqToQuest = C_QuestLog and C_QuestLog.GetDistanceSqToQuest
 local C_QuestLog_GetNumQuestLogEntries = GetNumQuestLogEntries
 local function C_Timer_NewTicker(...)
@@ -72,7 +73,8 @@ local function UpdateEquipmentList()
 	wipe(equipmentList)
 	for slotID = 1, 18 do
 		local itemID = GetInventoryItemID("player", slotID)
-		if itemID and (C_Item_IsUsableItem(itemID) or forceUsableItems[itemID]) then
+		local itemLink = itemID and GetInventoryItemLink("player", slotID)
+		if itemID and ((itemLink and GetItemSpell(itemLink)) or forceUsableItems[itemID]) then
 			tinsert(equipmentList, slotID)
 		end
 	end
@@ -265,7 +267,7 @@ function EB:SetUpButton(button, itemData, slotID, waitGroup)
 			else
 				start, duration, enable = C_Item_GetItemCooldown(button.itemID)
 			end
-			CooldownFrame_Set(button.cooldown, start, duration, enable)
+			CooldownFrame_SetTimer(button.cooldown, start, duration, enable)
 			if duration and duration > 0 and enable and enable == 0 then
 				button.tex:SetVertexColor(0.4, 0.4, 0.4)
 			elseif not InCombatLockdown() and C_Item_IsItemInRange(button.itemID, "target") == 0 then
@@ -277,7 +279,7 @@ function EB:SetUpButton(button, itemData, slotID, waitGroup)
 	elseif button.slotID then
 		OnUpdateFunction = function(_)
 			local start, duration, enable = GetInventoryItemCooldown("player", button.slotID)
-			CooldownFrame_Set(button.cooldown, start, duration, enable)
+			CooldownFrame_SetTimer(button.cooldown, start, duration, enable)
 		end
 	end
 	button:SetScript("OnUpdate", OnUpdateFunction)
