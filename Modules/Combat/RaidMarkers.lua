@@ -10,7 +10,6 @@ local abs = abs
 local format = format
 local gsub = gsub
 local strupper = strupper
-local strlower = strlower
 
 local CreateFrame = CreateFrame
 local InCombatLockdown = InCombatLockdown
@@ -19,16 +18,33 @@ local UnregisterStateDriver = UnregisterStateDriver
 
 local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 
-local TargetToWorld = {
-	[1] = 5,
-	[2] = 6,
-	[3] = 3,
-	[4] = 2,
-	[5] = 7,
-	[6] = 1,
-	[7] = 4,
-	[8] = 8,
-}
+-- [SIRUS] World marker IDs are zero-based and follow the native bindings.
+local TargetToWorld = { 7, 2, 3, 1, 5, 0, 4, 6 }
+local CLEAR_TARGET_MARKERS = "/run for i=1,8 do SetRaidTarget('player',i) end SetRaidTarget('player',0)"
+local CLEAR_WORLD_MARKERS = "/cwm " .. _G.ALL
+
+function RM:AnimateButton(button, targetScale)
+	local tex, group = button.tex, button.animGroup
+	local currentScale = tex:GetScale()
+	if group:IsPlaying() and tex.__fromScale and tex.__toScale then
+		local progress = group:GetProgress()
+		currentScale = tex.__fromScale + (tex.__toScale - tex.__fromScale) * progress
+	end
+	group:Stop()
+
+	local span = abs(self.db.buttonAnimationScale - 1)
+	local distance = abs(targetScale - currentScale)
+	if span == 0 or distance < 0.0001 then
+		tex:SetScale(targetScale)
+		tex.__fromScale, tex.__toScale = nil, nil
+		return
+	end
+
+	tex.__fromScale, tex.__toScale = currentScale, targetScale
+	button.scaleAnim:SetScale(targetScale / currentScale, targetScale / currentScale)
+	button.scaleAnim:SetDuration(self.db.buttonAnimationDuration * distance / span)
+	group:Play()
+end
 
 function RM:UpdateBar()
 	if not self.bar then
@@ -49,6 +65,8 @@ function RM:UpdateBar()
 		button:Size(self.db.buttonSize, self.db.buttonSize)
 		button.tex:Size(self.db.buttonSize, self.db.buttonSize)
 		button.animGroup:Stop()
+		button.tex:SetScale(1)
+		button.tex.__fromScale, button.tex.__toScale = nil, nil
 
 		if (i == 10 and not self.db.readyCheck) or (i == 11 and not self.db.countDown) then
 			button:Hide()
@@ -115,23 +133,32 @@ function RM:UpdateButtons()
 		end
 
 		-- Key bindings
-		if button.isMarkButton then
-			button:SetAttribute("shift-type*", nil)
-			button:SetAttribute("alt-type*", nil)
-			button:SetAttribute("ctrl-type*", nil)
+		if button.isMarkButton or i == 9 then
+			for _, modifier in ipairs({ "shift", "alt", "ctrl" }) do
+				button:SetAttribute(modifier .. "-type*", nil)
+				button:SetAttribute(modifier .. "-macrotext1", nil)
+				button:SetAttribute(modifier .. "-macrotext2", nil)
+			end
 
 			button:SetAttribute(format("%s-type*", self.db.modifier), "macro")
 
-			if not self.db.inverse then
-				button:SetAttribute("macrotext1", format("/tm %d", i))
-				button:SetAttribute("macrotext2", "/tm 0")
+			if i == 9 then
+				local normal = self.db.inverse and CLEAR_WORLD_MARKERS or CLEAR_TARGET_MARKERS
+				local modified = self.db.inverse and CLEAR_TARGET_MARKERS or CLEAR_WORLD_MARKERS
+				button:SetAttribute("macrotext1", normal)
+				button:SetAttribute("macrotext2", normal)
+				button:SetAttribute(format("%s-macrotext1", self.db.modifier), modified)
+				button:SetAttribute(format("%s-macrotext2", self.db.modifier), modified)
+			elseif not self.db.inverse then
+				button:SetAttribute("macrotext1", format("/run SetRaidTarget('target',%d)", i))
+				button:SetAttribute("macrotext2", "/run SetRaidTarget('target',0)")
 				button:SetAttribute(format("%s-macrotext1", self.db.modifier), format("/wm %d", TargetToWorld[i]))
 				button:SetAttribute(format("%s-macrotext2", self.db.modifier), format("/cwm %d", TargetToWorld[i]))
 			else
 				button:SetAttribute("macrotext1", format("/wm %d", TargetToWorld[i]))
 				button:SetAttribute("macrotext2", format("/cwm %d", TargetToWorld[i]))
-				button:SetAttribute(format("%s-macrotext1", self.db.modifier), format("/tm %d", i))
-				button:SetAttribute(format("%s-macrotext2", self.db.modifier), "/tm 0")
+				button:SetAttribute(format("%s-macrotext1", self.db.modifier), format("/run SetRaidTarget('target',%d)", i))
+				button:SetAttribute(format("%s-macrotext2", self.db.modifier), "/run SetRaidTarget('target',0)")
 			end
 		end
 	end
@@ -159,8 +186,8 @@ function RM:ToggleSettings()
 			self.bar,
 			"visibility",
 			self.db.visibility == "DEFAULT" and "[noexists, nogroup] hide; show"
-				or self.db.visibility == "ALWAYS" and "[petbattle] hide; show"
-				or "[group] show; [petbattle] hide; hide"
+				or self.db.visibility == "ALWAYS" and "show"
+				or "[group] show; hide"
 		)
 	end
 
@@ -236,7 +263,7 @@ function RM:UpdateCountDownButton()
 		button:SetAttribute("macrotext2", "/dbm pull 0")
 	else
 		button:SetAttribute("macrotext1", _G.SLASH_COUNTDOWN1 .. " " .. self.db.countDownTime)
-		button:SetAttribute("macrotext1", _G.SLASH_COUNTDOWN1 .. " " .. 0)
+		button:SetAttribute("macrotext2", _G.SLASH_COUNTDOWN1 .. " " .. 0)
 	end
 end
 
@@ -270,19 +297,7 @@ function RM:CreateButtons()
 		elseif i == 9 then -- Clear All
 			tex:SetTexture("Interface\\BUTTONS\\UI-GroupLoot-Pass-Up")
 
-			button:ClearAttribute("marker")
-			local prefix = strlower(RM.modifierString)
-			if not self.db.inverse then
-				button:SetAttribute(prefix .. "-type*", "worldmarker")
-				button:SetAttribute(prefix .. "-action*", "clear")
-				button:SetAttribute("type*", "raidtarget")
-				button:SetAttribute("action", "clear-all")
-			else
-				button:SetAttribute(prefix .. "-type*", "raidtarget")
-				button:SetAttribute(prefix .. "-action*", "clear-all")
-				button:SetAttribute("type*", "worldmarker")
-				button:SetAttribute("action", "clear")
-			end
+			button:SetAttribute("type*", "macro")
 		elseif i == 10 then -- Ready Check & Combat Log
 			tex:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
 			button:SetAttribute("type*", "macro")
@@ -351,13 +366,13 @@ function RM:CreateButtons()
 
 		local animGroup = tex:CreateAnimationGroup()
 		local scaleAnim = animGroup:CreateAnimation("Scale")
-		scaleAnim:SetTarget(tex)
 		scaleAnim:SetOrigin("CENTER", 0, 0)
 
 		button.animGroup = animGroup
+		button.scaleAnim = scaleAnim
 
 		animGroup:SetScript("OnPlay", function()
-			tex:SetScale(1)
+			tex:SetScale(tex.__fromScale or 1)
 		end)
 
 		animGroup:SetScript("OnFinished", function()
@@ -366,20 +381,7 @@ function RM:CreateButtons()
 
 		button:SetScript("OnEnter", function(btn)
 			if RM.db.buttonAnimation then
-				local progress = F.Or(animGroup:GetProgress(), 0)
-				local currentScale = F.Or(tex:GetScale(), 1)
-				if abs(progress) > 0.002 and tex.__fromScale and tex.__toScale then
-					currentScale = tex.__fromScale + (tex.__toScale - tex.__fromScale) * progress
-				end
-				animGroup:Stop()
-				tex.__fromScale = currentScale
-				tex.__toScale = RM.db.buttonAnimationScale
-				scaleAnim:SetScaleFrom(currentScale, currentScale)
-				scaleAnim:SetScaleTo(RM.db.buttonAnimationScale, RM.db.buttonAnimationScale)
-				scaleAnim:SetDuration(
-					(tex.__toScale - currentScale) / (tex.__toScale - 1) * RM.db.buttonAnimationDuration
-				)
-				animGroup:Play()
+				RM:AnimateButton(btn, RM.db.buttonAnimationScale)
 			end
 
 			local icon = F.GetIconString(W.Media.Textures.smallLogo, 14)
@@ -394,20 +396,7 @@ function RM:CreateButtons()
 
 		button:SetScript("OnLeave", function(btn)
 			if RM.db.buttonAnimation then
-				local progress = F.Or(animGroup:GetProgress(), 0)
-				local currentScale = F.Or(tex:GetScale(), 1)
-				if abs(progress) > 0.002 and tex.__fromScale and tex.__toScale then
-					currentScale = tex.__fromScale + (tex.__toScale - tex.__fromScale) * progress
-				end
-				animGroup:Stop()
-				tex.__fromScale = currentScale
-				tex.__toScale = 1
-				scaleAnim:SetScaleFrom(currentScale, currentScale)
-				scaleAnim:SetScaleTo(1, 1)
-				scaleAnim:SetDuration(
-					RM.db.buttonAnimationDuration * (currentScale - 1) / (RM.db.buttonAnimationScale - 1)
-				)
-				animGroup:Play()
+				RM:AnimateButton(btn, 1)
 			end
 
 			btn:SetBackdropBorderColor(0, 0, 0)

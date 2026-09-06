@@ -2,12 +2,11 @@ local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI
 local S = W.Modules.Skins ---@type Skins
 
 local _G = _G
-local hooksecurefunc = hooksecurefunc
 local pairs = pairs
 
 function S:HandleMerchantItem(index)
-	for currencyIndex = 1, 3 do
-		local itemLine = _G["MerchantItem" .. index .. "AltCurrencyFrameItem" .. currencyIndex] --[[@as SmallDenominationTemplate?]]
+	for currencyIndex = 1, 2 do
+		local itemLine = _G["MerchantItem" .. index .. "AltCurrencyFrameItem" .. currencyIndex]
 		if itemLine then
 			for _, region in pairs({ itemLine:GetRegions() }) do
 				if region:GetObjectType() == "Texture" then
@@ -24,33 +23,20 @@ function S:MerchantFrame()
 	end
 
 	self:CreateShadow(_G.MerchantFrame)
-
 	for i = 1, 2 do
 		self:CreateBackdropShadow(_G["MerchantFrameTab" .. i])
 	end
-
 	for i = 1, 12 do
 		self:HandleMerchantItem(i)
 	end
 
-	for _, region in pairs({ _G.MerchantMoneyFrame.GoldButton:GetRegions() }) do
+	-- [SIRUS] MoneyFrame children use global names, not parent keys.
+	local gold = _G.MerchantMoneyFrameGoldButton
+	for _, region in pairs({ gold:GetRegions() }) do
 		if region:GetObjectType() == "Texture" then
 			F.Move(region, 0, 4)
 		end
 	end
-
-	hooksecurefunc("MerchantFrame_UpdateCurrencies", function()
-		for i = 1, 3 do
-			local token = _G["MerchantToken" .. i] --[[@as BackpackTokenTemplate?]]
-			if token and not token.__wind then
-				token:Width(token:GetWidth() + 2)
-				F.SetFont(token.Count)
-				F.Move(token.Count, -2, 0)
-				token.Icon:SetTexCoords()
-				token.__wind = true
-			end
-		end
-	end)
 end
 
 S:AddCallback("MerchantFrame")

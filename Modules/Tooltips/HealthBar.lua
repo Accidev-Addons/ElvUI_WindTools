@@ -10,7 +10,7 @@ function T:ChangeHealthBarPosition(_, tt)
 		return
 	end
 
-	if tt:IsForbidden() or not ET.db.visibility then
+	if not F.CanAccessWidget(tt) or not ET.db.visibility then
 		return
 	end
 

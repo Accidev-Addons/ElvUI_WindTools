@@ -17,11 +17,10 @@ local GetTalentInfoByID = GetTalentInfoByID
 
 local C_ChallengeMode_GetMapUIInfo = C_ChallengeMode.GetMapUIInfo
 local C_CurrencyInfo_GetCurrencyInfo = C_CurrencyInfo.GetCurrencyInfo
-local C_Item_GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo
-local C_Item_GetItemIconByID = C_Item.GetItemIconByID
-local C_Item_GetItemInfoInstant = C_Item.GetItemInfoInstant
-local C_Item_GetItemNameByID = C_Item.GetItemNameByID
-local C_Spell_GetSpellTexture = C_Spell.GetSpellTexture
+local C_Item_GetItemInfo = C_Item.GetItemInfo
+local function GetSpellIcon(spellID)
+	return select(3, GetSpellInfo(spellID))
+end
 
 local RETRIEVING_ITEM_INFO = RETRIEVING_ITEM_INFO
 local ITEM_LEVEL = ITEM_LEVEL
@@ -30,18 +29,18 @@ local ITEM_MIN_LEVEL = ITEM_MIN_LEVEL
 
 local MATCH_ITEM_LEVEL = ITEM_LEVEL:gsub("%%d", "(%%d+)")
 local MATCH_MIN_LEVEL = ITEM_MIN_LEVEL:gsub("%%d", "(%%d+)")
-local MATCH_ITEM_LEVEL_ALT = ITEM_LEVEL_ALT:gsub("%%d(%s?)%(%%d%)", "%%d+%1%%((%%d+)%%)")
+local MATCH_ITEM_LEVEL_ALT = ITEM_LEVEL_ALT and ITEM_LEVEL_ALT:gsub("%%d(%s?)%(%%d%)", "%%d+%1%%((%%d+)%%)")
 
 local function ParseItemLevelFromTooltipLine(text)
 	if not text or text == "" then
 		return
 	end
-	local ilvl = strmatch(text, MATCH_ITEM_LEVEL_ALT)
+	local ilvl = (MATCH_ITEM_LEVEL_ALT and strmatch(text, MATCH_ITEM_LEVEL_ALT))
 		or (not strmatch(text, MATCH_MIN_LEVEL) and strmatch(text, MATCH_ITEM_LEVEL))
 	return ilvl and tonumber(ilvl)
 end
 
---- Item level as shown on the item tooltip (post-squish display), not C_Item.GetDetailedItemLevelInfo.
+--- Prefer the level displayed by the native item tooltip.
 local function GetDisplayedItemLevelFromHyperlink(link)
 	local info = E:ScanTooltip_HyperlinkInfo(link)
 	if not info or not info.lines then
@@ -103,20 +102,21 @@ local tierColor = {
 }
 
 local function AddItemInfo(link)
-	local itemID, itemType, itemSubType, itemEquipLoc, icon, classID, subclassID = C_Item_GetItemInfoInstant(link)
-
-	if not itemID then
-		return
+	-- [SIRUS] GetItemInfo is the native tuple; cache misses must not suppress chat.
+	local localizedName, _, _, nativeLevel, _, itemType, itemSubType, _, itemEquipLoc, icon = C_Item_GetItemInfo(link)
+	if not localizedName then
+		return link
 	end
 
 	if CL.db.translateItem then
-		local localizedName = C_Item_GetItemNameByID(itemID)
 		if localizedName then
 			local professionIcon = strmatch(link, "|A:Professions.-|a")
 			if professionIcon then
 				localizedName = localizedName .. " " .. professionIcon
 			end
-			link = gsub(link, "|h%[(.+)%]|h", "|h[" .. localizedName .. "]|h")
+			link = gsub(link, "|h%[(.+)%]|h", function()
+				return "|h[" .. localizedName .. "]|h"
+			end)
 		end
 	end
 
@@ -133,12 +133,12 @@ local function AddItemInfo(link)
 
 	-- item level: tooltip display value, fallback if hyperlink data not ready
 	if CL.db.level then
-		level = GetDisplayedItemLevelFromHyperlink(link) or C_Item_GetDetailedItemLevelInfo(link)
+		level = GetDisplayedItemLevelFromHyperlink(link) or nativeLevel
 	end
 
 	-- armor
 	if itemType == _G.ARMOR and CL.db.armorCategory then
-		if itemEquipLoc ~= "" then
+		if itemEquipLoc and itemEquipLoc ~= "" then
 			if SearchArmorType[itemEquipLoc] then
 				if E.global.general.locale == "zhTW" or E.global.general.locale == "zhCN" then
 					slot = itemSubType .. (abbrList[itemEquipLoc] or _G[itemEquipLoc])
@@ -153,7 +153,7 @@ local function AddItemInfo(link)
 
 	-- weapon
 	if itemType == _G.WEAPON and CL.db.weaponCategory then
-		if itemEquipLoc ~= "" then
+		if itemEquipLoc and itemEquipLoc ~= "" then
 			slot = itemSubType or abbrList[itemEquipLoc] or _G[itemEquipLoc]
 		end
 	end
@@ -166,7 +166,7 @@ local function AddItemInfo(link)
 		link = gsub(link, "|h%[(.-)%]|h", "|h[" .. slot .. ":%1]|h")
 	end
 
-	if CL.db.icon then
+	if CL.db.icon and icon then
 		link = F.GetIconString(icon, CL.db.iconHeight, CL.db.iconWidth, CL.db.keepRatio) .. " " .. link
 	end
 
@@ -200,7 +200,7 @@ local function AddSpellInfo(link)
 
 	if CL.db.icon then
 		local spellIDNum = tonumber(id)
-		local texture = spellIDNum and C_Spell_GetSpellTexture(spellIDNum)
+		local texture = spellIDNum and GetSpellIcon(spellIDNum)
 		local icon = texture and F.GetIconString(texture, CL.db.iconHeight, CL.db.iconWidth, CL.db.keepRatio)
 		if icon then
 			link = icon .. C.StringByTemplate(link, "sky-400")
@@ -219,7 +219,7 @@ local function AddEnchantInfo(link)
 
 	if CL.db.icon then
 		local enchantIDNum = tonumber(id)
-		local texture = enchantIDNum and C_Spell_GetSpellTexture(enchantIDNum)
+		local texture = enchantIDNum and GetSpellIcon(enchantIDNum)
 		local icon = texture and F.GetIconString(texture, CL.db.iconHeight, CL.db.iconWidth, CL.db.keepRatio)
 		if icon then
 			link = icon .. " " .. link
@@ -238,7 +238,7 @@ local function AddPvPTalentInfo(link)
 
 	if CL.db.icon then
 		local pvpTalentIDNum = tonumber(id)
-		local texture = pvpTalentIDNum and select(3, GetPvpTalentInfoByID(pvpTalentIDNum))
+		local texture = pvpTalentIDNum and GetPvpTalentInfoByID and select(3, GetPvpTalentInfoByID(pvpTalentIDNum))
 		local icon = texture and F.GetIconString(texture, CL.db.iconHeight, CL.db.iconWidth, CL.db.keepRatio)
 		if icon then
 			link = icon .. " " .. link
@@ -257,7 +257,7 @@ local function AddTalentInfo(link)
 
 	if CL.db.icon then
 		local talentIDNum = tonumber(id)
-		local texture = talentIDNum and select(3, GetTalentInfoByID(talentIDNum))
+		local texture = talentIDNum and GetTalentInfoByID and select(3, GetTalentInfoByID(talentIDNum))
 		local icon = texture and F.GetIconString(texture, CL.db.iconHeight, CL.db.iconWidth, CL.db.keepRatio)
 		if icon then
 			link = icon .. " " .. link
@@ -294,10 +294,8 @@ local function AddCurrencyInfo(link)
 	end
 
 	if CL.db.icon then
-		local info = C_CurrencyInfo_GetCurrencyInfo(id)
-		local icon = info
-			and info.iconFileID
-			and F.GetIconString(info.iconFileID, CL.db.iconHeight, CL.db.iconWidth, CL.db.keepRatio)
+		local texture = select(3, C_CurrencyInfo_GetCurrencyInfo(tonumber(id)))
+		local icon = texture and F.GetIconString(texture, CL.db.iconHeight, CL.db.iconWidth, CL.db.keepRatio)
 		if icon then
 			link = icon .. " " .. link
 		end

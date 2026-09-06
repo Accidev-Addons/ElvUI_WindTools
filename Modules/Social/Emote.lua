@@ -15,7 +15,6 @@ local ChatFrameUtil_AddMessageEventFilter = ChatFrameUtil.AddMessageEventFilter
 local ChatFrameUtil_ChooseBoxForSend = ChatFrameUtil.ChooseBoxForSend
 local CreateFrame = CreateFrame
 
-local C_ChatBubbles_GetAllChatBubbles = C_ChatBubbles.GetAllChatBubbles
 
 local emotes = {
 	{ key = "angel", zhTW = "天使", zhCN = "天使" },
@@ -225,31 +224,49 @@ function CE:ChatEdit_OnTextChanged(chatEdit, userInput)
 	end
 end
 
-function CE:ParseChatBubbles()
-	for _, frame in pairs(C_ChatBubbles_GetAllChatBubbles()) do
-		local holder = frame:GetChildren()
-		---@cast holder ChatBubbleTemplate
-		if holder and not holder:IsForbidden() then
-			local str = holder and holder.String
-			if str then
-				local oldMessage = str:GetText()
-				local afterMessage = gsub(oldMessage, "%{.-%}", ReplaceEmote)
-				if oldMessage ~= afterMessage then
-					str:SetText(afterMessage)
-				end
-			end
+-- [SIRUS] Native bubbles are WorldFrame children with font regions.
+local function FindBubbleText(...)
+	local isBubble, candidate
+	for index = 1, select("#", ...) do
+		local region = select(index, ...)
+		if region.GetTexture and region:GetTexture() == "Interface\\Tooltips\\ChatBubble-Background" then
+			isBubble = true
+		elseif region:IsObjectType("FontString") then
+			candidate = region
 		end
+	end
+	return isBubble and candidate
+end
+
+local function ParseBubble(frame)
+	if not frame:IsShown() then return end
+	local text = frame.isSkinnedElvUI and frame.text
+	if not text then text = FindBubbleText(frame:GetRegions()) end
+	local oldMessage = text and text:GetText()
+	if oldMessage then
+		local afterMessage = gsub(oldMessage, "%{.-%}", ReplaceEmote)
+		if oldMessage ~= afterMessage then text:SetText(afterMessage) end
 	end
 end
 
+local function ParseBubbles(...)
+	for index = 1, select("#", ...) do
+		ParseBubble(select(index, ...))
+	end
+end
+
+function CE:ParseChatBubbles()
+	if not self.db or not self.db.enable or not self.db.chatBubbles then return end
+	ParseBubbles(_G.WorldFrame:GetChildren())
+end
+
 function CE:HandleEmoteWithBubble()
+	if self.bubbleTimer then
+		self:CancelTimer(self.bubbleTimer)
+		self.bubbleTimer = nil
+	end
 	if self.db and self.db.enable and self.db.chatBubbles then
 		self.bubbleTimer = self:ScheduleRepeatingTimer("ParseChatBubbles", 0.1)
-	else
-		if self.bubbleTimer then
-			self:CancelTimer(self.bubbleTimer)
-			self.bubbleTimer = nil
-		end
 	end
 end
 

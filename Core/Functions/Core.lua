@@ -28,7 +28,7 @@ local unpack = unpack
 local GenerateClosure = GenerateClosure
 local PlaySoundFile = PlaySoundFile
 
----ElvUI FontTemplate expects an LSM font name; file paths must use SetFont + SetFontShadow.
+---Distinguish font file paths from LibSharedMedia names.
 ---@param font any
 ---@return boolean
 local function isFontPath(font)
@@ -95,12 +95,11 @@ function F.FontTemplate(text, font, size, style)
 
 	local justifyHBefore = text.GetJustifyH and text:GetJustifyH()
 
-	if isFontPath(font) then
-		applyFontPath(text, font, size, style)
-	else
-		-- ElvUI FontTemplate arg1 is an LSM name; it Fetch()s internally.
-		text:FontTemplate(font, size, style)
+	-- ElvUI 9.07 expects a file path, while WindTools settings store LSM names.
+	if font and not isFontPath(font) then
+		font = LSM:Fetch("font", font, true) or E.media.normFont
 	end
+	text:FontTemplate(font, size, style)
 
 	if text.SetJustifyH and text.GetJustifyH and justifyHBefore and justifyHBefore ~= text:GetJustifyH() then
 		text:SetJustifyH(justifyHBefore)
@@ -165,7 +164,7 @@ function F.SetFont(text, font, size, style)
 	local currentFontPath, fontHeight = text:GetFont()
 
 	if type(size) == "string" then
-		size = fontHeight + (tonumber(size) or 0)
+		size = (fontHeight or E.db.general.fontSize or 12) + (tonumber(size) or 0)
 	end
 
 	local fontSize = size or fontHeight

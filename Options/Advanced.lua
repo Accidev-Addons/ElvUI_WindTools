@@ -131,6 +131,7 @@ options.developer = {
 			},
 		},
 		tableAttributeDisplay = {
+			hidden = true,
 			order = 2,
 			type = "group",
 			name = L["Table Attribute Display"],

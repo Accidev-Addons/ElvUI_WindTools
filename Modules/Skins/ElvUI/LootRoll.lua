@@ -7,7 +7,7 @@ local pairs = pairs
 local hooksecurefunc = hooksecurefunc
 
 function S:ElvUI_SkinLootRollFrame(frame)
-	if not frame or frame:IsForbidden() or frame.__windSkin then
+	if not F.CanAccessWidget(frame) or frame.__windSkin then
 		return
 	end
 
@@ -38,9 +38,3 @@ function S:ElvUI_LootRoll()
 end
 
 S:AddCallback("ElvUI_LootRoll")
-
--- debug note:
--- itemLink = select(2, C_Item.GetItemInfo(193652))
--- local texture, name, count, quality, canNeed, canGreed, canDisenchant, canTransmog = 606551, 'test', 1, 1, true, true, true, true
--- call the function
--- E:GetModule("Misc"):START_LOOT_ROLL(_, 1, 19)

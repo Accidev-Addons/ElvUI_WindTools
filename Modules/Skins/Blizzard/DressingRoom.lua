@@ -2,30 +2,17 @@ local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI
 local S = W.Modules.Skins ---@type Skins
 
 local _G = _G
-local hooksecurefunc = hooksecurefunc
 
 function S:DressUpFrame()
 	if not self:CheckDB("dressingroom", "dressingRoom") then
 		return
 	end
 
+	-- [SIRUS] The model is separate from DressUpFrame; there is no set-selection panel.
 	self:CreateShadow(_G.DressUpFrame)
-	self:CreateShadow(_G.DressUpFrame.SetSelectionPanel)
-	self:CreateBackdropShadow(_G.DressUpFrame.CustomSetDetailsPanel)
-
-	hooksecurefunc(_G.DressUpFrame.SetSelectionPanel.ScrollBox, "Update", function(box)
-		box:ForEachFrame(function(frame)
-			if frame.__windSkin then
-				return
-			end
-			F.SetFont(frame.ItemName)
-			local width = frame.ItemSlot:GetWidth()
-			F.SetFont(frame.ItemSlot)
-			frame.ItemSlot:Width(width + 4)
-
-			frame.__windSkin = true
-		end)
-	end)
+	self:CreateBackdropShadow(_G.DressUpModel)
+	self:CreateBackdropShadow(_G.DressUpFrameCancelButton)
+	self:CreateBackdropShadow(_G.DressUpFrameResetButton)
 end
 
 S:AddCallback("DressUpFrame")

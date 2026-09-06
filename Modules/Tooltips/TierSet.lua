@@ -5,6 +5,8 @@ local T = W.Modules.Tooltips
 
 local _G = _G
 
+local next = next
+local type = type
 local pairs = pairs
 local select = select
 local strmatch = strmatch
@@ -86,7 +88,9 @@ function T:TierSet(tt, _, guid)
 end
 
 function T:InitializeTierSet()
-	if not self.db.tierSet then
+	-- [SIRUS] No retail tier metadata or ElvUI retail inspect-cache hooks.
+	if not self.db.tierSet or not next(W.CurrentTierSetItemIDTable or {})
+		or type(ET.INSPECT_READY) ~= "function" or type(ET.PopulateInspectGUIDCache) ~= "function" then
 		return
 	end
 

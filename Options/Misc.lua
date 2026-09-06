@@ -185,6 +185,7 @@ options.automation = {
 	},
 }
 
+-- [SIRUS] CVar names and camera bounds match the native Interface Options.
 options.cvars = {
 	order = 3,
 	type = "group",
@@ -265,46 +266,18 @@ options.cvars = {
 			inline = true,
 			name = L["Combat"],
 			args = {
-				floatingCombatTextCombatDamage_v2 = {
+				CombatDamage = {
 					order = 1,
 					type = "toggle",
 					name = L["Floating Damage Text"],
 				},
-				floatingCombatTextCombatHealing_v2 = {
+				CombatHealing = {
 					order = 2,
 					type = "toggle",
 					name = L["Floating Healing Text"],
 				},
-				WorldTextScale_v2 = {
+				cameraDistanceMaxFactor = {
 					order = 3,
-					type = "range",
-					name = L["Floating Text Scale"],
-					get = function(info)
-						return tonumber(C_CVar_GetCVar(info[#info]))
-					end,
-					set = function(info, value)
-						return C_CVar_SetCVar(info[#info], value)
-					end,
-					min = 0.1,
-					max = 5,
-					step = 0.1,
-				},
-				SpellQueueWindow = {
-					order = 4,
-					type = "range",
-					name = L["Spell Queue Window"],
-					get = function(info)
-						return tonumber(C_CVar_GetCVar(info[#info]))
-					end,
-					set = function(info, value)
-						return C_CVar_SetCVar(info[#info], value)
-					end,
-					min = 0,
-					max = 400,
-					step = 1,
-				},
-				cameraDistanceMaxZoomFactor = {
-					order = 5,
 					type = "range",
 					name = L["Camera Max Zoom"],
 					get = function(info)
@@ -314,8 +287,8 @@ options.cvars = {
 						return C_CVar_SetCVar(info[#info], value)
 					end,
 					min = 1,
-					max = 2.6,
-					step = 0.01,
+					max = 6,
+					step = 0.1,
 				},
 			},
 		},
@@ -348,28 +321,6 @@ options.cvars = {
 			inline = true,
 			name = L["Control"],
 			args = {
-				rawMouseEnable = {
-					order = 1,
-					type = "toggle",
-					name = L["Raw Mouse"],
-					desc = L["It will fix the problem if your cursor has abnormal movement."],
-				},
-				mouseAcceleration = {
-					order = 2,
-					type = "select",
-					name = L["Acceleration Type"],
-					get = function(info)
-						return C_CVar_GetCVar(info[#info])
-					end,
-					set = function(info, value)
-						return C_CVar_SetCVar(info[#info], value)
-					end,
-					values = {
-						["-1"] = L["System Default"],
-						["0"] = L["Disable"],
-						["1"] = L["Raw Mouse Acceleration"],
-					},
-				},
 				ActionButtonUseKeyDown = {
 					order = 3,
 					type = "toggle",
@@ -496,6 +447,7 @@ options.moveFrames = {
 }
 
 options.mute = {
+	hidden = function() return not W.Modules.Misc.MuteAvailable end,
 	order = 5,
 	type = "group",
 	name = L["Mute"],
@@ -1873,21 +1825,6 @@ options.spellActivationAlert = {
 			order = 2,
 			type = "toggle",
 			name = L["Enable"],
-		},
-		visibility = {
-			order = 3,
-			type = "toggle",
-			name = L["Visibility"],
-			desc = L["Enable/Disable the spell activation alert frame."],
-			get = function(info)
-				return C_CVar_GetCVarBool("displaySpellActivationOverlays")
-			end,
-			set = function(info, value)
-				C_CVar_SetCVar("displaySpellActivationOverlays", value and "1" or "0")
-			end,
-			disabled = function()
-				return not E.db.WT.misc.spellActivationAlert.enable
-			end,
 		},
 		opacity = {
 			order = 4,

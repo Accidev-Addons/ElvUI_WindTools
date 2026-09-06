@@ -19,6 +19,12 @@ local type = type
 
 F.Developer = {}
 
+local function GetLogLevel()
+	local settings = E.global and E.global.WT and E.global.WT.developer
+	return settings and settings.logLevel or 2
+end
+
+
 ---Pretty print any object with table structure visualization
 ---Modified from https://www.cnblogs.com/leezj/p/4230271.html
 ---@param object any The object to print (table, string, number, etc.)
@@ -76,7 +82,7 @@ end
 ---Custom logger for warning messages
 ---@param ... string Message parts
 function F.Developer.LogWarning(...)
-	if E.global.WT.developer.logLevel < 2 then
+	if GetLogLevel() < 2 then
 		return
 	end
 
@@ -87,7 +93,7 @@ end
 ---Custom logger for info messages
 ---@param ... string Message parts
 function F.Developer.LogInfo(...)
-	if E.global.WT.developer.logLevel < 3 then
+	if GetLogLevel() < 3 then
 		return
 	end
 
@@ -98,7 +104,7 @@ end
 ---Custom logger for debug messages
 ---@param ... string Message parts
 function F.Developer.LogDebug(...)
-	if E.global.WT.developer.logLevel < 4 then
+	if GetLogLevel() < 4 then
 		return
 	end
 

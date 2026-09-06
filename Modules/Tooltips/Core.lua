@@ -63,7 +63,7 @@ function T:AddInspectInfoCallback(priority, inspectFunc, useModifier, clearFunc)
 end
 
 function T:ClearInspectInfo(tt)
-	if tt:IsForbidden() then
+	if not F.CanAccessWidget(tt) then
 		return
 	end
 
@@ -102,7 +102,7 @@ end
 ---@param data table
 ---@param triedTimes number?
 function T:InspectInfo(tt, data, triedTimes)
-	if (tt.IsForbidden and tt:IsForbidden()) or tt ~= GameTooltip or (ET.db and not ET.db.visibility) then
+	if not F.CanAccessWidget(tt) or tt ~= GameTooltip or (ET.db and not ET.db.visibility) then
 		return
 	end
 
@@ -172,7 +172,7 @@ function T:InspectInfo(tt, data, triedTimes)
 end
 
 function T:ElvUIRemoveTrashLines(_, tt)
-	if tt:IsForbidden() then
+	if not F.CanAccessWidget(tt) then
 		return
 	end
 

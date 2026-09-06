@@ -1012,7 +1012,7 @@ do
 						values = function()
 							local v = {}
 							for _, style in pairs(F.GetClassIconStyleList()) do
-								local monkSample = F.GetClassIconStringWithStyle("MONK", style, 16, 16)
+								local monkSample = F.GetClassIconStringWithStyle("WARRIOR", style, 16, 16)
 								local druidSample = F.GetClassIconStringWithStyle("DRUID", style, 16, 16)
 								local paladinSample = F.GetClassIconStringWithStyle("PALADIN", style, 16, 16)
 

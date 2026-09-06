@@ -5,6 +5,10 @@ local pairs = pairs
 local MuteSoundFile = MuteSoundFile
 local UnmuteSoundFile = UnmuteSoundFile
 
+-- [SIRUS] File-ID sound muting is not provided by this client.
+M.MuteAvailable = type(MuteSoundFile) == "function" and type(UnmuteSoundFile) == "function"
+if not M.MuteAvailable then return end
+
 local MountSE = {
 	[63796] = {
 		-- 彌米倫之首

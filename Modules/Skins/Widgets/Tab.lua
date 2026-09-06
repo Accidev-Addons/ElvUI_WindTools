@@ -33,7 +33,8 @@ function WS:HandleTab(_, tab, noBackdrop, template)
 	local db = E.private.WT and E.private.WT.skins and E.private.WT.skins.widgets and E.private.WT.skins.widgets.tab
 
 	if db.text.enable then
-		local text = tab.text or tab.Text or tab.GetName and tab:GetName() and _G[tab:GetName() .. "Text"]
+		local text = tab.GetFontString and tab:GetFontString()
+			or tab.text or tab.Text or tab.GetName and tab:GetName() and _G[tab:GetName() .. "Text"]
 		if text and text.GetTextColor then
 			F.SetFontWithDB(text, db.text.font)
 			tab.windWidgetText = text
@@ -117,23 +118,36 @@ do
 			return ES.Ace3_TabSetSelected_(tab, selected)
 		end
 
+		local fill = tab.backdropFill or tab.backdrop.Center or tab.backdrop.Middle
+		if not fill then
+			return ES.Ace3_TabSetSelected_(tab, selected)
+		end
+
 		local borderColor = db.selected.borderClassColor and E.myClassColor or db.selected.borderColor
 		local backdropColor = db.selected.backdropClassColor and E.myClassColor or db.selected.backdropColor
 		if selected then
-			tab.backdrop.Center:SetTexture(LSM:Fetch("statusbar", db.selected.texture) or E.media.glossTex)
+			fill:SetTexture(LSM:Fetch("statusbar", db.selected.texture) or E.media.glossTex)
 			tab.backdrop:SetBackdropBorderColor(borderColor.r, borderColor.g, borderColor.b, db.selected.borderAlpha)
-			tab.backdrop:SetBackdropColor(backdropColor.r, backdropColor.g, backdropColor.b, db.selected.backdropAlpha)
+			if tab.backdropFill then
+				fill:SetVertexColor(backdropColor.r, backdropColor.g, backdropColor.b, db.selected.backdropAlpha)
+			else
+				tab.backdrop:SetBackdropColor(backdropColor.r, backdropColor.g, backdropColor.b, db.selected.backdropAlpha)
+			end
 
 			if not tab.wasRaised then
 				RaiseFrameLevel(tab)
 				tab.wasRaised = true
 			end
 		else
-			tab.backdrop.Center:SetTexture(E.media.glossTex)
+			fill:SetTexture(E.media.glossTex)
 			local r, g, b = unpack(E.media.bordercolor)
 			tab.backdrop:SetBackdropBorderColor(r, g, b, 1)
 			r, g, b = unpack(E.media.backdropcolor)
-			tab.backdrop:SetBackdropColor(r, g, b, 1)
+			if tab.backdropFill then
+				fill:SetVertexColor(r, g, b, 1)
+			else
+				tab.backdrop:SetBackdropColor(r, g, b, 1)
+			end
 
 			if tab.wasRaised then
 				LowerFrameLevel(tab)

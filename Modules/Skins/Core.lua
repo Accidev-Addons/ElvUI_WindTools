@@ -150,7 +150,7 @@ function S:CreateShadow(frame, size, r, g, b, force)
 	size = size + (E.private.WT.skins.increasedSize or 0)
 
 	local shadow = CreateFrame("Frame", nil, frame)
-	shadow:SetFrameStrata(frame:GetFrameStrata())
+	-- Inherit strata: native nameplates report UNKNOWN, which SetFrameStrata cannot accept.
 	shadow:SetFrameLevel(frame:GetFrameLevel() or 1)
 	shadow:SetOutside(frame, size, size)
 	shadow:SetBackdrop({ edgeFile = LSM:Fetch("border", "ElvUI GlowBorder"), edgeSize = size + 1 })
@@ -177,7 +177,7 @@ function S:CreateLowerShadow(frame, size, r, g, b, force)
 	end
 
 	self:CreateShadow(frame, size, r, g, b, force)
-	if frame.shadow and frame.SetFrameStrata and frame.SetFrameLevel then
+	if frame and frame.shadow and frame.SetFrameStrata and frame.SetFrameLevel and not frame.__windLowerShadowHooked then
 		---Refresh frame level to keep shadow below the main frame
 		local function refreshFrameLevel()
 			local parentFrameLevel = frame:GetFrameLevel()
@@ -187,6 +187,7 @@ function S:CreateLowerShadow(frame, size, r, g, b, force)
 		-- avoid the shadow level is reset when the frame strata/level is changed
 		hooksecurefunc(frame, "SetFrameStrata", refreshFrameLevel)
 		hooksecurefunc(frame, "SetFrameLevel", refreshFrameLevel)
+		frame.__windLowerShadowHooked = true
 	end
 end
 

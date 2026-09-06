@@ -36,7 +36,7 @@ local C_Item_GetItemCount = GetItemCount
 local C_Item_GetItemInfoInstant = GetItemInfoInstant
 local C_Item_IsItemInRange = IsItemInRange
 local C_Item_IsUsableItem = C_Item.IsUsableItem
-local C_QuestLog_GetDistanceSqToQuest = C_QuestLog.GetDistanceSqToQuest
+local C_QuestLog_GetDistanceSqToQuest = C_QuestLog and C_QuestLog.GetDistanceSqToQuest
 local C_QuestLog_GetNumQuestLogEntries = GetNumQuestLogEntries
 local function C_Timer_NewTicker(...)
 	return C_Timer:NewTicker(...)

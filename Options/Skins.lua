@@ -11,7 +11,9 @@ local type = type
 
 local GetTime = GetTime
 
-local C_AddOns_DoesAddOnExist = C_AddOns.DoesAddOnExist
+local function DoesAddOnExist(name)
+	return _G.GetAddOnInfo(name) ~= nil
+end
 local C_Spell_GetSpellTexture = C_Spell.GetSpellTexture
 
 local RED_FONT_COLOR = RED_FONT_COLOR
@@ -104,7 +106,7 @@ options.general = {
 				format(L["It doesn't mean that the %s Skins will not be applied."], W.Title)
 			),
 			hidden = function()
-				return not C_AddOns_DoesAddOnExist("ElvUI_MerathilisUI")
+				return not DoesAddOnExist("ElvUI_MerathilisUI")
 			end,
 		},
 		general = {
@@ -1906,11 +1908,6 @@ options.blizzard = {
 			type = "toggle",
 			name = L["Tutorials"],
 		},
-		uiWidget = {
-			order = 10,
-			type = "toggle",
-			name = L["UI Widget"],
-		},
 		warboard = {
 			order = 10,
 			type = "toggle",
@@ -2359,13 +2356,13 @@ options.addons = {
 local function GenerateAddOnSkinsGetFunction(name)
 	if type(name) == "string" then
 		return function(info)
-			return C_AddOns_DoesAddOnExist(name) and E.private.WT.skins.addons[info[#info]]
+			return DoesAddOnExist(name) and E.private.WT.skins.addons[info[#info]]
 		end
 	elseif type(name) == "table" then
 		return function(info)
 			local isValid = false
 			for _, addon in pairs(name) do
-				isValid = isValid or C_AddOns_DoesAddOnExist(addon)
+				isValid = isValid or DoesAddOnExist(addon)
 			end
 			return isValid and E.private.WT.skins.addons[info[#info]]
 		end
@@ -2392,13 +2389,13 @@ end
 local function GenerateAddOnSkinsDisabledFunction(name)
 	if type(name) == "string" then
 		return function(info)
-			return not C_AddOns_DoesAddOnExist(name) or not E.private.WT.skins.enable
+			return not DoesAddOnExist(name) or not E.private.WT.skins.enable
 		end
 	elseif type(name) == "table" then
 		return function(info)
 			local isValid = false
 			for _, addon in pairs(name) do
-				isValid = isValid or C_AddOns_DoesAddOnExist(addon)
+				isValid = isValid or DoesAddOnExist(addon)
 			end
 			return not isValid or not E.private.WT.skins.enable
 		end
@@ -3648,14 +3645,14 @@ options.bigWigsSkin = {
 	type = "group",
 	name = L["BigWigs Skin"],
 	disabled = function()
-		return not E.private.WT.skins.enable or not C_AddOns_DoesAddOnExist("BigWigs")
+		return not E.private.WT.skins.enable or not DoesAddOnExist("BigWigs")
 	end,
 	args = {
 		alert = {
 			order = 1,
 			type = "description",
 			name = function()
-				if not C_AddOns_DoesAddOnExist("BigWigs") then
+				if not DoesAddOnExist("BigWigs") then
 					return C.StringByTemplate(format(L["%s is not loaded."], L["BigWigs"]), "rose-500")
 				end
 

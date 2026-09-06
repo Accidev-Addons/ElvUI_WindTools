@@ -686,7 +686,7 @@ function W.Utilities.Color.StringWithClassColor(text, classFile)
 		return
 	end
 
-	local color = E:ClassColor(classFile, true)
+	local color = E:ClassColor(classFile, true) or GetClassColorObj(classFile)
 	if not color then
 		F.Developer.LogDebug("Color.StringWithClassColor: invalid class " .. tostring(classFile))
 		return

@@ -697,7 +697,6 @@ V.skins = {
 		transmogrify = true,
 		tutorial = true,
 		uiErrors = true,
-		uiWidget = true,
 		warboard = true,
 		worldMap = true,
 	},

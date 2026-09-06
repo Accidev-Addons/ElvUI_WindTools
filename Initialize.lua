@@ -101,10 +101,9 @@ function W:Initialize()
 		return
 	end
 
-	self.initialized = true
-
 	self:AddCustomLinkSupport()
 	self:UpdateScripts()
+	self.initialized = true
 
 	-- To avoid the update tips from ElvUI when alpha/beta versions are used
 	EP:RegisterPlugin(addonName, W.OptionsCallback, false, xVersionString)

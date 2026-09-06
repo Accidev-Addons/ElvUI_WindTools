@@ -39,16 +39,25 @@ end
 
 function W:UpdateScripts()
 	local currentVersion = tonumber(W.Version) or 0 -- installed WindTools Version
-	local globalVersion = tonumber(E.global.WT.version) or 0 -- version in ElvUI Global
+	local globalVersion = tonumber(E.global.WT.version)
+	if not globalVersion or globalVersion == 0 then
+		globalVersion = tonumber(E.global.WT.Version) or globalVersion
+	end
+	local profileVersion = tonumber(E.db.WT.version)
+	local privateVersion = tonumber(E.private.WT.version)
 
-	-- from old updater
-	if globalVersion == 0 then
-		globalVersion = tonumber(E.global.WT.Version) or 0
-		E.global.WT.Version = nil
+	-- [SIRUS] New databases already use current defaults, not historical retail schemas.
+	if not (globalVersion or profileVersion or privateVersion) then
+		E.global.WT.version = W.Version
+		E.db.WT.version = W.Version
+		E.private.WT.version = W.Version
+		return
 	end
 
-	local profileVersion = tonumber(E.db.WT.version) or globalVersion -- Version in ElvUI Profile
-	local privateVersion = tonumber(E.private.WT.version) or globalVersion -- Version in ElvUI Private
+	globalVersion = globalVersion or 0
+	profileVersion = profileVersion or globalVersion
+	privateVersion = privateVersion or globalVersion
+	E.global.WT.Version = nil
 
 	if globalVersion == currentVersion and profileVersion == currentVersion and privateVersion == currentVersion then
 		return
@@ -91,7 +100,7 @@ function W:UpdateScripts()
 		UpdateMessage(L["Automation"] .. " - " .. L["Update Database"], profileVersion)
 	end
 
-	if profileVersion < 3.56 then
+	if profileVersion < 3.56 and E.db.WT.maps and E.db.WT.maps.eventTracker then
 		E.db.WT.maps.eventTracker.spacing = nil
 		E.db.WT.maps.eventTracker.height = nil
 		E.db.WT.maps.eventTracker.yOffset = nil
@@ -217,16 +226,6 @@ function W:UpdateScripts()
 			if db.icon ~= nil then
 				db.titleIcon.enable = db.icon
 				db.icon = nil
-			end
-
-			if type(db.objectiveProgress) ~= "table" then
-				local saved = db.objectiveProgress
-				db.objectiveProgress = {}
-
-				E:CopyTable(db.objectiveProgress, V.tooltips.objectiveProgress)
-				if type(saved) == "boolean" then
-					db.objectiveProgress.enable = saved
-				end
 			end
 		end
 

@@ -225,6 +225,10 @@ end
 ---@param name string The base font name
 ---@return string compatibleName Font name with optional " (en)" suffix for compatibility
 function F.GetCompatibleFont(name)
+	-- [SIRUS] These bundled CFF fonts cannot be loaded by the client.
+	if name == "Montserrat" or name == "LINE Seed" then
+		return "Expressway"
+	end
 	return name .. (W.CompatibleFont and " (en)" or "")
 end
 
@@ -233,16 +237,16 @@ end
 ---@param file string The file path relative to media type folder
 ---@param type string The media type ("Icons" or "Textures")
 local function AddMedia(name, file, type)
-	W.Media[type][name] = MediaPath .. type .. "/" .. file
+	W.Media[type][name] = MediaPath .. type .. "\\" .. file
 end
 
 ---Pack role icon into media registry
 ---@param pack string The role icon style pack name
 local function AddRoleIconPack(pack)
 	W.Media.RoleIcons[strupper(pack)] = {
-		TANK = MediaPath .. "RoleIcons/" .. pack .. "/Tank.tga",
-		HEALER = MediaPath .. "RoleIcons/" .. pack .. "/Healer.tga",
-		DAMAGER = MediaPath .. "RoleIcons/" .. pack .. "/DPS.tga",
+		TANK = MediaPath .. "RoleIcons\\" .. pack .. "\\Tank.tga",
+		HEALER = MediaPath .. "RoleIcons\\" .. pack .. "\\Healer.tga",
+		DAMAGER = MediaPath .. "RoleIcons\\" .. pack .. "\\DPS.tga",
 	}
 end
 
@@ -444,7 +448,7 @@ do
 		return 0, 1, 0, 1
 	end
 
-	AddMedia("ROLES", "UI-LFG-ICON-ROLES.blp", "Textures")
+	AddMedia("ROLES", "UI-LFG-ICON-ROLES.tga", "Textures")
 end
 
 ---@alias ClassIconStyle
@@ -476,7 +480,7 @@ function F.GetClassIconWithStyle(class, style)
 		return
 	end
 
-	return MediaPath .. "Icons/ClassIcon/" .. strlower(class) .. "_" .. style .. ".tga"
+	return MediaPath .. "Icons\\ClassIcon\\" .. strlower(class) .. "_" .. style .. ".tga"
 end
 
 ---Generate class icon string with specified style and dimensions
@@ -518,23 +522,23 @@ AddMedia("accept", "Accept.tga", "Icons")
 AddMedia("donateKofi", "Ko-fi.tga", "Icons")
 AddMedia("donateAiFaDian", "AiFaDian.tga", "Icons")
 
-AddMedia("announcement", "Categories/Announcement.tga", "Icons")
-AddMedia("advanced", "Categories/Advanced.tga", "Icons")
-AddMedia("social", "Categories/Social.tga", "Icons")
-AddMedia("combat", "Categories/Combat.tga", "Icons")
-AddMedia("information", "Categories/Information.tga", "Icons")
-AddMedia("item", "Categories/Item.tga", "Icons")
-AddMedia("map", "Categories/Map.tga", "Icons")
-AddMedia("misc", "Categories/Misc.tga", "Icons")
-AddMedia("quest", "Categories/Quest.tga", "Icons")
-AddMedia("skins", "Categories/Skins.tga", "Icons")
-AddMedia("tooltips", "Categories/Tooltips.tga", "Icons")
-AddMedia("unitFrames", "Categories/UnitFrames.tga", "Icons")
+AddMedia("announcement", "Categories\\Announcement.tga", "Icons")
+AddMedia("advanced", "Categories\\Advanced.tga", "Icons")
+AddMedia("social", "Categories\\Social.tga", "Icons")
+AddMedia("combat", "Categories\\Combat.tga", "Icons")
+AddMedia("information", "Categories\\Information.tga", "Icons")
+AddMedia("item", "Categories\\Item.tga", "Icons")
+AddMedia("map", "Categories\\Map.tga", "Icons")
+AddMedia("misc", "Categories\\Misc.tga", "Icons")
+AddMedia("quest", "Categories\\Quest.tga", "Icons")
+AddMedia("skins", "Categories\\Skins.tga", "Icons")
+AddMedia("tooltips", "Categories\\Tooltips.tga", "Icons")
+AddMedia("unitFrames", "Categories\\UnitFrames.tga", "Icons")
 
-AddMedia("covenantKyrian", "Covenants/Kyrian.tga", "Icons")
-AddMedia("covenantNecrolord", "Covenants/Necrolord.tga", "Icons")
-AddMedia("covenantNightFae", "Covenants/NightFae.tga", "Icons")
-AddMedia("covenantVenthyr", "Covenants/Venthyr.tga", "Icons")
+AddMedia("covenantKyrian", "Covenants\\Kyrian.tga", "Icons")
+AddMedia("covenantNecrolord", "Covenants\\Necrolord.tga", "Icons")
+AddMedia("covenantNightFae", "Covenants\\NightFae.tga", "Icons")
+AddMedia("covenantVenthyr", "Covenants\\Venthyr.tga", "Icons")
 
 AddMedia("discord", "Discord.tga", "Icons")
 AddMedia("github", "Github.tga", "Icons")
@@ -546,47 +550,47 @@ AddMedia("favorite", "Favorite.tga", "Icons")
 AddMedia("list", "List.tga", "Icons")
 AddMedia("star", "Star.tga", "Icons")
 
-AddMedia("barAchievements", "GameBar/Achievements.tga", "Icons")
-AddMedia("barBags", "GameBar/Bags.tga", "Icons")
-AddMedia("barBlizzardShop", "GameBar/BlizzardShop.tga", "Icons")
-AddMedia("barCharacter", "GameBar/Character.tga", "Icons")
-AddMedia("barCollections", "GameBar/Collections.tga", "Icons")
-AddMedia("barEncounterJournal", "GameBar/EncounterJournal.tga", "Icons")
-AddMedia("barFriends", "GameBar/Friends.tga", "Icons")
-AddMedia("barGameMenu", "GameBar/GameMenu.tga", "Icons")
-AddMedia("barGroupFinder", "GameBar/GroupFinder.tga", "Icons")
-AddMedia("barGuild", "GameBar/Guild.tga", "Icons")
-AddMedia("barHearthstone", "GameBar/Hearthstone.tga", "Icons")
-AddMedia("barHome", "GameBar/Home.tga", "Icons")
-AddMedia("barMissionReports", "GameBar/MissionReports.tga", "Icons")
-AddMedia("barOptions", "GameBar/Options.tga", "Icons")
-AddMedia("barPetJournal", "GameBar/PetJournal.tga", "Icons")
-AddMedia("barProfession", "GameBar/Profession.tga", "Icons")
-AddMedia("barScreenShot", "GameBar/ScreenShot.tga", "Icons")
-AddMedia("barSpellBook", "GameBar/SpellBook.tga", "Icons")
-AddMedia("barTalents", "GameBar/Talents.tga", "Icons")
-AddMedia("barToyBox", "GameBar/ToyBox.tga", "Icons")
-AddMedia("barVolume", "GameBar/Volume.tga", "Icons")
-AddMedia("barNotification", "GameBar/Notification.tga", "Icons")
+AddMedia("barAchievements", "GameBar\\Achievements.tga", "Icons")
+AddMedia("barBags", "GameBar\\Bags.tga", "Icons")
+AddMedia("barBlizzardShop", "GameBar\\BlizzardShop.tga", "Icons")
+AddMedia("barCharacter", "GameBar\\Character.tga", "Icons")
+AddMedia("barCollections", "GameBar\\Collections.tga", "Icons")
+AddMedia("barEncounterJournal", "GameBar\\EncounterJournal.tga", "Icons")
+AddMedia("barFriends", "GameBar\\Friends.tga", "Icons")
+AddMedia("barGameMenu", "GameBar\\GameMenu.tga", "Icons")
+AddMedia("barGroupFinder", "GameBar\\GroupFinder.tga", "Icons")
+AddMedia("barGuild", "GameBar\\Guild.tga", "Icons")
+AddMedia("barHearthstone", "GameBar\\Hearthstone.tga", "Icons")
+AddMedia("barHome", "GameBar\\Home.tga", "Icons")
+AddMedia("barMissionReports", "GameBar\\MissionReports.tga", "Icons")
+AddMedia("barOptions", "GameBar\\Options.tga", "Icons")
+AddMedia("barPetJournal", "GameBar\\PetJournal.tga", "Icons")
+AddMedia("barProfession", "GameBar\\Profession.tga", "Icons")
+AddMedia("barScreenShot", "GameBar\\ScreenShot.tga", "Icons")
+AddMedia("barSpellBook", "GameBar\\SpellBook.tga", "Icons")
+AddMedia("barTalents", "GameBar\\Talents.tga", "Icons")
+AddMedia("barToyBox", "GameBar\\ToyBox.tga", "Icons")
+AddMedia("barVolume", "GameBar\\Volume.tga", "Icons")
+AddMedia("barNotification", "GameBar\\Notification.tga", "Icons")
 
-AddMedia("buttonLock", "Button/Lock.tga", "Icons")
-AddMedia("buttonUnlock", "Button/Unlock.tga", "Icons")
-AddMedia("buttonMinus", "Button/Minus.tga", "Icons")
-AddMedia("buttonPlus", "Button/Plus.tga", "Icons")
-AddMedia("buttonForward", "Button/Forward.tga", "Icons")
-AddMedia("buttonDelete", "Button/Delete.tga", "Icons")
-AddMedia("buttonSetting", "Button/Setting.tga", "Icons")
-AddMedia("buttonGoStart", "Button/GoStart.tga", "Icons")
-AddMedia("buttonGoEnd", "Button/GoEnd.tga", "Icons")
-AddMedia("buttonUndo", "Button/Undo.tga", "Icons")
-AddMedia("buttonPin", "Button/Pin.tga", "Icons")
-AddMedia("buttonCheck", "Button/Check.tga", "Icons")
-AddMedia("buttonDiscord", "Button/Discord.tga", "Icons")
+AddMedia("buttonLock", "Button\\Lock.tga", "Icons")
+AddMedia("buttonUnlock", "Button\\Unlock.tga", "Icons")
+AddMedia("buttonMinus", "Button\\Minus.tga", "Icons")
+AddMedia("buttonPlus", "Button\\Plus.tga", "Icons")
+AddMedia("buttonForward", "Button\\Forward.tga", "Icons")
+AddMedia("buttonDelete", "Button\\Delete.tga", "Icons")
+AddMedia("buttonSetting", "Button\\Setting.tga", "Icons")
+AddMedia("buttonGoStart", "Button\\GoStart.tga", "Icons")
+AddMedia("buttonGoEnd", "Button\\GoEnd.tga", "Icons")
+AddMedia("buttonUndo", "Button\\Undo.tga", "Icons")
+AddMedia("buttonPin", "Button\\Pin.tga", "Icons")
+AddMedia("buttonCheck", "Button\\Check.tga", "Icons")
+AddMedia("buttonDiscord", "Button\\Discord.tga", "Icons")
 
 AddMedia("round", "Round.tga", "Textures")
 AddMedia("inspectGemBG", "InspectGemBG.blp", "Textures")
 AddMedia("exchange", "Exchange.tga", "Textures")
-AddMedia("illMurloc1", "Illustration/Murloc1.tga", "Textures")
+AddMedia("illMurloc1", "Illustration\\Murloc1.tga", "Textures")
 
 AddRoleIconPack("FFXIV")
 AddRoleIconPack("PhilMod")
@@ -600,55 +604,51 @@ do
 	local locale = GetLocale()
 	if LSM["LOCALE_BIT_" .. locale] then
 		local region = LSM["LOCALE_BIT_" .. locale]
-		LSM:Register("font", "Accidental Presidency (en)", MediaPath .. "Fonts/AccidentalPresidency.ttf", region)
-		LSM:Register("font", "Chivo Mono (en)", MediaPath .. "Fonts/ChivoMono.ttf", region)
-		LSM:Register("font", "LINE Seed (en)", MediaPath .. "Fonts/LineSeed.otf", region)
-		LSM:Register("font", "Montserrat (en)", MediaPath .. "Fonts/Montserrat.ttf", region)
-		LSM:Register("font", "Roadway (en)", MediaPath .. "Fonts/Roadway.ttf", region)
-		LSM:Register("font", "Homespun (en)", "Interface/Addons/ElvUI/Game/Shared/Media/Fonts/Homespun.ttf", region)
+		LSM:Register("font", "Accidental Presidency (en)", MediaPath .. "Fonts\\AccidentalPresidency.ttf", region)
+		LSM:Register("font", "Chivo Mono (en)", MediaPath .. "Fonts\\ChivoMono.ttf", region)
+		LSM:Register("font", "Roadway (en)", MediaPath .. "Fonts\\Roadway.ttf", region)
+		LSM:Register("font", "Homespun (en)", "Interface\\Addons\\ElvUI\\Core\\Media\\Fonts\\Homespun.ttf", region)
 		LSM:Register(
 			"font",
 			"ContinuumMedium (en)",
-			"Interface/Addons/ElvUI/Game/Shared/Media/Fonts/ContinuumMedium.ttf",
+			"Interface\\Addons\\ElvUI\\Core\\Media\\Fonts\\ContinuumMedium.ttf",
 			region
 		)
-		LSM:Register("font", "Action Man (en)", "Interface/Addons/ElvUI/Game/Shared/Media/Fonts/ActionMan.ttf", region)
-		LSM:Register("font", "Die Die Die (en)", "Interface/Addons/ElvUI/Game/Shared/Media/Fonts/DieDieDie.ttf", region)
-		LSM:Register("font", "Expressway (en)", "Interface/Addons/ElvUI/Game/Shared/Media/Fonts/Expressway.ttf", region)
+		LSM:Register("font", "Action Man (en)", "Interface\\Addons\\ElvUI\\Core\\Media\\Fonts\\ActionMan.ttf", region)
+		LSM:Register("font", "Die Die Die (en)", "Interface\\Addons\\ElvUI\\Core\\Media\\Fonts\\DieDieDie.ttf", region)
+		LSM:Register("font", "Expressway (en)", "Interface\\Addons\\ElvUI\\Core\\Media\\Fonts\\Expressway.ttf", region)
 		W.CompatibleFont = true
 	else
 		LSM:Register(
 			"font",
 			"Accidental Presidency",
-			MediaPath .. "Fonts/AccidentalPresidency.ttf",
+			MediaPath .. "Fonts\\AccidentalPresidency.ttf",
 			LSM.LOCALE_BIT_western
 		)
-		LSM:Register("font", "Chivo Mono", MediaPath .. "Fonts/ChivoMono.ttf", LSM.LOCALE_BIT_western)
-		LSM:Register("font", "LINE Seed", MediaPath .. "Fonts/LineSeed.otf", LSM.LOCALE_BIT_western)
-		LSM:Register("font", "Montserrat", MediaPath .. "Fonts/Montserrat.ttf", LSM.LOCALE_BIT_western)
-		LSM:Register("font", "Roadway", MediaPath .. "Fonts/Roadway.ttf", LSM.LOCALE_BIT_western)
+		LSM:Register("font", "Chivo Mono", MediaPath .. "Fonts\\ChivoMono.ttf", LSM.LOCALE_BIT_western)
+		LSM:Register("font", "Roadway", MediaPath .. "Fonts\\Roadway.ttf", LSM.LOCALE_BIT_western)
 		W.CompatibleFont = false
 	end
 end
 
-LSM:Register("statusbar", "WindTools Glow", MediaPath .. "Textures/StatusbarGlow.tga")
-LSM:Register("statusbar", "WindTools Flat", MediaPath .. "Textures/StatusbarFlat.blp")
-LSM:Register("statusbar", "WindTools Light", MediaPath .. "Textures/StatusbarLight.tga")
-LSM:Register("statusbar", "WindTools Clean", MediaPath .. "Textures/StatusbarClean.tga")
-LSM:Register("statusbar", "WindTools Background", MediaPath .. "Textures/StatusbarBackground.tga")
+LSM:Register("statusbar", "WindTools Glow", MediaPath .. "Textures\\StatusbarGlow.tga")
+LSM:Register("statusbar", "WindTools Flat", MediaPath .. "Textures\\StatusbarFlat.blp")
+LSM:Register("statusbar", "WindTools Light", MediaPath .. "Textures\\StatusbarLight.tga")
+LSM:Register("statusbar", "WindTools Clean", MediaPath .. "Textures\\StatusbarClean.tga")
+LSM:Register("statusbar", "WindTools Background", MediaPath .. "Textures\\StatusbarBackground.tga")
 
-LSM:Register("statusbar", "ToxiUI Clean", MediaPath .. "Textures/ToxiUI/ToxiUI-clean.tga")
-LSM:Register("statusbar", "ToxiUI Dark", MediaPath .. "Textures/ToxiUI/ToxiUI-dark.tga")
-LSM:Register("statusbar", "ToxiUI Gradient 1", MediaPath .. "Textures/ToxiUI/ToxiUI-g1.tga")
-LSM:Register("statusbar", "ToxiUI Gradient 2", MediaPath .. "Textures/ToxiUI/ToxiUI-g2.tga")
-LSM:Register("statusbar", "ToxiUI Gradient 3", MediaPath .. "Textures/ToxiUI/ToxiUI-grad.tga")
-LSM:Register("statusbar", "ToxiUI Half", MediaPath .. "Textures/ToxiUI/ToxiUI-half.tga")
+LSM:Register("statusbar", "ToxiUI Clean", MediaPath .. "Textures\\ToxiUI\\ToxiUI-clean.tga")
+LSM:Register("statusbar", "ToxiUI Dark", MediaPath .. "Textures\\ToxiUI\\ToxiUI-dark.tga")
+LSM:Register("statusbar", "ToxiUI Gradient 1", MediaPath .. "Textures\\ToxiUI\\ToxiUI-g1.tga")
+LSM:Register("statusbar", "ToxiUI Gradient 2", MediaPath .. "Textures\\ToxiUI\\ToxiUI-g2.tga")
+LSM:Register("statusbar", "ToxiUI Gradient 3", MediaPath .. "Textures\\ToxiUI\\ToxiUI-grad.tga")
+LSM:Register("statusbar", "ToxiUI Half", MediaPath .. "Textures\\ToxiUI\\ToxiUI-half.tga")
 
-LSM:Register("sound", "OnePlus Light", MediaPath .. "Sounds/OnePlusLight.ogg")
-LSM:Register("sound", "OnePlus Surprise", MediaPath .. "Sounds/OnePlusSurprise.ogg")
-LSM:Register("sound", "WT Accept", MediaPath .. "Sounds/Accept.ogg")
-LSM:Register("sound", "WT Clear", MediaPath .. "Sounds/Clear.ogg")
-LSM:Register("sound", "WT Complete", MediaPath .. "Sounds/Complete.ogg")
-LSM:Register("sound", "WT Simple", MediaPath .. "Sounds/Simple.ogg")
-LSM:Register("sound", "WT Success", MediaPath .. "Sounds/Success.ogg")
-LSM:Register("sound", "WT Win", MediaPath .. "Sounds/Win.ogg")
+LSM:Register("sound", "OnePlus Light", MediaPath .. "Sounds\\OnePlusLight.ogg")
+LSM:Register("sound", "OnePlus Surprise", MediaPath .. "Sounds\\OnePlusSurprise.ogg")
+LSM:Register("sound", "WT Accept", MediaPath .. "Sounds\\Accept.ogg")
+LSM:Register("sound", "WT Clear", MediaPath .. "Sounds\\Clear.ogg")
+LSM:Register("sound", "WT Complete", MediaPath .. "Sounds\\Complete.ogg")
+LSM:Register("sound", "WT Simple", MediaPath .. "Sounds\\Simple.ogg")
+LSM:Register("sound", "WT Success", MediaPath .. "Sounds\\Success.ogg")
+LSM:Register("sound", "WT Win", MediaPath .. "Sounds\\Win.ogg")

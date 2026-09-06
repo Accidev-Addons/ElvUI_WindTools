@@ -32,7 +32,6 @@ local ChannelList = {
 	"SAY",
 	"YELL",
 	"PARTY",
-	"INSTANCE_CHAT",
 	"RAID",
 	"RAID_WARNING",
 	"BATTLEGROUND",
@@ -59,8 +58,6 @@ function ST:CheckAvailability(chatType)
 		return self.db.yell
 	elseif chatType == "PARTY" then
 		return IsInGroup(LE_PARTY_CATEGORY_HOME)
-	elseif chatType == "INSTANCE_CHAT" then
-		return IsInGroup(LE_PARTY_CATEGORY_INSTANCE)
 	elseif chatType == "RAID" then
 		return IsInRaid()
 	elseif chatType == "RAID_WARNING" then
@@ -169,7 +166,7 @@ end
 function ST:GetNext(chatType, currentTarget)
 	local newChatType, newTarget, nextIndex
 
-	if chatType == "CHANNEL" then
+	if chatType == "CHANNEL" or not IndexOfChannelListWithWhisper[chatType] then
 		return "SAY"
 	end
 
@@ -223,6 +220,7 @@ function ST:GetNext(chatType, currentTarget)
 end
 
 function ST:TabPressed(frame)
+	nextChatType, nextTellTarget = nil, nil
 	if not self.db.enable then
 		return
 	end
@@ -231,12 +229,11 @@ function ST:TabPressed(frame)
 		return
 	end
 
-	nextChatType, nextTellTarget = nil, nil
 	nextChatType, nextTellTarget = self:GetNext(frame:GetAttribute("chatType"), frame:GetAttribute("tellTarget"))
 end
 
 function ST:SecureTabPressed(frame)
-	if not self.db.enable then
+	if not self.db.enable or not nextChatType then
 		return
 	end
 
@@ -260,7 +257,7 @@ function ST:SecureTabPressed(frame)
 	_G.ACTIVE_CHAT_EDIT_BOX = frame
 	_G.LAST_ACTIVE_CHAT_EDIT_BOX = frame
 
-	frame:UpdateHeader()
+	ChatEdit_UpdateHeader(frame)
 end
 
 function ST:CHAT_MSG_WHISPER(_, _, author)
@@ -293,12 +290,7 @@ function ST:Initialize()
 
 	self:SecureHook("ChatEdit_CustomTabPressed", "TabPressed")
 
-	for _, frameName in ipairs(_G.CHAT_FRAMES) do
-		local chat = _G[frameName]
-		if chat and chat.editBox then
-			self:SecureHook(chat.editBox, "SecureTabPressed", "SecureTabPressed")
-		end
-	end
+	self:SecureHook("ChatEdit_SecureTabPressed", "SecureTabPressed")
 
 	if not self.db.enable then
 		return
