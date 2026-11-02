@@ -8,7 +8,7 @@ local tinsert = tinsert
 local type = type
 local xpcall = xpcall
 
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
+local IsAddOnLoaded = IsAddOnLoaded
 
 ---@type table<string, function[]> Table of functions to execute after addon loading
 M.addonsToLoad = {}
@@ -80,7 +80,7 @@ function M:Initialize()
 	end
 
 	for addonName, object in pairs(self.addonsToLoad) do
-		local isLoaded = C_AddOns_IsAddOnLoaded(addonName)
+		local isLoaded = IsAddOnLoaded(addonName)
 		if isLoaded then
 			self:CallLoadedAddon(addonName, object)
 		end

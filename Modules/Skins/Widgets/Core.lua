@@ -84,14 +84,10 @@ function WS:ReskinEarlyFrames()
 	end
 
 	for i = 1, E.MAX_STATIC_POPUPS do
-		local popup = _G["StaticPopup" .. i]
-		if popup then
-			for index = 1, 4 do
-				local getter = popup["GetButton" .. index]
-				local button = getter and getter(popup)
-				if button and button.IsSkinned and not button.windWidgetSkinned then
-					ES:HandleButton(button)
-				end
+		for index = 1, 4 do
+			local button = _G["StaticPopup" .. i .. "Button" .. index]
+			if button and button.isSkinned and not button.windWidgetSkinned then
+				ES:HandleButton(button)
 			end
 		end
 	end

@@ -1,6 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
 	<Script file='Achievements.lua' />
-	<Script file='AddonManager.lua' />
 	<Script file='Alerts.lua' />
 	<Script file='AuctionHouse.lua' />
 	<Script file='Bags.lua' />
@@ -15,9 +14,7 @@
 	<Script file='Collections.lua' />
 	<Script file='DebugTools.lua' />
 	<Script file='DressingRoom.lua' />
-	<Script file='EditModeManager.lua' />
 	<Script file='EncounterJournal.lua' />
-	<Script file='EventTrace.lua' />
 	<Script file='Friends.lua' />
 	<Script file='GameMenu.lua' />
 	<Script file='Gossip.lua' />
@@ -26,8 +23,6 @@
 	<Script file='Help.lua' />
 	<Script file='Inspect.lua' />
 	<Script file='ItemSocketing.lua' />
-	<Script file='ItemUpgrade.lua' />
-	<Script file='KeyBinding.lua' />
 	<Script file='LookingForGroup.lua' />
 	<Script file='Loot.lua' />
 	<Script file='LossOfControl.lua' />
@@ -38,9 +33,6 @@
 	<Script file='MirrorTimers.lua' />
 	<Script file='Misc.lua' />
 	<Script file='ObjectiveTracker.lua' />
-	<Script file='PlayerSpells.lua' />
-	<Script file='Professions.lua' />
-	<Script file='ProfessionsBook.lua' />
 	<Script file='Quest.lua' />
 	<Script file='RaidInfo.lua' />
 	<Script file='Scenario.lua' />

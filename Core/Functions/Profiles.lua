@@ -3,17 +3,11 @@ local W, F, E, L, V, P, G ---@type WindTools, Functions, ElvUI, LocaleTable, Pri
 W, F, E, L, V, P, G = unpack((select(2, ...)))
 
 local next = next
+local strmatch = strmatch
 local type = type
 
-local SerializeCBOR = C_EncodingUtil.SerializeCBOR
-local DeserializeCBOR = C_EncodingUtil.DeserializeCBOR
-local CompressString = C_EncodingUtil.CompressString
-local DecompressString = C_EncodingUtil.DecompressString
-local EncodeBase64 = C_EncodingUtil.EncodeBase64
-local DecodeBase64 = C_EncodingUtil.DecodeBase64
-
-local compressionMethodDeflate = Enum.CompressionMethod.Deflate or 0
-local compressionLevelDefault = Enum.CompressionLevel.Default or 0
+local LibDeflate = E.Libs.Deflate
+local Serializer = E.Distributor
 
 ---@cast F Functions
 
@@ -30,19 +24,19 @@ local generatedKeys = {
 ---@param data table The data to serialize and compress
 ---@return string? encodedString The compressed and encoded string
 function F.Profiles.GenerateString(data)
-	local serializedData = SerializeCBOR(data)
+	local serializedData = Serializer:Serialize(data)
 	if not serializedData then
 		F.Print("Error serializing data.")
 		return
 	end
 
-	local compressedData = CompressString(serializedData, compressionMethodDeflate, compressionLevelDefault)
+	local compressedData = LibDeflate:CompressDeflate(serializedData, Serializer.CompressLevel)
 	if not compressedData then
 		F.Print("Error compressing data.")
 		return
 	end
 
-	local encodedData = EncodeBase64(compressedData)
+	local encodedData = LibDeflate:EncodeForPrint(compressedData)
 	if not encodedData then
 		F.Print("Error encoding data.")
 		return
@@ -56,20 +50,20 @@ end
 ---@param dataString string The encoded data string
 ---@return table? data The deserialized data or nil if failed
 function F.Profiles.ExactString(dataString)
-	local decodedData = DecodeBase64(dataString)
+	local decodedData = LibDeflate:DecodeForPrint(dataString)
 	if not decodedData then
 		F.Print("Error decoding data.")
 		return
 	end
 
-	local decompressed = DecompressString(decodedData, compressionMethodDeflate)
+	local decompressed = LibDeflate:DecompressDeflate(decodedData)
 	if not decompressed then
 		F.Print("Error decompressing data.")
 		return
 	end
 
-	local data = DeserializeCBOR(decompressed)
-	if type(data) ~= "table" then
+	local success, data = Serializer:Deserialize(decompressed)
+	if not success or type(data) ~= "table" then
 		F.Print("Error deserializing data.")
 		return
 	end
@@ -109,7 +103,7 @@ end
 ---Import profile and private data from string
 ---@param importString string The import string containing profile and private data
 function F.Profiles.ImportByString(importString)
-	local profileString, privateString = E:SplitString(importString, "{}")
+	local profileString, privateString = strmatch(importString, "^(.-){}(.+)$")
 	if not profileString or not privateString then
 		F.Print("Error importing profile. String is invalid or corrupted!")
 		return

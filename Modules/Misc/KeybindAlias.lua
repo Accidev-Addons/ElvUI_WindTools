@@ -2,6 +2,7 @@ local W, F, E, L, V, P, G = unpack((select(2, ...))) ---@type WindTools, Functio
 local M = W.Modules.Misc ---@class Misc
 local AB = E.ActionBars
 
+local _G = _G
 local pairs = pairs
 
 local setHistory = {}
@@ -33,21 +34,22 @@ local function getBeforeText(button, currentText)
 end
 
 function M:ElvUI_AB_FixKeybindText(_, button)
-	local currentText = button.HotKey:GetText()
+	local hotkey = _G[button:GetName() .. "HotKey"]
+	local currentText = hotkey:GetText()
 	local before = getBeforeText(button, currentText)
 	local after
 
 	if E.db.WT and E.db.WT.misc.keybindAlias.enable then
 		if E.db.WT.misc.keybindAlias.list and E.db.WT.misc.keybindAlias.list[before] then
 			after = E.db.WT.misc.keybindAlias.list[before]
-			button.HotKey:SetText(after)
+			hotkey:SetText(after)
 		end
 	end
 
 	if not after then
-		button.HotKey:SetText(before)
+		hotkey:SetText(before)
 		self.hooks[AB].FixKeybindText(nil, button)
-		after = button.HotKey:GetText()
+		after = hotkey:GetText()
 	end
 
 	updateHistoty(button, before, after)
@@ -63,6 +65,6 @@ function M:PLAYER_LOGIN()
 	M:RawHook(AB, "FixKeybindText", "ElvUI_AB_FixKeybindText")
 	M:AddCallback("UpdateAllKeybindText")
 	M:AddCallbackForUpdate("UpdateAllKeybindText")
- end
+end
 
- M:RegisterEvent("PLAYER_LOGIN")
+M:RegisterEvent("PLAYER_LOGIN")

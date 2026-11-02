@@ -3,9 +3,6 @@ local S = W.Modules.Skins ---@type Skins
 
 local _G = _G
 local pairs = pairs
-local hooksecurefunc = hooksecurefunc
-
-local SettingsPanel = SettingsPanel
 
 function S:BugSack_OpenSack()
 	if _G.BugSackFrame.__windSkin then
@@ -87,15 +84,6 @@ function S:BugSack()
 	self:DisableAddOnSkin("BugSack")
 
 	self:SecureHook(_G.BugSack, "OpenSack", "BugSack_OpenSack")
-
-	-- Handle the special dropdown in settings
-	hooksecurefunc(SettingsPanel.Container.SettingsList.ScrollBox, "Update", function(scrollBox)
-		scrollBox:ForEachFrame(function(frame)
-			if frame.soundDropdown and frame.soundDropdown.intrinsic == "DropdownButton" then
-				self:Proxy("HandleDropDownBox", frame.soundDropdown)
-			end
-		end)
-	end)
 end
 
 S:AddCallbackForAddon("BugSack")

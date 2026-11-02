@@ -10,23 +10,11 @@ local time = time
 
 local IsEveryoneAssistant = IsEveryoneAssistant
 local IsInGroup = IsInGroup
-local IsInInstance = IsInInstance
 local IsInRaid = IsInRaid
-local IsPartyLFG = IsPartyLFG
-local UnitIsGroupAssistant = UnitIsGroupAssistant
+local IsRaidOfficer = IsRaidOfficer
 local UnitIsGroupLeader = UnitIsGroupLeader
 
-local C_RestrictedActions_IsAddOnRestrictionActive = C_RestrictedActions.IsAddOnRestrictionActive
-
-local Enum_AddOnRestrictionType_ChallengeMode = Enum.AddOnRestrictionType.ChallengeMode
-local LE_PARTY_CATEGORY_HOME = LE_PARTY_CATEGORY_HOME
-local LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE
-
 A.history = {}
-
-function A:CanSentMessage()
-	return not C_RestrictedActions_IsAddOnRestrictionActive(Enum_AddOnRestrictionType_ChallengeMode)
-end
 
 function A:AddHistory(text, channel)
 	if not self.db.sameMessageInterval or self.db.sameMessageInterval == 0 then
@@ -62,19 +50,8 @@ function A:SendMessage(text, channel, raidWarning, whisperTarget)
 		return
 	end
 
-	-- Change channel if it is protected by Blizzard
-	if channel == "YELL" or channel == "SAY" then
-		if not IsInInstance() then
-			channel = "SELF"
-		end
-	end
-
 	if channel == "SELF" then
 		_G.DEFAULT_CHAT_FRAME:AddMessage(text)
-		return
-	end
-
-	if not self:CanSentMessage() then
 		return
 	end
 
@@ -93,8 +70,8 @@ function A:SendMessage(text, channel, raidWarning, whisperTarget)
 		end
 	end
 
-	if channel == "RAID" and raidWarning and IsInRaid(LE_PARTY_CATEGORY_HOME) then
-		if UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or IsEveryoneAssistant() then
+	if channel == "RAID" and raidWarning and IsInRaid() then
+		if UnitIsGroupLeader("player") or IsRaidOfficer() or IsEveryoneAssistant() then
 			channel = "RAID_WARNING"
 		end
 	end
@@ -108,16 +85,11 @@ end
 ---@param channelDB table Channel configuration table
 ---@return string
 function A:GetChannel(channelDB)
-	if
-		(IsPartyLFG() or IsInGroup(LE_PARTY_CATEGORY_INSTANCE) or IsInRaid(LE_PARTY_CATEGORY_INSTANCE))
-		and channelDB.instance
-	then
-		return channelDB.instance
-	elseif IsInRaid(LE_PARTY_CATEGORY_HOME) and channelDB.raid then
+	if IsInRaid() and channelDB.raid then
 		return channelDB.raid
-	elseif IsInGroup(LE_PARTY_CATEGORY_HOME) and channelDB.party then
+	elseif IsInGroup() and channelDB.party then
 		return channelDB.party
-	elseif channelDB.solo and channelDB.solo then
+	elseif channelDB.solo then
 		return channelDB.solo
 	end
 	return "NONE"

@@ -4,20 +4,6 @@ local AB = E.ActionBars
 
 local _G = _G
 local MICRO_BUTTONS = _G.MICRO_BUTTONS
-	or {
-		"CharacterMicroButton",
-		"SpellbookMicroButton",
-		"TalentMicroButton",
-		"AchievementMicroButton",
-		"QuestLogMicroButton",
-		"GuildMicroButton",
-		"LFDMicroButton",
-		"EJMicroButton",
-		"CollectionsMicroButton",
-		"MainMenuMicroButton",
-		"HelpMicroButton",
-		"StoreMicroButton",
-	}
 
 function S:MicroButtons()
 	if not self:CheckDB(nil, "microButtons") then

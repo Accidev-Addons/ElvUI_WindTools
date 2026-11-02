@@ -5,36 +5,29 @@ W, F, E, L = unpack((select(2, ...)))
 local tinsert = tinsert
 local tostring = tostring
 
-local GetCurrentRegionName = GetCurrentRegionName
+local GetCVar = GetCVar
 local GetLocale = GetLocale
-local GetMaxLevelForPlayerExpansion = GetMaxLevelForPlayerExpansion
-local GetRealmID = GetRealmID
-local GetRealmName = GetRealmName
 local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
 
 local C_ChallengeMode_GetMapUIInfo = C_ChallengeMode.GetMapUIInfo
-local C_CVar_GetCVarBool = C_CVar.GetCVarBool
+local C_Service = C_Service
 
 E.myClassColor = E.myClassColor or E:ClassColor(E.myclass, true)
 
 -- WindTools
 W.Title = L["WindTools"]
-W.PlainTitle = gsub(W.Title, "|c........([^|]+)|r", "%1")
 
 -- Environment
 W.Locale = GetLocale()
 W.ChineseLocale = strsub(W.Locale, 0, 2) == "zh"
 W.AsianLocale = W.ChineseLocale or W.Locale == "koKR"
 W.SupportElvUIVersion = 9.07
-W.UseKeyDown = C_CVar_GetCVarBool("ActionButtonUseKeyDown")
+W.UseKeyDown = GetCVar("ActionButtonUseKeyDown") == "1"
 
 -- Game
-W.MaxLevelForPlayerExpansion = GetMaxLevelForPlayerExpansion()
+W.MaxLevelForPlayerExpansion = MAX_PLAYER_LEVEL
 
--- [SIRUS] Dungeon IDs and upgrade timers come from the server.
 W.MythicPlusMapData = {}
-W.MythicPlusSeasonAchievementData = {}
-W.RaidData = {}
 
 function W:GetMythicPlusMapData()
 	for _, id in ipairs(C_ChallengeMode.GetMapTable()) do
@@ -52,17 +45,8 @@ end
 
 W.SpecializationInfo = {}
 
-W.RealRegion = (function()
-	local region = GetCurrentRegionName()
-	if region == "KR" and W.ChineseLocale then
-		region = "TW" -- Fix taiwan server region issue
-	end
-
-	return region
-end)()
-
-W.CurrentRealmID = GetRealmID()
-W.CurrentRealmName = GetRealmName()
+W.RealRegion = "EU"
+W.CurrentRealmID = C_Service and C_Service.GetRealmID and C_Service.GetRealmID() or 0
 
 W.EquipmentSlots = {
 	HEADSLOT,
@@ -85,10 +69,6 @@ W.EquipmentSlots = {
 	RANGEDSLOT,
 	TABARDSLOT,
 }
-
-W.CurrentTierSetTable = {}
-W.CurrentTierSetItemIDTable = {}
-W.RealmSlugs = {}
 
 function W:InitializeMetadata()
 	self:GetMythicPlusMapData()

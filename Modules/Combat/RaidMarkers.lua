@@ -13,12 +13,10 @@ local strupper = strupper
 
 local CreateFrame = CreateFrame
 local InCombatLockdown = InCombatLockdown
+local IsAddOnLoaded = IsAddOnLoaded
 local RegisterStateDriver = RegisterStateDriver
 local UnregisterStateDriver = UnregisterStateDriver
 
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-
--- [SIRUS] World marker IDs are zero-based and follow the native bindings.
 local TargetToWorld = { 7, 2, 3, 1, 5, 0, 4, 6 }
 local CLEAR_TARGET_MARKERS = "/run for i=1,8 do SetRaidTarget('player',i) end SetRaidTarget('player',0)"
 local CLEAR_WORLD_MARKERS = "/cwm " .. _G.ALL
@@ -255,10 +253,10 @@ function RM:UpdateCountDownButton()
 	end
 
 	local button = self.bar.buttons[11]
-	if C_AddOns_IsAddOnLoaded("BigWigs") then
+	if IsAddOnLoaded("BigWigs") then
 		button:SetAttribute("macrotext1", "/pull " .. self.db.countDownTime)
 		button:SetAttribute("macrotext2", "/pull 0")
-	elseif C_AddOns_IsAddOnLoaded("DBM-Core") then
+	elseif IsAddOnLoaded("DBM-Core") then
 		button:SetAttribute("macrotext1", "/dbm pull " .. self.db.countDownTime)
 		button:SetAttribute("macrotext2", "/dbm pull 0")
 	else
@@ -307,10 +305,10 @@ function RM:CreateButtons()
 			tex:SetTexture("Interface\\Icons\\Spell_unused2")
 			tex:SetTexCoord(0.25, 0.8, 0.2, 0.75)
 			button:SetAttribute("type*", "macro")
-			if C_AddOns_IsAddOnLoaded("BigWigs") then
+			if IsAddOnLoaded("BigWigs") then
 				button:SetAttribute("macrotext1", "/pull " .. self.db.countDownTime)
 				button:SetAttribute("macrotext2", "/pull 0")
-			elseif C_AddOns_IsAddOnLoaded("DBM-Core") then
+			elseif IsAddOnLoaded("DBM-Core") then
 				button:SetAttribute("macrotext1", "/dbm pull " .. self.db.countDownTime)
 				button:SetAttribute("macrotext2", "/dbm pull 0")
 			else

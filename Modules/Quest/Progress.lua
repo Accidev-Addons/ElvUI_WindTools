@@ -1,44 +1,27 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local QP = W:GetModule("QuestProgress") ---@class QuestProgress : AceModule, AceEvent-3.0
-
--- [SIRUS] Keep the native UI until this enhancement has a native API port.
-if not (C_QuestLog and C_QuestLog.GetInfo and C_QuestLog.GetQuestObjectives) then
-	QP.StopRunning = "Sirus: quest log structures unavailable"
-	return
-end
 local A = W:GetModule("Announcement") ---@class Announcement
 local C = W.Utilities.Color
-local cache = W.Utilities.Cache
 
 local _G = _G
 local assert = assert
 local format = format
 local gsub = gsub
 local pairs = pairs
-local select = select
-local strfind = strfind
+local strmatch = strmatch
 local strtrim = strtrim
-local tCompare = tCompare
 local tinsert = tinsert
 local tonumber = tonumber
 local tostring = tostring
 
+local GetNumQuestLeaderBoards = GetNumQuestLeaderBoards
+local GetNumQuestLogEntries = GetNumQuestLogEntries
 local GetQuestLink = GetQuestLink
+local GetQuestLogLeaderBoard = GetQuestLogLeaderBoard
+local GetQuestLogTitle = GetQuestLogTitle
 local GetTime = GetTime
 local UIErrorsFrame = _G.UIErrorsFrame
 local UnitLevel = UnitLevel
-
-local C_MythicPlus_IsMythicPlusActive = C_MythicPlus.IsMythicPlusActive
-local C_QuestLog_GetInfo = C_QuestLog.GetInfo
-local C_QuestLog_GetNumQuestLogEntries = C_QuestLog.GetNumQuestLogEntries
-local C_QuestLog_GetQuestObjectives = C_QuestLog.GetQuestObjectives
-local C_QuestLog_GetQuestTagInfo = C_QuestLog.GetQuestTagInfo
-local C_QuestLog_IsComplete = C_QuestLog.IsComplete
-local C_ScenarioInfo_GetCriteriaInfo = C_ScenarioInfo.GetCriteriaInfo
-local C_ScenarioInfo_GetScenarioStepInfo = C_ScenarioInfo.GetScenarioStepInfo
-
-local Enum_QuestFrequency_Daily = Enum.QuestFrequency.Daily
-local Enum_QuestFrequency_Weekly = Enum.QuestFrequency.Weekly
 
 ---@class QuestStatusType : number
 ---@type table<string, QuestStatusType>
@@ -46,28 +29,11 @@ local QUEST_STATUS = {
 	ACCEPTED = 1,
 	COMPLETED = 2,
 	QUEST_UPDATE = 3,
-	SCENARIO_UPDATE = 4,
-	OBJECTIVE_UPDATE = 5,
+	OBJECTIVE_UPDATE = 4,
 }
 
 local cachedQuests ---@type table<number, QuestProgressData>
-local cachedScenarioStep ---@type ScenarioProgressData
-
-local ignoreTagIDs = {
-	[265] = true, -- Hidden Quest
-	[291] = true, -- Hidden
-}
-
-local ignoreWorldQuestTypeIDs = {
-	[Enum.QuestTagType.Profession] = true,
-}
-
-local manuallyFlaggedCompletedQuests = cache.New({
-	defaultTTL = 5,
-	maxLength = nil,
-	autoCleanup = true,
-	cleanupInterval = 60,
-})
+local cachedNumQuests = 0
 
 ---@class QuestProgressData
 ---@field questID number Quest ID
@@ -76,16 +42,9 @@ local manuallyFlaggedCompletedQuests = cache.New({
 ---@field level number Quest level
 ---@field suggestedGroup number Suggested group size
 ---@field isComplete boolean Quest completion status
----@field frequency? number Quest frequency (1=Daily, 2=Weekly)
+---@field isDaily boolean Daily quest
 ---@field tag? string Quest tag name
----@field tagID? number Quest tag ID
----@field worldQuestType? number World quest type ID
 ---@field objectives QuestObjectiveData[] List of quest objectives
-
----@class ScenarioProgressData
----@field title string Scenario title
----@field tag string Scenario tag
----@field objectives QuestObjectiveData[] List of scenario objectives
 
 ---@class QuestObjectiveData
 ---@field item string
@@ -95,92 +54,64 @@ local manuallyFlaggedCompletedQuests = cache.New({
 
 ---@alias QuestProgressContext table<string, string?>
 
----@return ScenarioProgressData
-local function FetchAllScenarioProgressData()
-	local scenarioStepInfo = C_ScenarioInfo_GetScenarioStepInfo()
-	if not scenarioStepInfo or scenarioStepInfo.numCriteria == 0 then
-		return {}
+---@param text string
+---@return string? item
+---@return number? numFulfilled
+---@return number? numRequired
+local function ParseObjective(text)
+	local item, numFulfilled, numRequired = strmatch(text, "^(.*):%s*(%d+)%s*/%s*(%d+)")
+	if not item then
+		numFulfilled, numRequired, item = strmatch(text, "(%d+)/(%d+) ?(.*)")
 	end
-
-	---@type ScenarioProgressData
-	local data = {
-		title = scenarioStepInfo.title,
-		tag = L["Scenario"],
-		objectives = {},
-	}
-
-	for i = 1, scenarioStepInfo.numCriteria do
-		local criteriaInfo = C_ScenarioInfo_GetCriteriaInfo(i)
-		if criteriaInfo and criteriaInfo.quantity and criteriaInfo.totalQuantity and criteriaInfo.completed ~= nil then
-			tinsert(data.objectives, {
-				item = criteriaInfo.description,
-				finished = criteriaInfo.completed or criteriaInfo.quantity >= criteriaInfo.totalQuantity,
-				numFulfilled = criteriaInfo.quantity,
-				numRequired = criteriaInfo.totalQuantity,
-			})
-		end
-	end
-
-	return data
+	return item, tonumber(numFulfilled), tonumber(numRequired)
 end
 
 ---Get all current quest progress data
 ---@return table<number, QuestProgressData> quests
+---@return number numQuests
+---@return boolean isPartial
 local function FetchAllQuestProgressData()
 	local quests = {} ---@type table<number, QuestProgressData>
+	local numEntries, numQuests = GetNumQuestLogEntries()
+	local numVisible = 0
 
-	for questIndex = 1, C_QuestLog_GetNumQuestLogEntries() do
-		local questInfo = C_QuestLog_GetInfo(questIndex)
-		if questInfo then
-			local tagInfo = C_QuestLog_GetQuestTagInfo(questInfo.questID)
+	for questIndex = 1, numEntries do
+		local title, level, questTag, suggestedGroup, isHeader, _, isComplete, isDaily, questID =
+			GetQuestLogTitle(questIndex)
+		if title and not isHeader and questID then
+			numVisible = numVisible + 1
 
-			-- isHeader: Quest category header (e.g., "Highmountain-Highmountain Tribe" quests, "Highmountain" should be excluded)
-			-- isBounty: Bounty quests (e.g., "The Nightfallen" quests)
-			-- isHidden: Auto-accepted weekly quests (e.g., "Conqueror's Reward" weekly PvP quest)
-			local skip = tagInfo and ignoreTagIDs[tagInfo.tagID]
-				or questInfo.isHeader
-				or questInfo.isBounty
-				or questInfo.isHidden
-
-			if tagInfo and tagInfo.worldQuestType and not ignoreWorldQuestTypeIDs[tagInfo.worldQuestType] then
-				skip = false
-			end
-
-			if not skip then
-				local objectiveData = {}
-				for _, objective in pairs(C_QuestLog_GetQuestObjectives(questInfo.questID)) do
-					local numFulfilled, numRequired, itemName = select(3, strfind(objective.text, "(%d+)/(%d+) ?(.*)"))
-					numFulfilled = tonumber(numFulfilled)
-					numRequired = tonumber(numRequired)
+			local objectiveData = {}
+			for objectiveIndex = 1, GetNumQuestLeaderBoards(questIndex) do
+				local text, _, finished = GetQuestLogLeaderBoard(objectiveIndex, questIndex)
+				if text then
+					local item, numFulfilled, numRequired = ParseObjective(text)
 					tinsert(objectiveData, {
-						item = itemName,
-						finished = objective.finished or (numFulfilled and numRequired and numFulfilled >= numRequired),
+						item = item,
+						finished = finished and true or (numFulfilled and numRequired and numFulfilled >= numRequired),
 						numFulfilled = numFulfilled,
 						numRequired = numRequired,
 					})
 				end
-
-				local manuallyFlagged = manuallyFlaggedCompletedQuests:Get(tostring(questInfo.questID))
-				local isComplete = manuallyFlagged and true or C_QuestLog_IsComplete(questInfo.questID)
-
-				quests[questInfo.questID] = {
-					title = questInfo.title,
-					questID = questInfo.questID,
-					level = questInfo.level,
-					suggestedGroup = questInfo.suggestedGroup,
-					isComplete = isComplete,
-					frequency = questInfo.frequency,
-					tag = tagInfo and tagInfo.tagName,
-					tagID = tagInfo and tagInfo.tagID,
-					worldQuestType = tagInfo and tagInfo.worldQuestType,
-					link = GetQuestLink(questInfo.questID),
-					objectives = objectiveData,
-				}
 			end
+
+			quests[questID] = {
+				title = title,
+				questID = questID,
+				level = level,
+				suggestedGroup = suggestedGroup,
+				isComplete = isComplete == 1,
+				isDaily = isDaily and true or false,
+				tag = questTag,
+				link = GetQuestLink(questIndex),
+				objectives = objectiveData,
+			}
 		end
 	end
 
-	return quests
+	numQuests = numQuests or numVisible
+
+	return quests, numQuests, numVisible < numQuests
 end
 
 ---Check if objective data has been updated
@@ -243,7 +174,7 @@ function QP:RenderTemplate(template, context)
 	return result
 end
 
----@param data QuestProgressData | ScenarioProgressData
+---@param data QuestProgressData
 ---@return QuestProgressContext plainContext
 ---@return QuestProgressContext coloredContext
 function QP:BuildContext(data)
@@ -255,12 +186,8 @@ function QP:BuildContext(data)
 	plainContext.level, coloredContext.level = Render(data.level, db.level.template, db.level.color)
 	plainContext.link, coloredContext.link = data.link, data.link
 
-	if data.frequency then
-		if data.frequency == Enum_QuestFrequency_Daily then
-			plainContext.daily, coloredContext.daily = Render(data.link, db.daily.template, db.daily.color)
-		elseif data.frequency == Enum_QuestFrequency_Weekly then
-			plainContext.weekly, coloredContext.weekly = Render(data.link, db.weekly.template, db.weekly.color)
-		end
+	if data.isDaily then
+		plainContext.daily, coloredContext.daily = Render(data.link, db.daily.template, db.daily.color)
 	end
 
 	if data.suggestedGroup and data.suggestedGroup > 1 then
@@ -299,16 +226,19 @@ function QP:ValidateObjectiveData(objectiveData)
 end
 
 function QP:ProcessQuestUpdate()
-	local currentQuests = FetchAllQuestProgressData()
+	local currentQuests, numQuests, isPartial = FetchAllQuestProgressData()
 	if not cachedQuests then
 		cachedQuests = currentQuests
+		cachedNumQuests = numQuests
 		return
 	end
+
+	local hasNewQuest = numQuests > cachedNumQuests
 
 	for id, questData in pairs(currentQuests) do
 		local previousQuestData = cachedQuests[id]
 		if not previousQuestData then
-			if not questData.worldQuestType then
+			if hasNewQuest then
 				self:HandleQuestProgress(QUEST_STATUS.ACCEPTED, questData)
 			end
 		elseif not previousQuestData.isComplete then
@@ -329,41 +259,16 @@ function QP:ProcessQuestUpdate()
 		end
 	end
 
-	cachedQuests = currentQuests
-end
-
-function QP:ProcessScenarioUpdate()
-	if not self.db.scenario then
-		return
-	end
-
-	local currentScenarioStep = FetchAllScenarioProgressData()
-
-	if
-		not cachedScenarioStep
-		or cachedScenarioStep.title ~= currentScenarioStep.title
-		or (C_MythicPlus_IsMythicPlusActive() and self.db.disableInMythicPlus)
-	then
-		cachedScenarioStep = currentScenarioStep
-		return
-	end
-
-	local numCurrent = currentScenarioStep.objectives and #currentScenarioStep.objectives or 0
-	local numCached = cachedScenarioStep.objectives and #cachedScenarioStep.objectives or 0
-
-	if numCached > 0 and numCurrent > 0 then
-		for objectiveIndex = 1, numCurrent do
-			local objectiveData = currentScenarioStep.objectives[objectiveIndex]
-			local previousObjectiveData = cachedScenarioStep.objectives[objectiveIndex]
-			if not previousObjectiveData or not tCompare(objectiveData, previousObjectiveData) then
-				if self:ValidateObjectiveData(objectiveData) then
-					self:HandleQuestProgress(QUEST_STATUS.SCENARIO_UPDATE, currentScenarioStep, objectiveData)
-				end
+	if isPartial then
+		for id, questData in pairs(cachedQuests) do
+			if not currentQuests[id] then
+				currentQuests[id] = questData
 			end
 		end
 	end
 
-	cachedScenarioStep = currentScenarioStep
+	cachedQuests = currentQuests
+	cachedNumQuests = numQuests
 end
 
 ---@param context QuestProgressContext
@@ -413,7 +318,7 @@ end
 
 ---Handle quest progress update event
 ---@param status QuestStatusType
----@param questData QuestProgressData | ScenarioProgressData
+---@param questData QuestProgressData
 ---@param objectiveData? QuestObjectiveData
 function QP:HandleQuestProgress(status, questData, objectiveData)
 	if not self.fiveSecondsAfterLogin then
@@ -432,11 +337,10 @@ function QP:HandleQuestProgress(status, questData, objectiveData)
 		plainContext.progress, coloredContext.progress = Render(db.text, nil, db.color)
 		coloredContext.icon = format("|T%s:0|t", W.Media.Icons.complete)
 		self:PlaySoundEffect(status)
-	elseif status == QUEST_STATUS.QUEST_UPDATE or status == QUEST_STATUS.SCENARIO_UPDATE then
+	elseif status == QUEST_STATUS.QUEST_UPDATE then
 		assert(objectiveData, "Objective data is required for progress update")
 		local db = self.db.progress.objective
-		local item = gsub(objectiveData.item, " |A:.+|a", "")
-		local objectiveText, coloredObjectiveText = Render(item, "%s", db.color)
+		local objectiveText, coloredObjectiveText = Render(objectiveData.item, "%s", db.color)
 		local progressText = format(db.detailTemplate, objectiveData.numFulfilled, objectiveData.numRequired)
 		local progressColor = F.GetProgressColor(objectiveData.numFulfilled / objectiveData.numRequired)
 		local coloredProgressText = C.StringWithRGB(progressText, progressColor)
@@ -470,9 +374,6 @@ function QP:HandleQuestProgress(status, questData, objectiveData)
 		else
 			event = A.QUEST_EVENT.PROGRESS_UPDATE
 		end
-	elseif status == QUEST_STATUS.SCENARIO_UPDATE then
-		-- Scenario progress should shared across all party members, no need to announce
-		return
 	end
 
 	A:AnnounceQuestProgress(event, plainContext)
@@ -499,25 +400,6 @@ function QP:HandleQuestUpdateEvent()
 	F.TaskManager:AfterLogin(self.ProcessQuestUpdate, self)
 end
 
----@param _ "QUEST_TURNED_IN"
----@param questID number
-function QP:HandleQuestTurnedIn(_, questID)
-	manuallyFlaggedCompletedQuests:Set(tostring(questID), true)
-
-	if not questID or not cachedQuests or not cachedQuests[questID] or not cachedQuests[questID].worldQuestType then
-		return
-	end
-
-	if not cachedQuests[questID].isComplete then
-		cachedQuests[questID].isComplete = true
-		self:HandleQuestProgress(QUEST_STATUS.COMPLETED, cachedQuests[questID])
-	end
-end
-
-function QP:HandleScenarioUpdate()
-	F.TaskManager:AfterLogin(self.ProcessScenarioUpdate, self)
-end
-
 ---Fetch the context for preview or test
 ---@return QuestProgressContext plainContext
 ---@return QuestProgressContext coloredContext
@@ -528,7 +410,7 @@ function QP:GetTestContext()
 		level = 99,
 		suggestedGroup = 30,
 		isComplete = false,
-		frequency = 1,
+		isDaily = true,
 		tag = L["Test Series"],
 		link = format("|cffffff00|Hquest:39987:335|h[%s]|h|r", L["Test Quest Name"]),
 		objectives = {},
@@ -548,18 +430,12 @@ function QP:Initialize()
 	if not self.initialized then
 		self:RegisterEvent("QUEST_LOG_UPDATE", "HandleQuestUpdateEvent")
 		self:RegisterEvent("QUEST_WATCH_UPDATE", "HandleQuestUpdateEvent")
-		self:RegisterEvent("QUEST_WATCH_LIST_CHANGED", "HandleQuestUpdateEvent")
-		self:RegisterEvent("QUEST_TURNED_IN", "HandleQuestTurnedIn")
-		self:RegisterEvent("SCENARIO_CRITERIA_UPDATE", "HandleScenarioUpdate")
-		self:RegisterEvent("SCENARIO_UPDATE", "HandleScenarioUpdate")
-		self:RegisterEvent("SCENARIO_CRITERIA_SHOW_STATE_UPDATE", "HandleScenarioUpdate")
 		self.initialized = true
 	end
 
 	F.TaskManager:AfterLogin(function()
 		self:UpdateBlizzardQuestMessage()
 		self:ProcessQuestUpdate()
-		self:ProcessScenarioUpdate()
 
 		E:Delay(5, function()
 			self.fiveSecondsAfterLogin = true

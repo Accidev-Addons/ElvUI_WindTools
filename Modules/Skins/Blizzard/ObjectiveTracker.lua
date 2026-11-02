@@ -6,15 +6,11 @@ local pairs = pairs
 
 local trackers = {
 	_G.ScenarioObjectiveTracker,
-	_G.UIWidgetObjectiveTracker,
-	_G.CampaignQuestObjectiveTracker,
 	_G.QuestObjectiveTracker,
-	_G.AdventureObjectiveTracker,
 	_G.AchievementObjectiveTracker,
-	_G.MonthlyActivitiesObjectiveTracker,
 	_G.ProfessionsRecipeTracker,
-	_G.BonusObjectiveTracker,
-	_G.WorldQuestObjectiveTracker,
+	_G.BattlePassQuestTracker,
+	_G.ReturningCharacterQuestTracker,
 }
 
 function S:ReskinObjectiveTrackerHeader(header)
@@ -39,7 +35,7 @@ local function ReskinQuestIcon(button)
 		button:Size(24)
 		button:SetNormalTexture(E.ClearTexture)
 		button:SetPushedTexture(E.ClearTexture)
-		button:GetHighlightTexture():SetColorTexture(1, 1, 1, 0.25)
+		button:GetHighlightTexture():SetTexture(1, 1, 1, 0.25)
 
 		local icon = button.icon or button.Icon
 		if icon then
@@ -125,17 +121,15 @@ function S:Blizzard_ObjectiveTracker()
 		return
 	end
 
-	self.questItemButtons = {}
-
 	local MainHeader = _G.ObjectiveTrackerFrame.Header
 	self:ReskinObjectiveTrackerHeader(MainHeader)
 
 	for _, tracker in pairs(trackers) do
 		self:ReskinObjectiveTrackerHeader(tracker.Header)
 
-		for _, block in pairs(tracker.usedBlocks or {}) do
+		tracker:EnumerateActiveBlocks(function(block)
 			self:ReskinObjectiveTrackerBlock(tracker, block)
-		end
+		end)
 
 		self:SecureHook(tracker, "AddBlock", "ReskinObjectiveTrackerBlock")
 		self:SecureHook(tracker, "GetProgressBar", "SkinProgressBar")

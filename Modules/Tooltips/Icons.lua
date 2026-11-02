@@ -1,7 +1,6 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local T = W.Modules.Tooltips ---@class Tooltips
 
-
 local _G = _G
 local pairs = pairs
 local select = select
@@ -10,8 +9,9 @@ local tInsertUnique = tInsertUnique
 local tonumber = tonumber
 
 local GetAchievementInfo = GetAchievementInfo
-local UnitFactionGroup = UnitFactionGroup
 local UnitIsPlayer = UnitIsPlayer
+
+local C_Unit_GetFactionInfo = C_Unit.GetFactionInfo
 
 local tooltips = {
 	"GameTooltip",
@@ -23,7 +23,6 @@ local tooltips = {
 	"ElvUI_SpellBookTooltip",
 }
 
--- [SIRUS] Native tooltip scripts replace the retail TooltipDataProcessor.
 local function AddTitleIcon(tt, icon)
 	if not icon or not tt:GetName() then
 		return
@@ -60,7 +59,7 @@ end
 
 function T:AddFactionIcon(tt, unit, guid)
 	if UnitIsPlayer(unit) then
-		local faction = UnitFactionGroup(unit)
+		local _, _, faction = C_Unit_GetFactionInfo(unit)
 		if faction and faction ~= "Neutral" then
 			if not tt.factionFrame then
 				local f = tt:CreateTexture(nil, "OVERLAY")
@@ -70,7 +69,12 @@ function T:AddFactionIcon(tt, unit, guid)
 				f:SetAlpha(0.5)
 				tt.factionFrame = f
 			end
-			tt.factionFrame:SetTexture("Interface\\FriendsFrame\\PlusManz-" .. faction)
+			if faction == "Renegade" then
+				tt.factionFrame:SetAtlas("bfa-landingbutton-renegade-up")
+			else
+				tt.factionFrame:SetTexture("Interface\\FriendsFrame\\PlusManz-" .. faction)
+				tt.factionFrame:SetTexCoord(0, 1, 0, 1)
+			end
 			tt.factionFrame:Show()
 		end
 	end
@@ -94,7 +98,6 @@ function T:Icons()
 	if E.private.WT.tooltips.factionIcon then
 		self:AddInspectInfoCallback(2, "AddFactionIcon", false, "ClearFactionIcon")
 	end
-
 end
 
 function T:AddIconTooltip(name)

@@ -90,7 +90,7 @@ W.options = {
 	information = {
 		order = 112,
 		name = L["Information"],
-		desc = L["Credits & help."],
+		desc = L["Help"],
 		icon = W.Media.Icons.information,
 		args = {},
 	},

@@ -8,7 +8,7 @@ local strlower = strlower
 function A:Keystone(_, _, link)
 	local db = self.db.keystone
 
-	if not db or not db.enable then
+	if not db or not db.enable or not link then
 		return
 	end
 
@@ -23,7 +23,7 @@ function A:KeystoneLink(event, text)
 		return
 	end
 
-	if E:IsSecretValue(text) or strlower(text) ~= "!keys" then
+	if not text or strlower(text) ~= "!keys" then
 		return
 	end
 

@@ -9,7 +9,6 @@ local ceil = ceil
 local format = format
 local ipairs = ipairs
 local pairs = pairs
-local sort = sort
 local strmatch = strmatch
 local strsplit = strsplit
 local tinsert = tinsert
@@ -18,7 +17,6 @@ local unpack = unpack
 local wipe = wipe
 
 local CooldownFrame_SetTimer = CooldownFrame_SetTimer
-local CreateAtlasMarkup = CreateAtlasMarkup
 local CreateFrame = CreateFrame
 local GameTooltip = _G.GameTooltip
 local GetBindingKey = GetBindingKey
@@ -33,40 +31,27 @@ local InCombatLockdown = InCombatLockdown
 local RegisterStateDriver = RegisterStateDriver
 local UnregisterStateDriver = UnregisterStateDriver
 
-local C_Item_GetItemCooldown = GetItemCooldown
-local C_Item_GetItemCount = GetItemCount
-local C_Item_GetItemInfoInstant = GetItemInfoInstant
-local C_Item_IsItemInRange = IsItemInRange
-local C_QuestLog_GetDistanceSqToQuest = C_QuestLog and C_QuestLog.GetDistanceSqToQuest
-local C_QuestLog_GetNumQuestLogEntries = GetNumQuestLogEntries
+local GetItemCooldown = GetItemCooldown
+local GetItemCount = GetItemCount
+local GetItemInfoInstant = GetItemInfoInstant
+local GetNumQuestLogEntries = GetNumQuestLogEntries
+local IsItemInRange = IsItemInRange
+
 local function C_Timer_NewTicker(...)
 	return C_Timer:NewTicker(...)
 end
-local C_TradeSkillUI_GetItemReagentQualityInfo = C_TradeSkillUI.GetItemReagentQualityInfo
 
 local questItemList = {}
 local function UpdateQuestItemList()
 	wipe(questItemList)
 
-	for questLogIndex = 1, C_QuestLog_GetNumQuestLogEntries() do
+	for questLogIndex = 1, GetNumQuestLogEntries() do
 		local link = GetQuestLogSpecialItemInfo(questLogIndex)
 		if link then
-			local questID = select(9, GetQuestLogTitle(questLogIndex))
-			local distance = questID and C_QuestLog_GetDistanceSqToQuest and C_QuestLog_GetDistanceSqToQuest(questID)
-			local itemID = C_Item_GetItemInfoInstant(link)
-			tinsert(questItemList, { questLogIndex = questLogIndex, itemID = itemID, distance = distance or 1e8 })
+			tinsert(questItemList, { questLogIndex = questLogIndex, itemID = GetItemInfoInstant(link) })
 		end
 	end
-
-	sort(questItemList, function(a, b)
-		return a.distance < b.distance
-	end)
 end
-
-local forceUsableItems = {
-	[193634] = true, -- иЊ‚з™јзЁ®е­ђ
-	[206448] = true, --гЂЋе¤ўеўѓиЈ‚ж–§гЂЏиЏІж‹‰й›·ж–Ї
-}
 
 local equipmentList = {}
 local function UpdateEquipmentList()
@@ -74,7 +59,7 @@ local function UpdateEquipmentList()
 	for slotID = 1, 18 do
 		local itemID = GetInventoryItemID("player", slotID)
 		local itemLink = itemID and GetInventoryItemLink("player", slotID)
-		if itemID and ((itemLink and GetItemSpell(itemLink)) or forceUsableItems[itemID]) then
+		if itemID and itemLink and GetItemSpell(itemLink) then
 			tinsert(equipmentList, slotID)
 		end
 	end
@@ -153,16 +138,6 @@ function EB:CreateButton(name, barDB)
 	tex:Point("BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
 	tex:SetTexCoords()
 
-	local qualityTier = button:CreateFontString(nil, "OVERLAY")
-	qualityTier:SetTextColor(1, 1, 1, 1)
-	qualityTier:Point("TOPLEFT", button, "TOPLEFT")
-	qualityTier:SetJustifyH("CENTER")
-	F.SetFontWithDB(qualityTier, {
-		size = barDB.qualityTier.size,
-		name = E.db.general.font,
-		style = "OUTLINE",
-	})
-
 	local count = button:CreateFontString(nil, "OVERLAY")
 	count:SetTextColor(1, 1, 1, 1)
 	count:Point("BOTTOMRIGHT", button, "BOTTOMRIGHT")
@@ -179,22 +154,9 @@ function EB:CreateButton(name, barDB)
 	E:RegisterCooldown(cooldown)
 
 	button.tex = tex
-	button.qualityTier = qualityTier
 	button.count = count
 	button.bind = bind
 	button.cooldown = cooldown
-
-	button.SetTier = function(_, itemIDOrLink)
-		local qualityInfo = C_TradeSkillUI_GetItemReagentQualityInfo and C_TradeSkillUI_GetItemReagentQualityInfo(itemIDOrLink)
-
-		if not qualityInfo or not qualityInfo.icon or qualityInfo.icon == "" then
-			button.qualityTier:SetText("")
-			button.qualityTier:Hide()
-		else
-			button.qualityTier:SetText(CreateAtlasMarkup(qualityInfo.icon))
-			button.qualityTier:Show()
-		end
-	end
 
 	button:StyleButton()
 
@@ -213,7 +175,7 @@ function EB:SetUpButton(button, itemData, slotID, waitGroup)
 
 	if itemData then
 		button.itemID = itemData.itemID
-		button.countText = C_Item_GetItemCount(itemData.itemID, nil, true)
+		button.countText = GetItemCount(itemData.itemID, nil, true)
 		button.questLogIndex = itemData.questLogIndex
 		button:SetBackdropBorderColor(0, 0, 0)
 
@@ -221,11 +183,7 @@ function EB:SetUpButton(button, itemData, slotID, waitGroup)
 		async.WithItemID(itemData.itemID, function(item)
 			button.itemName = item:GetItemName()
 			button.tex:SetTexture(item:GetItemIcon())
-			button:SetTier(itemData.itemID)
-			E:Delay(0.1, function()
-				-- delay for quality tier fetching and text changing
-				waitGroup.count = waitGroup.count - 1
-			end)
+			waitGroup.count = waitGroup.count - 1
 		end)
 	elseif slotID then
 		button.slotID = slotID
@@ -241,12 +199,7 @@ function EB:SetUpButton(button, itemData, slotID, waitGroup)
 				button:SetBackdropBorderColor(color.r, color.g, color.b)
 			end
 
-			button:SetTier(item:GetItemID())
-
-			E:Delay(0.1, function()
-				-- delay for quality tier fetching and text changing
-				waitGroup.count = waitGroup.count - 1
-			end)
+			waitGroup.count = waitGroup.count - 1
 		end)
 	end
 
@@ -265,12 +218,12 @@ function EB:SetUpButton(button, itemData, slotID, waitGroup)
 			if button.questLogIndex and button.questLogIndex > 0 then
 				start, duration, enable = GetQuestLogSpecialItemCooldown(button.questLogIndex)
 			else
-				start, duration, enable = C_Item_GetItemCooldown(button.itemID)
+				start, duration, enable = GetItemCooldown(button.itemID)
 			end
 			CooldownFrame_SetTimer(button.cooldown, start, duration, enable)
 			if duration and duration > 0 and enable and enable == 0 then
 				button.tex:SetVertexColor(0.4, 0.4, 0.4)
-			elseif not InCombatLockdown() and C_Item_IsItemInRange(button.itemID, "target") == 0 then
+			elseif not InCombatLockdown() and IsItemInRange(button.itemID, "target") == 0 then
 				button.tex:SetVertexColor(1, 0, 0)
 			else
 				button.tex:SetVertexColor(1, 1, 1)
@@ -313,7 +266,7 @@ function EB:SetUpButton(button, itemData, slotID, waitGroup)
 			if button.slotID then
 				GameTooltip:SetInventoryItem("player", button.slotID)
 			else
-				GameTooltip:SetItemByID(button.itemID)
+				GameTooltip:SetHyperlink("item:" .. button.itemID)
 			end
 
 			GameTooltip:Show()
@@ -355,9 +308,6 @@ function EB:SetUpButton(button, itemData, slotID, waitGroup)
 			macroText = "/use " .. button.slotID
 		elseif button.itemName then
 			macroText = "/use item:" .. button.itemID
-			if button.itemID == 172347 then
-				macroText = macroText .. "\n/use 5"
-			end
 		end
 
 		if macroText then
@@ -396,7 +346,7 @@ function EB:UpdateBarTextOnCombat(i)
 	for k = 1, 12 do
 		local button = self.bars[i].buttons[k]
 		if button.itemID and button:IsShown() then
-			button.countText = C_Item_GetItemCount(button.itemID, nil, true)
+			button.countText = GetItemCount(button.itemID, nil, true)
 			if button.countText and button.countText > 1 then
 				button.count:SetText(button.countText)
 			else
@@ -497,17 +447,8 @@ function EB:ValidateItem(itemID)
 		return false
 	end
 
-	if self.StateCheckList[itemID] and not self:GetState(self.StateCheckList[itemID]) then
-		return false
-	end
-
-	local count = C_Item_GetItemCount(itemID)
-	local countThreshold = self.CountThreshold[itemID] or 1
-	if not count or count < countThreshold then
-		return false
-	end
-
-	return true
+	local count = GetItemCount(itemID)
+	return count and count > 0
 end
 
 function EB:UpdateBar(id)
@@ -665,20 +606,11 @@ function EB:UpdateBar(id)
 			end
 		end
 
-		F.SetFontWithDB(button.qualityTier, {
-			size = barDB.qualityTier.size,
-			name = E.db.general.font,
-			style = "OUTLINE",
-		})
-
 		F.SetFontWithDB(button.count, barDB.countFont)
 		F.SetFontWithDB(button.bind, barDB.bindFont)
 
 		F.SetFontColorWithDB(button.count, barDB.countFont.color)
 		F.SetFontColorWithDB(button.bind, barDB.bindFont.color)
-
-		button.qualityTier:ClearAllPoints()
-		button.qualityTier:Point("TOPLEFT", button, "TOPLEFT", barDB.qualityTier.xOffset, barDB.qualityTier.yOffset)
 
 		button.count:ClearAllPoints()
 		button.count:Point("BOTTOMRIGHT", button, "BOTTOMRIGHT", barDB.countFont.xOffset, barDB.countFont.yOffset)
@@ -747,7 +679,6 @@ function EB:UpdateBar(id)
 end
 
 function EB:UpdateBars()
-	self:UpdateState(EB.STATE.IN_DELVE)
 	for i = 1, 5 do
 		self:UpdateBar(i)
 	end
@@ -829,19 +760,16 @@ function EB:Initialize()
 	self:CreateAll()
 	UpdateQuestItemList()
 	UpdateEquipmentList()
-	self:UpdateState(EB.STATE.QUANTUM_ITEM_ALLOWED)
 	self:UpdateBars()
 	self:UpdateBinding()
 
-	self:RegisterEvent("BAG_UPDATE_DELAYED", "UpdateBars")
+	E:RegisterEventForObject("BAG_UPDATE_DELAYED", self, self.UpdateBars)
 	self:RegisterEvent("ITEM_LOCKED")
 	self:RegisterEvent("PLAYER_ALIVE", "UpdateBars")
 	self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED", "UpdateEquipmentItem")
 	self:RegisterEvent("PLAYER_UNGHOST", "UpdateBars")
 	self:RegisterEvent("QUEST_ACCEPTED", "UpdateQuestItem")
 	self:RegisterEvent("QUEST_LOG_UPDATE", "UpdateQuestItem")
-	self:RegisterEvent("QUEST_TURNED_IN", "UpdateQuestItem")
-	self:RegisterEvent("QUEST_WATCH_LIST_CHANGED", "UpdateQuestItem")
 	self:RegisterEvent("UNIT_INVENTORY_CHANGED")
 	self:RegisterEvent("UPDATE_BINDINGS", "UpdateBinding")
 	self:RegisterEvent("ZONE_CHANGED", "UpdateBars")
@@ -856,16 +784,13 @@ function EB:ProfileUpdate()
 	if self.db.enable then
 		UpdateQuestItemList()
 		UpdateEquipmentList()
-		self:UpdateState(EB.STATE.QUANTUM_ITEM_ALLOWED)
 	elseif self.initialized then
-		self:UnregisterEvent("BAG_UPDATE_DELAYED")
+		E:UnregisterEventForObject("BAG_UPDATE_DELAYED", self, self.UpdateBars)
 		self:UnregisterEvent("PLAYER_ALIVE")
 		self:UnregisterEvent("PLAYER_EQUIPMENT_CHANGED")
 		self:UnregisterEvent("PLAYER_UNGHOST")
 		self:UnregisterEvent("QUEST_ACCEPTED")
 		self:UnregisterEvent("QUEST_LOG_UPDATE")
-		self:UnregisterEvent("QUEST_TURNED_IN")
-		self:UnregisterEvent("QUEST_WATCH_LIST_CHANGED")
 		self:UnregisterEvent("UNIT_INVENTORY_CHANGED")
 		self:UnregisterEvent("UPDATE_BINDINGS")
 		self:UnregisterEvent("ZONE_CHANGED")

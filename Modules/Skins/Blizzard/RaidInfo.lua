@@ -4,7 +4,7 @@ local S = W.Modules.Skins ---@type Skins
 local _G = _G
 
 function S:RaidInfoFrame()
-	if not self:CheckDB("nonraid", "raidInfo") then
+	if not self:CheckDB("friends", "raidInfo") then
 		return
 	end
 

@@ -1,36 +1,41 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
-local QK = W:NewModule("QuickKeystone", "AceHook-3.0", "AceEvent-3.0")
+local QK = W:NewModule("QuickKeystone", "AceHook-3.0")
 
 local _G = _G
 
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-local C_Container_GetContainerItemID = C_Container.GetContainerItemID
-local C_Container_GetContainerNumSlots = C_Container.GetContainerNumSlots
-local C_Container_UseContainerItem = UseContainerItem
+local ClearCursor = ClearCursor
+local CursorHasItem = CursorHasItem
+local GetContainerItemID = GetContainerItemID
+local GetContainerNumSlots = GetContainerNumSlots
+local PickupContainerItem = PickupContainerItem
+
+local C_ChallengeMode_SlotKeystone = C_ChallengeMode.SlotKeystone
 local C_Item_IsItemKeystoneByID = C_Item.IsItemKeystoneByID
 
 local NUM_BAG_SLOTS = NUM_BAG_SLOTS
 
 function QK:PutKeystone()
+	if CursorHasItem() then
+		return
+	end
+
 	for bagIndex = 0, NUM_BAG_SLOTS do
-		for slotIndex = 1, C_Container_GetContainerNumSlots(bagIndex) do
-			local itemID = C_Container_GetContainerItemID(bagIndex, slotIndex)
+		for slotIndex = 1, GetContainerNumSlots(bagIndex) do
+			local itemID = GetContainerItemID(bagIndex, slotIndex)
 			if itemID and C_Item_IsItemKeystoneByID(itemID) then
-				C_Container_UseContainerItem(bagIndex, slotIndex)
+				PickupContainerItem(bagIndex, slotIndex)
+				C_ChallengeMode_SlotKeystone()
+				if CursorHasItem() then
+					ClearCursor()
+				end
 				return
 			end
 		end
 	end
 end
 
-function QK:UpdateHook(event, addon)
-	if event then
-		if addon == "Blizzard_ChallengesUI" then
-			self:UnregisterEvent("ADDON_LOADED")
-		else
-			return
-		end
-	end
+function QK:ProfileUpdate()
+	self.db = E.db.WT.combat.quickKeystone
 
 	local frame = _G.ChallengesKeystoneFrame
 	if not frame then
@@ -41,20 +46,8 @@ function QK:UpdateHook(event, addon)
 		if not self:IsHooked(frame, "OnShow") then
 			self:SecureHookScript(frame, "OnShow", "PutKeystone")
 		end
-	else
-		if self:IsHooked(frame, "OnShow") then
-			self:Unhook(frame, "OnShow")
-		end
-	end
-end
-
-function QK:ProfileUpdate()
-	self.db = E.db.WT.combat.quickKeystone
-
-	if C_AddOns_IsAddOnLoaded("Blizzard_ChallengesUI") then
-		self:UpdateHook()
-	else
-		self:RegisterEvent("ADDON_LOADED", "UpdateHook")
+	elseif self:IsHooked(frame, "OnShow") then
+		self:Unhook(frame, "OnShow")
 	end
 end
 

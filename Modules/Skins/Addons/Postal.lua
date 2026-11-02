@@ -1,6 +1,6 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local S = W.Modules.Skins ---@type Skins
-local CT = W:GetModule("Contacts")
+local CT = W:GetModule("Contacts", true)
 
 local _G = _G
 local floor = floor
@@ -134,7 +134,9 @@ local function postalQuickAttach()
 		end
 	end
 
-	CT:RepositionWithPostal()
+	if CT then
+		CT:RepositionWithPostal()
+	end
 
 	return true
 end
@@ -155,14 +157,18 @@ function S:Postal()
 
 	self:DisableAddOnSkin("Postal")
 
-	local Postal = _G.LibStub("AceAddon-3.0"):GetAddon("Postal")
-	local Select = Postal:GetModule("Select")
-	local OpenAll = Postal:GetModule("OpenAll")
-	local BlackBook = Postal:GetModule("BlackBook")
-	local QuickAttach = Postal:GetModule("QuickAttach")
-	local Forward = Postal:GetModule("Forward")
+	local Postal = _G.LibStub("AceAddon-3.0"):GetAddon("Postal", true)
+	if not Postal then
+		return
+	end
 
-	if not Postal or not Select or not OpenAll or not BlackBook or not QuickAttach then
+	local Select = Postal:GetModule("Select", true)
+	local OpenAll = Postal:GetModule("OpenAll", true)
+	local BlackBook = Postal:GetModule("BlackBook", true)
+	local QuickAttach = Postal:GetModule("QuickAttach", true)
+	local Forward = Postal:GetModule("Forward", true)
+
+	if not Select or not OpenAll or not BlackBook then
 		return
 	end
 
@@ -182,11 +188,11 @@ function S:Postal()
 		hooksecurefunc(BlackBook, "OnEnable", postalBlackBook)
 	end
 
-	if not postalQuickAttach() and QuickAttach.OnEnable then
+	if QuickAttach and not postalQuickAttach() and QuickAttach.OnEnable then
 		hooksecurefunc(QuickAttach, "OnEnable", postalQuickAttach)
 	end
 
-	if not postalForward() and Forward.OnEnable then
+	if Forward and not postalForward() and Forward.OnEnable then
 		hooksecurefunc(Forward, "OnEnable", postalForward)
 	end
 end

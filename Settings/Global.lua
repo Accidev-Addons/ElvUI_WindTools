@@ -7,7 +7,6 @@ G.core = {
 	changlogPopup = false,
 	elvUIVersionPopup = true,
 	cvarAlert = false,
-	fixSetPassThroughButtons = false,
 	loginMessage = true,
 	autoCopyPrivateProfile = {
 		enable = false,
@@ -33,20 +32,6 @@ G.item = {
 	},
 }
 
-G.combat = {
-	covenantHelper = {
-		soulbindRules = {
-			characters = {},
-		},
-	},
-}
-
 G.misc = {
-	watched = {
-		movies = {},
-	},
 	lfgList = {},
-}
-
-G.maps = {
 }

@@ -25,19 +25,6 @@ local function createPositionHook(tab, point, relativeTo, relativePoint, x, y)
 	end)
 end
 
-local function BossesScrollUpdateChild(child)
-	if not child.IsSkinned or child.__windSkin then
-		return
-	end
-
-	child:GetHighlightTexture():Kill()
-	child.__windSkin = true
-end
-
-local function BossesScrollUpdate(frame)
-	frame:ForEachFrame(BossesScrollUpdateChild)
-end
-
 function S:Blizzard_EncounterJournal()
 	if not self:CheckDB("encounterjournal", "encounterJournal") then
 		return
@@ -46,18 +33,8 @@ function S:Blizzard_EncounterJournal()
 	self:CreateShadow(_G.EncounterJournal)
 
 	-- Bottom tabs
-	local tabs = {
-		_G.EncounterJournalJourneysTab,
-		_G.EncounterJournalMonthlyActivitiesTab,
-		_G.EncounterJournalSuggestTab,
-		_G.EncounterJournalDungeonTab,
-		_G.EncounterJournalRaidTab,
-		_G.EncounterJournalLootJournalTab,
-		_G.EncounterJournal.TutorialsTab,
-	}
-
-	for _, tab in pairs(tabs) do
-		self:ReskinTab(tab)
+	for i = 1, _G.EncounterJournal.numTabs do
+		self:ReskinTab(_G["EncounterJournalTab" .. i])
 	end
 
 	-- Encounter info tabs
@@ -72,20 +49,10 @@ function S:Blizzard_EncounterJournal()
 	for tabName, position in pairs(tabPositions) do
 		local tab = info[tabName]
 		if tab then
-			self:CreateBackdropShadow(tab)
+			self:CreateShadow(tab)
 			createPositionHook(tab, position[1], position[2], position[3], position[4], position[5])
 		end
 	end
-
-	if E.private.skins.parchmentRemoverEnable then
-		hooksecurefunc(_G.EncounterJournal.encounter.info.BossesScrollBox, "Update", BossesScrollUpdate)
-	end
-
-	-- Monthly Activities
-	local MAF = _G.EncounterJournalMonthlyActivitiesFrame
-	if MAF and MAF.FilterList then
-		MAF.FilterList:SetTemplate("Transparent")
-	end
 end
 
-S:AddCallbackForAddon("Blizzard_EncounterJournal")
+S:AddCallback("Blizzard_EncounterJournal")

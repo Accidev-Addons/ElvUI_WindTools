@@ -1,11 +1,15 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local S = W.Modules.Skins ---@type Skins
 
+local hooksecurefunc = hooksecurefunc
 local pairs = pairs
 
 function S:AceGUI(lib)
-	if not self:IsHooked(lib, "RegisterWidgetType") then
-		self:SecureHook(lib, "RegisterWidgetType", "HandleAceGUIWidget")
+	if lib.RegisterWidgetType ~= self.hookedRegisterWidgetType then
+		hooksecurefunc(lib, "RegisterWidgetType", function(...)
+			self:HandleAceGUIWidget(...)
+		end)
+		self.hookedRegisterWidgetType = lib.RegisterWidgetType
 	end
 	for name, constructor in pairs(lib.WidgetRegistry) do
 		self:HandleAceGUIWidget(lib, name, constructor)

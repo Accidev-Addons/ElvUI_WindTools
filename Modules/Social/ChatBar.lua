@@ -8,73 +8,47 @@ local _G = _G
 local format = format
 local ipairs = ipairs
 local pairs = pairs
-local select = select
 local sort = sort
-local strmatch = strmatch
 local tinsert = tinsert
-local tostring = tostring
 
-local C_Club_GetClubInfo = C_Club.GetClubInfo
-local C_GuildInfo_IsGuildOfficer = C_GuildInfo.IsGuildOfficer
-local ChatFrameUtil_OpenChat = ChatFrameUtil.OpenChat
+local CanEditOfficerNote = CanEditOfficerNote
+local ChatFrame_AddChannel = ChatFrame_AddChannel
+local ChatFrame_OpenChat = ChatFrame_OpenChat
 local CreateFrame = CreateFrame
 local DefaultChatFrame = _G.DEFAULT_CHAT_FRAME
-local GetChannelList = GetChannelList
 local GetChannelName = GetChannelName
 local InCombatLockdown = InCombatLockdown
 local IsEveryoneAssistant = IsEveryoneAssistant
 local IsInGroup = IsInGroup
 local IsInGuild = IsInGuild
 local IsInRaid = IsInRaid
+local IsRaidOfficer = IsRaidOfficer
 local JoinPermanentChannel = JoinPermanentChannel
 local LeaveChannelByName = LeaveChannelByName
 local RandomRoll = RandomRoll
-local UnitIsGroupAssistant = UnitIsGroupAssistant
 local UnitIsGroupLeader = UnitIsGroupLeader
-
-local LE_PARTY_CATEGORY_HOME = LE_PARTY_CATEGORY_HOME
-local LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE
 
 local BUTTON_HOVER_FONT_SIZE_INCREASE = 4
 local MOUSE_OVER_HEIGHT_PADDING = 6
-local NORMAL_CHANNELS = { "SAY", "YELL", "PARTY", "INSTANCE", "RAID", "RAID_WARNING", "GUILD", "OFFICER", "EMOTE" }
+local NORMAL_CHANNELS = { "SAY", "YELL", "PARTY", "RAID", "RAID_WARNING", "GUILD", "OFFICER", "EMOTE" }
 
 local checkFunctions = {
 	PARTY = function()
-		return IsInGroup(LE_PARTY_CATEGORY_HOME)
-	end,
-	INSTANCE = function()
-		return IsInGroup(LE_PARTY_CATEGORY_INSTANCE)
+		return IsInGroup()
 	end,
 	RAID = function()
 		return IsInRaid()
 	end,
 	RAID_WARNING = function()
-		return IsInRaid() and (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or IsEveryoneAssistant())
+		return IsInRaid() and (UnitIsGroupLeader("player") or IsRaidOfficer() or IsEveryoneAssistant())
 	end,
 	GUILD = function()
 		return IsInGuild()
 	end,
 	OFFICER = function()
-		return IsInGuild() and C_GuildInfo_IsGuildOfficer()
+		return IsInGuild() and CanEditOfficerNote()
 	end,
 }
-
----Get community channel ID by channel name
----@param text string The community channel name to search for
----@return number? channelId The channel ID if found
-local function GetCommunityChannelByName(text)
-	local channelList = { GetChannelList() }
-	for _, v in pairs(channelList) do
-		local clubId = strmatch(tostring(v), "Community:(.-):")
-		if clubId then
-			local info = C_Club_GetClubInfo(clubId)
-			if info and info.name == text then
-				return select(1, GetChannelName(tostring(v)))
-			end
-		end
-	end
-end
 
 ---Calculate the next button position offset
 ---@param anchor string The anchor direction ("LEFT" or "TOP")
@@ -392,7 +366,7 @@ function CB:UpdateBar()
 				end
 				local currentText = DefaultChatFrame.editBox:GetText()
 				local command = format("/%s ", db.cmd)
-				ChatFrameUtil_OpenChat(command .. currentText, DefaultChatFrame)
+				ChatFrame_OpenChat(command .. currentText, DefaultChatFrame)
 			end
 
 			self:UpdateButton(name, chatFunc, anchor, offsetX, offsetY, db.color, self.db.tex, nil, nil, db.abbr)
@@ -417,7 +391,7 @@ function CB:UpdateBar()
 					local autoJoined = false
 					if channelID == 0 and config.autoJoin then
 						JoinPermanentChannel(config.name)
-						DefaultChatFrame:AddChannel(config.name)
+						ChatFrame_AddChannel(DefaultChatFrame, config.name)
 						channelID = GetChannelName(config.name)
 						autoJoined = true
 					end
@@ -428,14 +402,14 @@ function CB:UpdateBar()
 					local command = format("/%s ", channelID)
 					if autoJoined then
 						-- If the channel is just joined, delay a bit to let the server process it
-						E:Delay(0.5, ChatFrameUtil_OpenChat, command .. currentText, DefaultChatFrame)
+						E:Delay(0.5, ChatFrame_OpenChat, command .. currentText, DefaultChatFrame)
 					else
-						ChatFrameUtil_OpenChat(command .. currentText, DefaultChatFrame)
+						ChatFrame_OpenChat(command .. currentText, DefaultChatFrame)
 					end
 				elseif mouseButton == "RightButton" then
 					if channelID == 0 then
 						JoinPermanentChannel(config.name)
-						DefaultChatFrame:AddChannel(config.name)
+						ChatFrame_AddChannel(DefaultChatFrame, config.name)
 					else
 						LeaveChannelByName(config.name)
 					end
@@ -452,36 +426,6 @@ function CB:UpdateBar()
 		end
 	else
 		self:DisableButton("WORLD")
-	end
-
-	if self.db.channels.community.enable then
-		local db = self.db.channels.community
-		local name = db.name
-		if not name or name == "" then
-			F.Print(L["Club channel no found, please setup again."])
-			self:DisableButton("CLUB")
-		else
-			local chatFunc = function(_, mouseButton)
-				if mouseButton ~= "LeftButton" then
-					return
-				end
-				local clubChannelId = GetCommunityChannelByName(name)
-				if not clubChannelId then
-					F.Print(format(L["Club channel %s no found, please use the full name of the channel."], name))
-				else
-					local currentText = DefaultChatFrame.editBox:GetText()
-					local command = format("/%s ", clubChannelId)
-					ChatFrameUtil_OpenChat(command .. currentText, DefaultChatFrame)
-				end
-			end
-
-			self:UpdateButton("CLUB", chatFunc, anchor, offsetX, offsetY, db.color, self.db.tex, name, nil, db.abbr)
-
-			numberOfButtons = numberOfButtons + 1
-			offsetX, offsetY = CalculateNextOffset(anchor, offsetX, offsetY, buttonWidth, buttonHeight, spacing)
-		end
-	else
-		self:DisableButton("CLUB")
 	end
 
 	if self.db.channels.emote.enable and E.db.WT.social.emote.enable then
@@ -609,7 +553,8 @@ function CB:Initialize()
 	end, "WindTools,social,chatBar")
 
 	if self.db.autoHide then
-		self:RegisterEvent("GROUP_ROSTER_UPDATE", "UpdateBar")
+		self:RegisterEvent("PARTY_MEMBERS_CHANGED", "UpdateBar")
+		self:RegisterEvent("RAID_ROSTER_UPDATE", "UpdateBar")
 		self:RegisterEvent("PLAYER_GUILD_UPDATE", "UpdateBar")
 	end
 end
@@ -631,10 +576,12 @@ function CB:ProfileUpdate()
 	self.bar:Show()
 
 	if self.db.autoHide then
-		self:RegisterEvent("GROUP_ROSTER_UPDATE", "UpdateBar")
+		self:RegisterEvent("PARTY_MEMBERS_CHANGED", "UpdateBar")
+		self:RegisterEvent("RAID_ROSTER_UPDATE", "UpdateBar")
 		self:RegisterEvent("PLAYER_GUILD_UPDATE", "UpdateBar")
 	else
-		self:UnregisterEvent("GROUP_ROSTER_UPDATE")
+		self:UnregisterEvent("PARTY_MEMBERS_CHANGED")
+		self:UnregisterEvent("RAID_ROSTER_UPDATE")
 		self:UnregisterEvent("PLAYER_GUILD_UPDATE")
 	end
 end

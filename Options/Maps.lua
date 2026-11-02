@@ -336,35 +336,6 @@ options.minimapButtons = {
 				},
 			},
 		},
-		blizzardButtonsConfig = {
-			order = 6,
-			type = "group",
-			inline = true,
-			name = L["Blizzard Buttons"],
-			get = function(info)
-				return E.private.WT.maps.minimapButtons[info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.maps.minimapButtons[info[#info]] = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-			args = {
-				expansionLandingPage = {
-					order = 2,
-					type = "toggle",
-					name = L["Expansion Landing Page"],
-					desc = L["Add expansion landing page (ex. garrison) to the bar."],
-					width = 2,
-				},
-				garrisonAlertMsg = {
-					order = 3,
-					type = "toggle",
-					name = L["Garrison Alert Message"],
-					desc = L["Display garrison alert messages in the chat frame."],
-					width = 2,
-				},
-			},
-		},
 	},
 }
 

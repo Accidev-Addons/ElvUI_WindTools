@@ -4,13 +4,11 @@ local S = W.Modules.Skins ---@type Skins
 
 local _G = _G
 local floor = math.floor
-local hooksecurefunc = hooksecurefunc
 local pairs = pairs
 
 local CreateFrame = CreateFrame
 local GetNumBuybackItems = GetNumBuybackItems
-
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
+local IsAddOnLoaded = IsAddOnLoaded
 
 local BLIZZARD_MERCHANT_ITEMS_PER_PAGE = 10
 local BLIZZARD_BUYBACK_ITEMS_PER_PAGE = 12
@@ -42,15 +40,6 @@ function EMP:SkinButton(index)
 	icon:ClearAllPoints()
 	icon:Point("TOPLEFT", 1, -1)
 	icon:Point("BOTTOMRIGHT", -1, 1)
-
-	local questIcon = button.IconQuestTexture
-	questIcon:SetTexCoord(0, 1, 0, 1)
-	questIcon:SetInside()
-	hooksecurefunc(questIcon, "SetTexture", function(iconQuest, texture)
-		if texture == [[Interface\ContainerFrame\UI-Icon-QuestBang]] then
-			iconQuest:SetTexture(E.Media.Textures.BagQuestIcon)
-		end
-	end)
 
 	local nameFrame = _G["MerchantItem" .. index .. "NameFrame"]
 	nameFrame:Point("LEFT", slot, "RIGHT", -6, -17)
@@ -149,7 +138,7 @@ function EMP:Initialize()
 		"Krowi_ExtendedVendorUI",
 		"CompactVendor",
 	}) do
-		if C_AddOns_IsAddOnLoaded(addon) then
+		if IsAddOnLoaded(addon) then
 			self.StopRunning = addon
 			return
 		end

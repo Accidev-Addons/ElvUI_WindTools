@@ -377,7 +377,6 @@ function F.Throttle(duration, key, func, ...)
 	if not state then
 		state = {
 			isThrottling = false,
-			timer = nil,
 			lastArgs = { ... },
 		}
 		throttleStates[finalKey] = state
@@ -391,15 +390,9 @@ function F.Throttle(duration, key, func, ...)
 
 	state.isThrottling = true
 
-	if state.timer then
-		state.timer:Cancel()
-		state.timer = nil
-	end
-
-	state.timer = E:Delay(duration, function()
+	E:Delay(duration, function()
 		func(unpack(state.lastArgs))
 		state.isThrottling = false
-		state.timer = nil
 	end)
 end
 
@@ -428,7 +421,6 @@ function F.ThrottleFirst(duration, key, func, ...)
 	if not state then
 		state = {
 			isThrottling = false,
-			timer = nil,
 			lastArgs = { ... },
 		}
 		throttleFirstStates[finalKey] = state
@@ -442,15 +434,9 @@ function F.ThrottleFirst(duration, key, func, ...)
 
 	state.isThrottling = true
 
-	if state.timer then
-		state.timer:Cancel()
-		state.timer = nil
-	end
-
-	state.timer = E:Delay(duration, function()
+	E:Delay(duration, function()
 		func(unpack(state.lastArgs))
 		state.isThrottling = false
-		state.timer = nil
 	end)
 end
 
@@ -471,28 +457,6 @@ end
 function F.ThrottleFirstFunction(duration, func)
 	return function(...)
 		F.ThrottleFirst(duration, func, func, ...)
-	end
-end
-
----Cancel throttle for a specific key
----@param key any The throttle key to cancel
-function F.CancelThrottle(key)
-	local state = throttleStates[key]
-	if state and state.timer then
-		state.timer:Cancel()
-		state.timer = nil
-		state.isThrottling = false
-	end
-end
-
----Cancel throttle first for a specific key
----@param key any The throttle first key to cancel
-function F.CancelThrottleFirst(key)
-	local state = throttleFirstStates[key]
-	if state and state.timer then
-		state.timer:Cancel()
-		state.timer = nil
-		state.isThrottling = false
 	end
 end
 

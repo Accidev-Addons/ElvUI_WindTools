@@ -313,7 +313,7 @@ options.absorb = {
 					type = "execute",
 					name = L["Color"],
 					func = function()
-						E:ToggleOptions("unitframe,allColorsGroup,healPrediction")
+						E:ToggleOptions("unitframe,generalOptionsGroup,allColorsGroup,healPrediction")
 					end,
 					width = 0.6,
 				},
@@ -719,10 +719,8 @@ do
 		SHAMAN = L["Shaman"],
 		MAGE = L["Mage"],
 		WARLOCK = L["Warlock"],
-		MONK = L["Monk"],
 		DRUID = L["Druid"],
 		DEMONHUNTER = L["Demonhunter"],
-		EVOKER = L["Evoker"],
 	}
 
 	for i = 1, GetNumClasses() do

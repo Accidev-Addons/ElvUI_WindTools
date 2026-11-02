@@ -12,8 +12,9 @@ local gsub = gsub
 local pairs = pairs
 local strjoin = strjoin
 local strmatch = strmatch
+local tonumber = tonumber
 
-local C_Spell_GetSpellLink = C_Spell.GetSpellLink
+local GetSpellLink = GetSpellLink
 
 local function ImportantColorString(s)
 	return C.StringByTemplate(s, "blue-400")
@@ -196,20 +197,6 @@ options.quest = {
 						SAY = L["Say"],
 					},
 				},
-				instance = {
-					order = 2,
-					name = L["In Instance"],
-					type = "select",
-					values = {
-						NONE = L["None"],
-						PARTY = L["Party"],
-						SELF = L["Self (Chat Frame)"],
-						EMOTE = L["Emote"],
-						INSTANCE_CHAT = L["Instance"],
-						YELL = L["Yell"],
-						SAY = L["Say"],
-					},
-				},
 				raid = {
 					order = 3,
 					name = L["In Raid"],
@@ -322,20 +309,6 @@ options.utility = {
 								SELF = L["Self (Chat Frame)"],
 								EMOTE = L["Emote"],
 								PARTY = L["Party"],
-								YELL = L["Yell"],
-								SAY = L["Say"],
-							},
-						},
-						instance = {
-							order = 3,
-							name = L["In Instance"],
-							type = "select",
-							values = {
-								NONE = L["None"],
-								SELF = L["Self (Chat Frame)"],
-								EMOTE = L["Emote"],
-								PARTY = L["Party"],
-								INSTANCE_CHAT = L["Instance"],
 								YELL = L["Yell"],
 								SAY = L["Say"],
 							},
@@ -555,7 +528,7 @@ options.utility = {
 								if addedSelected and E.db.WT.announcement.utility.custom[addedSelected] then
 									local message = E.db.WT.announcement.utility.custom[addedSelected].text
 									message = gsub(message, "%%player%%", E.myname)
-									message = gsub(message, "%%spell%%", C_Spell_GetSpellLink(addedSelected))
+									message = gsub(message, "%%spell%%", GetSpellLink(tonumber(addedSelected)))
 									return "\n" .. ImportantColorString(L["Example"]) .. ": " .. message .. "\n"
 								end
 								return ""
@@ -689,19 +662,6 @@ options.goodbye = {
 						SAY = L["Say"],
 					},
 				},
-				instance = {
-					order = 2,
-					name = L["In Instance"],
-					type = "select",
-					values = {
-						NONE = L["None"],
-						EMOTE = L["Emote"],
-						PARTY = L["Party"],
-						INSTANCE_CHAT = L["Instance"],
-						YELL = L["Yell"],
-						SAY = L["Say"],
-					},
-				},
 				raid = {
 					order = 3,
 					name = L["In Raid"],
@@ -777,20 +737,6 @@ options.resetInstance = {
 						SELF = L["Self (Chat Frame)"],
 						EMOTE = L["Emote"],
 						PARTY = L["Party"],
-						YELL = L["Yell"],
-						SAY = L["Say"],
-					},
-				},
-				instance = {
-					order = 2,
-					name = L["In Instance"],
-					type = "select",
-					values = {
-						NONE = L["None"],
-						SELF = L["Self (Chat Frame)"],
-						EMOTE = L["Emote"],
-						PARTY = L["Party"],
-						INSTANCE_CHAT = L["Instance"],
 						YELL = L["Yell"],
 						SAY = L["Say"],
 					},

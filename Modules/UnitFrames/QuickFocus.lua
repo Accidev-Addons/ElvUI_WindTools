@@ -2,13 +2,11 @@ local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI
 local UF = E:GetModule("UnitFrames")
 local QF = W:NewModule("QuickFocus", "AceHook-3.0", "AceEvent-3.0")
 
+local format = format
 local next = next
 local pairs = pairs
-local strjoin = strjoin
 local strmatch = strmatch
 local strsub = strsub
-local tAppendAll = tAppendAll
-local unpack = unpack
 
 local CreateFrame = CreateFrame
 local InCombatLockdown = InCombatLockdown
@@ -42,7 +40,7 @@ function QF:PLAYER_REGEN_ENABLED()
 	end
 end
 
-function QF:GROUP_ROSTER_UPDATE()
+function QF:SetupAllFrames()
 	if not UF or not UF.units then
 		return
 	end
@@ -85,30 +83,22 @@ function QF:WaitUnitframesLoad(triedTimes)
 	end
 
 	if not UF.unitstoload and not UF.unitgroupstoload and not UF.headerstoload then
-		self:GROUP_ROSTER_UPDATE()
+		self:SetupAllFrames()
 	else
 		E:Delay(0.5, self.WaitUnitframesLoad, self, triedTimes + 1)
 	end
 end
 
 function QF:GetMacroText()
-	local lines = { "/focus mouseover" }
+	local macroText = "/focus mouseover"
 
 	if self.db.setMark and self.db.markNumber and self.db.markNumber >= 1 and self.db.markNumber <= 8 then
-		if self.db.safeMark then
-			tAppendAll(lines, {
-				"/tm [@focus,exists,help][@focus,exists,harm] 0",
-				"/tm [@focus,exists,help][@focus,exists,harm] " .. self.db.markNumber,
-			})
-		else
-			tAppendAll(lines, {
-				"/tm [@focus,exists] 0",
-				"/tm [@focus,exists] " .. self.db.markNumber,
-			})
-		end
+		local condition = self.db.safeMark and 'UnitCanAssist("player","focus") or UnitCanAttack("player","focus")'
+			or 'UnitExists("focus")'
+		macroText = format('%s\n/run if %s then SetRaidTarget("focus",%d) end', macroText, condition, self.db.markNumber)
 	end
 
-	return strjoin("\n", unpack(lines))
+	return macroText
 end
 
 function QF:Initialize()
@@ -124,7 +114,8 @@ function QF:Initialize()
 	SetOverrideBindingClick(button, true, self.db.modifier .. "-" .. self.db.button, "WTQuickFocusButton")
 
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
-	self:RegisterEvent("GROUP_ROSTER_UPDATE")
+	self:RegisterEvent("PARTY_MEMBERS_CHANGED", "SetupAllFrames")
+	self:RegisterEvent("RAID_ROSTER_UPDATE", "SetupAllFrames")
 	self:WaitUnitframesLoad()
 end
 

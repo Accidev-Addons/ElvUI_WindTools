@@ -105,7 +105,7 @@ function S:LossOfControlFrame()
 		return
 	end
 
-	self:SecureHook(_G.LossOfControlFrame, "SetUpDisplay", "LossOfControlFrame_SetUpDisplay")
+	self:SecureHook("LossOfControlFrame_SetUpDisplay", "LossOfControlFrame_SetUpDisplay")
 	self:SecureHook(_G.LossOfControlFrame.AbilityName, "Show", function(f)
 		if self.db.lossOfControl.abilityName.hide then
 			f:Hide()

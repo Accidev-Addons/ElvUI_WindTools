@@ -7,14 +7,15 @@ local C = W.Utilities.Color
 local _G = _G
 local format = format
 local pairs = pairs
+local select = select
 local type = type
 
+local GetSpellInfo = GetSpellInfo
 local GetTime = GetTime
 
 local function DoesAddOnExist(name)
-	return _G.GetAddOnInfo(name) ~= nil
+	return select(6, _G.GetAddOnInfo(name)) ~= "MISSING"
 end
-local C_Spell_GetSpellTexture = C_Spell.GetSpellTexture
 
 local RED_FONT_COLOR = RED_FONT_COLOR
 local YELLOW_FONT_COLOR = YELLOW_FONT_COLOR
@@ -130,20 +131,6 @@ options.general = {
 					set = function(info, value)
 						E.private.WT.skins.removeParchment = value
 						E.private.skins.parchmentRemoverEnable = E.private.WT.skins.removeParchment
-						E:StaticPopup_Show("PRIVATE_RL")
-					end,
-				},
-				imeTransparentBackdrop = {
-					order = 3,
-					width = 2,
-					type = "toggle",
-					name = L["IME Transparent Backdrop"],
-					desc = L["Enable a transparent backdrop for the IME candidate frame."],
-					get = function(info)
-						return E.private.WT.skins.ime.transparentBackdrop
-					end,
-					set = function(info, value)
-						E.private.WT.skins.ime.transparentBackdrop = value
 						E:StaticPopup_Show("PRIVATE_RL")
 					end,
 				},
@@ -443,762 +430,6 @@ options.font = {
 				},
 			},
 		},
-		imeLabel = {
-			order = 2,
-			type = "group",
-			inline = true,
-			name = L["Input Method Editor"] .. " - " .. L["Label"],
-			get = function(info)
-				return E.private.WT.skins.ime.label[info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.skins.ime.label[info[#info]] = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-			args = {
-				name = {
-					order = 1,
-					type = "select",
-					dialogControl = "LSM30_Font",
-					name = L["Font"],
-					values = LSM:HashTable("font"),
-				},
-				style = {
-					order = 2,
-					type = "select",
-					name = L["Outline"],
-					values = {
-						NONE = L["None"],
-						OUTLINE = L["Outline"],
-						THICKOUTLINE = L["Thick"],
-						SHADOW = L["|cff888888Shadow|r"],
-						SHADOWOUTLINE = L["|cff888888Shadow|r Outline"],
-						SHADOWTHICKOUTLINE = L["|cff888888Shadow|r Thick"],
-						MONOCHROME = L["|cFFAAAAAAMono|r"],
-						MONOCHROMEOUTLINE = L["|cFFAAAAAAMono|r Outline"],
-						MONOCHROMETHICKOUTLINE = L["|cFFAAAAAAMono|r Thick"],
-					},
-				},
-				size = {
-					order = 3,
-					name = L["Size"],
-					type = "range",
-					min = 5,
-					max = 60,
-					step = 1,
-				},
-			},
-		},
-		imeCandidate = {
-			order = 3,
-			type = "group",
-			inline = true,
-			name = L["Input Method Editor"] .. " - " .. L["Candidate"],
-			get = function(info)
-				return E.private.WT.skins.ime.candidate[info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.skins.ime.candidate[info[#info]] = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-			args = {
-				name = {
-					order = 1,
-					type = "select",
-					dialogControl = "LSM30_Font",
-					name = L["Font"],
-					values = LSM:HashTable("font"),
-				},
-				style = {
-					order = 2,
-					type = "select",
-					name = L["Outline"],
-					values = {
-						NONE = L["None"],
-						OUTLINE = L["Outline"],
-						THICKOUTLINE = L["Thick"],
-						SHADOW = L["|cff888888Shadow|r"],
-						SHADOWOUTLINE = L["|cff888888Shadow|r Outline"],
-						SHADOWTHICKOUTLINE = L["|cff888888Shadow|r Thick"],
-						MONOCHROME = L["|cFFAAAAAAMono|r"],
-						MONOCHROMEOUTLINE = L["|cFFAAAAAAMono|r Outline"],
-						MONOCHROMETHICKOUTLINE = L["|cFFAAAAAAMono|r Thick"],
-					},
-				},
-				size = {
-					order = 3,
-					name = L["Size"],
-					type = "range",
-					min = 5,
-					max = 60,
-					step = 1,
-				},
-			},
-		},
-	},
-}
-
-options.cooldownViewer = {
-	order = 4,
-	type = "group",
-	name = L["Cooldown Viewer"],
-	args = {
-		notice = {
-			order = 1,
-			type = "group",
-			name = " ",
-			inline = true,
-			args = {
-				desc = {
-					order = 1,
-					type = "description",
-					name = C.StringByTemplate(L["Notice"], "rose-500")
-						.. " "
-						.. L["This module will override ElvUI's Cooldown Manager count font settings."],
-					width = "full",
-					fontSize = "medium",
-				},
-				desc2 = {
-					order = 2,
-					type = "description",
-					hidden = function()
-						return E.private.WT.skins.blizzard.enable
-							and E.private.skins.blizzard.cooldownManager
-							and E.private.WT.skins.blizzard.cooldownViewer
-					end,
-					name = format(
-						L["To enable the modifications below, you need to enable [%s] - [%s] skin first."],
-						L["Blizzard"],
-						F.GetWindStyleText(L["Cooldown Viewer"])
-					),
-					width = "full",
-					fontSize = "medium",
-				},
-			},
-		},
-		enable = {
-			order = 2,
-			type = "toggle",
-			name = L["Enable"],
-			get = function(info)
-				return E.private.WT.skins.cooldownViewer[info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.skins.cooldownViewer[info[#info]] = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-			disabled = function()
-				return not E.private.WT.skins.blizzard.enable
-					or not E.private.skins.blizzard.cooldownManager
-					or not E.private.WT.skins.blizzard.cooldownViewer
-			end,
-		},
-		general = {
-			order = 10,
-			type = "group",
-			inline = true,
-			name = L["General"],
-			get = function(info)
-				return E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]] = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-			disabled = function()
-				return not E.private.WT.skins.cooldownViewer.enable
-			end,
-			args = {
-				barShadow = {
-					order = 1,
-					type = "toggle",
-					name = L["Shadow"] .. " - " .. L["Bar"],
-				},
-				iconShadow = {
-					order = 2,
-					type = "toggle",
-					name = L["Shadow"] .. " - " .. L["Icon"],
-				},
-				-- TODO: disable for now
-				-- useBlizzardGlow = {
-				-- 	order = 3,
-				-- 	type = "toggle",
-				-- 	name = L["Use Blizzard Glow"],
-				-- 	desc = L["Disable ElvUI's LibCustomGlow for fixing cooldown animations."],
-				-- },
-				removeDebuffBorder = {
-					order = 4,
-					type = "toggle",
-					width = 2,
-					name = L["Remove Debuff Border"],
-					desc = L["Remove the red border around icons when the cooldown is caused by debuffs."],
-				},
-			},
-		},
-		essential = {
-			order = 11,
-			type = "group",
-			name = L["Essential"],
-			get = function(info)
-				return E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]] = value
-				S:CooldownManager_HandleViewer(_G.EssentialCooldownViewer)
-			end,
-			disabled = function()
-				return not E.private.WT.skins.cooldownViewer.enable
-			end,
-			args = {
-				enable = {
-					order = 1,
-					type = "toggle",
-					name = L["Enable"],
-					set = function(info, value)
-						E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]] = value
-						E:StaticPopup_Show("PRIVATE_RL")
-					end,
-				},
-				frameStrata = {
-					order = 2,
-					type = "select",
-					name = L["Frame Strata"],
-					values = {
-						BACKGROUND = "BACKGROUND",
-						LOW = "LOW",
-						MEDIUM = "MEDIUM",
-						HIGH = "HIGH",
-						DIALOG = "DIALOG",
-						TOOLTIP = "TOOLTIP",
-					},
-				},
-				frameLevel = {
-					order = 3,
-					type = "range",
-					name = L["Frame Level"],
-					min = 1,
-					max = 2000,
-					step = 1,
-				},
-				iconHeightRatio = {
-					order = 4,
-					type = "range",
-					name = L["Icon Height Ratio"],
-					desc = L["Set the height ratio of icons inside Cooldown Viewer."],
-					min = 0.1,
-					max = 2,
-					step = 0.01,
-				},
-				chargeCountText = {
-					order = 5,
-					type = "group",
-					inline = true,
-					name = L["Charge Count Text"],
-					get = function(info)
-						return E.private.WT.skins.cooldownViewer[info[#info - 2]][info[#info - 1]][info[#info]]
-					end,
-					set = function(info, value)
-						E.private.WT.skins.cooldownViewer[info[#info - 2]][info[#info - 1]][info[#info]] = value
-						S:CooldownManager_HandleViewer(_G.EssentialCooldownViewer)
-					end,
-					args = {
-						name = {
-							order = 1,
-							type = "select",
-							dialogControl = "LSM30_Font",
-							name = L["Font"],
-							values = LSM:HashTable("font"),
-						},
-						style = {
-							order = 2,
-							type = "select",
-							name = L["Outline"],
-							values = {
-								NONE = L["None"],
-								OUTLINE = L["Outline"],
-								THICKOUTLINE = L["Thick"],
-								SHADOW = L["|cff888888Shadow|r"],
-								SHADOWOUTLINE = L["|cff888888Shadow|r Outline"],
-								SHADOWTHICKOUTLINE = L["|cff888888Shadow|r Thick"],
-								MONOCHROME = L["|cFFAAAAAAMono|r"],
-								MONOCHROMEOUTLINE = L["|cFFAAAAAAMono|r Outline"],
-								MONOCHROMETHICKOUTLINE = L["|cFFAAAAAAMono|r Thick"],
-							},
-						},
-						size = {
-							order = 3,
-							name = L["Size"],
-							type = "range",
-							min = 5,
-							max = 60,
-							step = 1,
-						},
-						justifyH = {
-							order = 4,
-							type = "select",
-							name = L["Horizontal Justify"],
-							values = {
-								LEFT = L["LEFT"],
-								CENTER = L["CENTER"],
-								RIGHT = L["RIGHT"],
-							},
-						},
-						point = {
-							order = 5,
-							type = "select",
-							name = L["Anchor Point"],
-							values = {
-								TOPLEFT = L["TOPLEFT"],
-								TOP = L["TOP"],
-								TOPRIGHT = L["TOPRIGHT"],
-								LEFT = L["LEFT"],
-								CENTER = L["CENTER"],
-								RIGHT = L["RIGHT"],
-								BOTTOMLEFT = L["BOTTOMLEFT"],
-								BOTTOM = L["BOTTOM"],
-								BOTTOMRIGHT = L["BOTTOMRIGHT"],
-							},
-						},
-						relativePoint = {
-							order = 6,
-							type = "select",
-							name = L["Relative Point"],
-							values = {
-								TOPLEFT = L["TOPLEFT"],
-								TOP = L["TOP"],
-								TOPRIGHT = L["TOPRIGHT"],
-								LEFT = L["LEFT"],
-								CENTER = L["CENTER"],
-								RIGHT = L["RIGHT"],
-								BOTTOMLEFT = L["BOTTOMLEFT"],
-								BOTTOM = L["BOTTOM"],
-								BOTTOMRIGHT = L["BOTTOMRIGHT"],
-							},
-						},
-						offsetX = {
-							order = 4,
-							name = L["X-Offset"],
-							type = "range",
-							min = -100,
-							max = 100,
-							step = 1,
-						},
-						offsetY = {
-							order = 5,
-							name = L["Y-Offset"],
-							type = "range",
-							min = -100,
-							max = 100,
-							step = 1,
-						},
-					},
-				},
-			},
-		},
-		utility = {
-			order = 13,
-			type = "group",
-			name = L["Utility"],
-			get = function(info)
-				return E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]] = value
-				S:CooldownManager_HandleViewer(_G.UtilityCooldownViewer)
-			end,
-			disabled = function()
-				return not E.private.WT.skins.cooldownViewer.enable
-			end,
-			args = {
-				enable = {
-					order = 1,
-					type = "toggle",
-					name = L["Enable"],
-					set = function(info, value)
-						E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]] = value
-						E:StaticPopup_Show("PRIVATE_RL")
-					end,
-				},
-				frameStrata = {
-					order = 2,
-					type = "select",
-					name = L["Frame Strata"],
-					values = {
-						BACKGROUND = "BACKGROUND",
-						LOW = "LOW",
-						MEDIUM = "MEDIUM",
-						HIGH = "HIGH",
-						DIALOG = "DIALOG",
-						TOOLTIP = "TOOLTIP",
-					},
-				},
-				frameLevel = {
-					order = 3,
-					type = "range",
-					name = L["Frame Level"],
-					min = 1,
-					max = 2000,
-					step = 1,
-				},
-				iconHeightRatio = {
-					order = 4,
-					type = "range",
-					name = L["Icon Height Ratio"],
-					desc = L["Set the height ratio of icons inside Cooldown Viewer."],
-					min = 0.1,
-					max = 2,
-					step = 0.01,
-				},
-				chargeCountText = {
-					order = 5,
-					type = "group",
-					inline = true,
-					name = L["Charge Count Text"],
-					get = function(info)
-						return E.private.WT.skins.cooldownViewer[info[#info - 2]][info[#info - 1]][info[#info]]
-					end,
-					set = function(info, value)
-						E.private.WT.skins.cooldownViewer[info[#info - 2]][info[#info - 1]][info[#info]] = value
-						S:CooldownManager_HandleViewer(_G.EssentialCooldownViewer)
-					end,
-					args = {
-						name = {
-							order = 1,
-							type = "select",
-							dialogControl = "LSM30_Font",
-							name = L["Font"],
-							values = LSM:HashTable("font"),
-						},
-						style = {
-							order = 2,
-							type = "select",
-							name = L["Outline"],
-							values = {
-								NONE = L["None"],
-								OUTLINE = L["Outline"],
-								THICKOUTLINE = L["Thick"],
-								SHADOW = L["|cff888888Shadow|r"],
-								SHADOWOUTLINE = L["|cff888888Shadow|r Outline"],
-								SHADOWTHICKOUTLINE = L["|cff888888Shadow|r Thick"],
-								MONOCHROME = L["|cFFAAAAAAMono|r"],
-								MONOCHROMEOUTLINE = L["|cFFAAAAAAMono|r Outline"],
-								MONOCHROMETHICKOUTLINE = L["|cFFAAAAAAMono|r Thick"],
-							},
-						},
-						size = {
-							order = 3,
-							name = L["Size"],
-							type = "range",
-							min = 5,
-							max = 60,
-							step = 1,
-						},
-						justifyH = {
-							order = 4,
-							type = "select",
-							name = L["Horizontal Justify"],
-							values = {
-								LEFT = L["LEFT"],
-								CENTER = L["CENTER"],
-								RIGHT = L["RIGHT"],
-							},
-						},
-						point = {
-							order = 5,
-							type = "select",
-							name = L["Anchor Point"],
-							values = {
-								TOPLEFT = L["TOPLEFT"],
-								TOP = L["TOP"],
-								TOPRIGHT = L["TOPRIGHT"],
-								LEFT = L["LEFT"],
-								CENTER = L["CENTER"],
-								RIGHT = L["RIGHT"],
-								BOTTOMLEFT = L["BOTTOMLEFT"],
-								BOTTOM = L["BOTTOM"],
-								BOTTOMRIGHT = L["BOTTOMRIGHT"],
-							},
-						},
-						relativePoint = {
-							order = 6,
-							type = "select",
-							name = L["Relative Point"],
-							values = {
-								TOPLEFT = L["TOPLEFT"],
-								TOP = L["TOP"],
-								TOPRIGHT = L["TOPRIGHT"],
-								LEFT = L["LEFT"],
-								CENTER = L["CENTER"],
-								RIGHT = L["RIGHT"],
-								BOTTOMLEFT = L["BOTTOMLEFT"],
-								BOTTOM = L["BOTTOM"],
-								BOTTOMRIGHT = L["BOTTOMRIGHT"],
-							},
-						},
-						offsetX = {
-							order = 4,
-							name = L["X-Offset"],
-							type = "range",
-							min = -100,
-							max = 100,
-							step = 1,
-						},
-						offsetY = {
-							order = 5,
-							name = L["Y-Offset"],
-							type = "range",
-							min = -100,
-							max = 100,
-							step = 1,
-						},
-					},
-				},
-			},
-		},
-		buffIcon = {
-			order = 14,
-			type = "group",
-			name = L["Buff Icon"],
-			get = function(info)
-				return E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]] = value
-				S:CooldownManager_HandleViewer(_G.BuffIconCooldownViewer)
-			end,
-			disabled = function()
-				return not E.private.WT.skins.cooldownViewer.enable
-			end,
-			args = {
-				enable = {
-					order = 1,
-					type = "toggle",
-					name = L["Enable"],
-					set = function(info, value)
-						E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]] = value
-						E:StaticPopup_Show("PRIVATE_RL")
-					end,
-				},
-				frameStrata = {
-					order = 2,
-					type = "select",
-					name = L["Frame Strata"],
-					values = {
-						BACKGROUND = "BACKGROUND",
-						LOW = "LOW",
-						MEDIUM = "MEDIUM",
-						HIGH = "HIGH",
-						DIALOG = "DIALOG",
-						TOOLTIP = "TOOLTIP",
-					},
-				},
-				frameLevel = {
-					order = 3,
-					type = "range",
-					name = L["Frame Level"],
-					min = 1,
-					max = 2000,
-					step = 1,
-				},
-				iconHeightRatio = {
-					order = 4,
-					type = "range",
-					name = L["Icon Height Ratio"],
-					desc = L["Set the height ratio of icons inside Cooldown Viewer."],
-					min = 0.1,
-					max = 2,
-					step = 0.01,
-				},
-				chargeCountText = {
-					order = 5,
-					type = "group",
-					inline = true,
-					name = L["Charge Count Text"],
-					get = function(info)
-						return E.private.WT.skins.cooldownViewer[info[#info - 2]][info[#info - 1]][info[#info]]
-					end,
-					set = function(info, value)
-						E.private.WT.skins.cooldownViewer[info[#info - 2]][info[#info - 1]][info[#info]] = value
-						S:CooldownManager_HandleViewer(_G.EssentialCooldownViewer)
-					end,
-					args = {
-						name = {
-							order = 1,
-							type = "select",
-							dialogControl = "LSM30_Font",
-							name = L["Font"],
-							values = LSM:HashTable("font"),
-						},
-						style = {
-							order = 2,
-							type = "select",
-							name = L["Outline"],
-							values = {
-								NONE = L["None"],
-								OUTLINE = L["Outline"],
-								THICKOUTLINE = L["Thick"],
-								SHADOW = L["|cff888888Shadow|r"],
-								SHADOWOUTLINE = L["|cff888888Shadow|r Outline"],
-								SHADOWTHICKOUTLINE = L["|cff888888Shadow|r Thick"],
-								MONOCHROME = L["|cFFAAAAAAMono|r"],
-								MONOCHROMEOUTLINE = L["|cFFAAAAAAMono|r Outline"],
-								MONOCHROMETHICKOUTLINE = L["|cFFAAAAAAMono|r Thick"],
-							},
-						},
-						size = {
-							order = 3,
-							name = L["Size"],
-							type = "range",
-							min = 5,
-							max = 60,
-							step = 1,
-						},
-						justifyH = {
-							order = 4,
-							type = "select",
-							name = L["Horizontal Justify"],
-							values = {
-								LEFT = L["LEFT"],
-								CENTER = L["CENTER"],
-								RIGHT = L["RIGHT"],
-							},
-						},
-						point = {
-							order = 5,
-							type = "select",
-							name = L["Anchor Point"],
-							values = {
-								TOPLEFT = L["TOPLEFT"],
-								TOP = L["TOP"],
-								TOPRIGHT = L["TOPRIGHT"],
-								LEFT = L["LEFT"],
-								CENTER = L["CENTER"],
-								RIGHT = L["RIGHT"],
-								BOTTOMLEFT = L["BOTTOMLEFT"],
-								BOTTOM = L["BOTTOM"],
-								BOTTOMRIGHT = L["BOTTOMRIGHT"],
-							},
-						},
-						relativePoint = {
-							order = 6,
-							type = "select",
-							name = L["Relative Point"],
-							values = {
-								TOPLEFT = L["TOPLEFT"],
-								TOP = L["TOP"],
-								TOPRIGHT = L["TOPRIGHT"],
-								LEFT = L["LEFT"],
-								CENTER = L["CENTER"],
-								RIGHT = L["RIGHT"],
-								BOTTOMLEFT = L["BOTTOMLEFT"],
-								BOTTOM = L["BOTTOM"],
-								BOTTOMRIGHT = L["BOTTOMRIGHT"],
-							},
-						},
-						offsetX = {
-							order = 4,
-							name = L["X-Offset"],
-							type = "range",
-							min = -100,
-							max = 100,
-							step = 1,
-						},
-						offsetY = {
-							order = 5,
-							name = L["Y-Offset"],
-							type = "range",
-							min = -100,
-							max = 100,
-							step = 1,
-						},
-					},
-				},
-			},
-		},
-		buffBar = {
-			order = 15,
-			type = "group",
-			name = L["Buff Bar"],
-			get = function(info)
-				return E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]] = value
-				S:CooldownManager_HandleViewer(_G.BuffBarCooldownViewer)
-			end,
-			disabled = function()
-				return not E.private.WT.skins.cooldownViewer.enable
-			end,
-			args = {
-				enable = {
-					order = 1,
-					type = "toggle",
-					name = L["Enable"],
-					set = function(info, value)
-						E.private.WT.skins.cooldownViewer[info[#info - 1]][info[#info]] = value
-						E:StaticPopup_Show("PRIVATE_RL")
-					end,
-				},
-				frameStrata = {
-					order = 2,
-					type = "select",
-					name = L["Frame Strata"],
-					values = {
-						BACKGROUND = "BACKGROUND",
-						LOW = "LOW",
-						MEDIUM = "MEDIUM",
-						HIGH = "HIGH",
-						DIALOG = "DIALOG",
-						TOOLTIP = "TOOLTIP",
-					},
-				},
-				frameLevel = {
-					order = 3,
-					type = "range",
-					name = L["Frame Level"],
-					min = 1,
-					max = 2000,
-					step = 1,
-				},
-				barTexture = {
-					order = 4,
-					type = "select",
-					dialogControl = "LSM30_Statusbar",
-					name = L["Bar Texture"],
-					values = LSM:HashTable("statusbar"),
-				},
-				colorLeft = {
-					order = 5,
-					type = "color",
-					name = L["Left Color"],
-					hasAlpha = true,
-					get = function(info)
-						local db = E.private.WT.skins.cooldownViewer.buffBar.colorLeft
-						local default = V.skins.cooldownViewer.buffBar.colorLeft
-						return db.r, db.g, db.b, db.a, default.r, default.g, default.b, default.a
-					end,
-					set = function(info, r, g, b, a)
-						local db = E.private.WT.skins.cooldownViewer.buffBar.colorLeft
-						db.r, db.g, db.b, db.a = r, g, b, a
-					end,
-				},
-				colorRight = {
-					order = 6,
-					type = "color",
-					name = L["Right Color"],
-					hasAlpha = true,
-					get = function(info)
-						local db = E.private.WT.skins.cooldownViewer.buffBar.colorRight
-						local default = V.skins.cooldownViewer.buffBar.colorRight
-						return db.r, db.g, db.b, db.a, default.r, default.g, default.b, default.a
-					end,
-					set = function(info, r, g, b, a)
-						local db = E.private.WT.skins.cooldownViewer.buffBar.colorRight
-						db.r, db.g, db.b, db.a = r, g, b, a
-					end,
-				},
-			},
-		},
 	},
 }
 
@@ -1240,18 +471,20 @@ options.lossOfControl = {
 							return
 						end
 
-						frame:SetUpDisplay(true, {
-							locType = "STUN",
-							spellID = 408,
-							displayText = L["Stunned"],
-							iconTexture = C_Spell_GetSpellTexture(408),
-							startTime = GetTime(),
-							timeRemaining = 6,
-							duration = 6,
-							lockoutSchool = 0,
-							priority = 5,
-							displayType = 1,
-						})
+						_G.LossOfControlFrame_SetUpDisplay(
+							frame,
+							true,
+							"STUN",
+							408,
+							L["Stunned"],
+							select(3, GetSpellInfo(408)),
+							GetTime(),
+							6,
+							6,
+							0,
+							5,
+							1
+						)
 						frame.fadeDelayTime = nil
 						frame.fadeTime = 3600
 					end,
@@ -1638,11 +871,6 @@ options.blizzard = {
 			type = "toggle",
 			name = L["Achievements"],
 		},
-		addonManager = {
-			order = 10,
-			type = "toggle",
-			name = L["AddOn Manager"],
-		},
 		alerts = {
 			order = 10,
 			type = "toggle",
@@ -1713,20 +941,10 @@ options.blizzard = {
 			type = "toggle",
 			name = L["Dressing Room"],
 		},
-		editModeManager = {
-			order = 10,
-			type = "toggle",
-			name = L["Edit Mode Manager"],
-		},
 		encounterJournal = {
 			order = 10,
 			type = "toggle",
 			name = L["Encounter Journal"],
-		},
-		eventTrace = {
-			order = 10,
-			type = "toggle",
-			name = L["Event Trace"],
 		},
 		friends = {
 			order = 10,
@@ -1738,15 +956,15 @@ options.blizzard = {
 			type = "toggle",
 			name = L["Game Menu"],
 		},
-		genericTrait = {
-			order = 10,
-			type = "toggle",
-			name = L["Generic Trait"],
-		},
 		gossip = {
 			order = 10,
 			type = "toggle",
 			name = L["Gossip Frame"],
+		},
+		guild = {
+			order = 10,
+			type = "toggle",
+			name = L["Guild"],
 		},
 		guildBank = {
 			order = 10,
@@ -1767,11 +985,6 @@ options.blizzard = {
 			order = 10,
 			type = "toggle",
 			name = L["Item Socketing"],
-		},
-		itemUpgrade = {
-			order = 10,
-			type = "toggle",
-			name = L["Item Upgrade"],
 		},
 		lookingForGroup = {
 			order = 10,
@@ -1822,21 +1035,6 @@ options.blizzard = {
 			order = 10,
 			type = "toggle",
 			name = L["Objective Tracker"],
-		},
-		playerSpells = {
-			order = 10,
-			type = "toggle",
-			name = L["Player Spells"],
-		},
-		professions = {
-			order = 10,
-			type = "toggle",
-			name = L["Professions"],
-		},
-		professionBook = {
-			order = 10,
-			type = "toggle",
-			name = L["Professions Book"],
 		},
 		quest = {
 			order = 10,
@@ -1907,11 +1105,6 @@ options.blizzard = {
 			order = 10,
 			type = "toggle",
 			name = L["Tutorials"],
-		},
-		warboard = {
-			order = 10,
-			type = "toggle",
-			name = L["Warboard"],
 		},
 		worldMap = {
 			order = 10,
@@ -1986,11 +1179,6 @@ options.elvui = {
 			type = "toggle",
 			name = L["AFK Mode"],
 		},
-		altPowerBar = {
-			order = 10,
-			type = "toggle",
-			name = L["Alt Power"],
-		},
 		auras = {
 			order = 10,
 			type = "toggle",
@@ -2015,11 +1203,6 @@ options.elvui = {
 			order = 10,
 			type = "toggle",
 			name = L["Chat Panels"],
-		},
-		chatVoicePanel = {
-			order = 10,
-			type = "toggle",
-			name = L["Chat Voice Panel"],
 		},
 		classBars = {
 			order = 10,
@@ -2165,48 +1348,12 @@ options.addons = {
 			name = " ",
 			width = "full",
 		},
-		angleur = {
-			order = 10,
-			type = "toggle",
-			name = L["Angleur"],
-			addonName = "Angleur",
-		},
-		angryKeystones = {
-			order = 10,
-			type = "toggle",
-			name = L["Angry Keystones"],
-			addonName = "AngryKeystones",
-		},
-		appearanceTooltip = {
-			order = 10,
-			type = "toggle",
-			name = L["AppearanceTooltip"],
-			addonName = "AppearanceTooltip",
-		},
 		auctionator = {
 			order = 10,
 			type = "toggle",
 			name = L["Auctionator"],
 			addonName = "Auctionator",
 			addonskinsKey = "Auctionator",
-		},
-		bigWigs = {
-			order = 10,
-			type = "toggle",
-			name = L["BigWigs"],
-			addonName = "BigWigs",
-		},
-		bigWigsQueueTimer = {
-			order = 10,
-			type = "toggle",
-			name = L["BigWigs Queue Timer"],
-			addonName = "BigWigs",
-		},
-		btWQuests = {
-			order = 10,
-			type = "toggle",
-			name = L["BtWQuests"],
-			addonName = "BtWQuests",
 		},
 		bugSack = {
 			order = 10,
@@ -2215,54 +1362,12 @@ options.addons = {
 			addonName = "BugSack",
 			addonskinsKey = "BugSack",
 		},
-		extraQuestButton = {
-			order = 10,
-			type = "toggle",
-			name = L["ExtraQuestButton"],
-			addonName = "ExtraQuestButton",
-		},
-		handyNotesMapNotes = {
-			order = 10,
-			type = "toggle",
-			name = L["HandyNotes MapNotes"],
-			addonName = "HandyNotes_MapNotes",
-		},
 		immersion = {
 			order = 10,
 			type = "toggle",
 			name = L["Immersion"],
 			addonName = "Immersion",
 			addonskinsKey = "Immersion",
-		},
-		meetingStone = {
-			order = 10,
-			type = "toggle",
-			name = L["Meeting Stone"],
-			addonName = "MeetingStone",
-		},
-		multiLanguage = {
-			order = 10,
-			type = "toggle",
-			name = L["Multi Language"],
-			addonName = "MultiLanguage",
-		},
-		murlokExport = {
-			order = 10,
-			type = "toggle",
-			name = L["Murlok Export"],
-			addonName = "MurlokExport",
-		},
-		myslot = {
-			order = 10,
-			type = "toggle",
-			name = L["Myslot"],
-			addonName = "Myslot",
-		},
-		mythicDungeonTools = {
-			order = 10,
-			type = "toggle",
-			name = L["Mythic Dungeon Tools"],
-			addonName = "MythicDungeonTools",
 		},
 		omniCD = {
 			order = 10,
@@ -2305,43 +1410,12 @@ options.addons = {
 			addonName = "Postal",
 			addonskinsKey = "Postal",
 		},
-		premadeGroupsFilter = {
-			order = 10,
-			type = "toggle",
-			name = L["Premade Groups Filter"],
-			addonName = "PremadeGroupsFilter",
-			addonskinsKey = "PremadeGroupsFilter",
-		},
-		rareScanner = {
-			order = 10,
-			type = "toggle",
-			name = L["RareScanner"],
-			addonName = "RareScanner",
-		},
-		silverDragon = {
-			order = 10,
-			type = "toggle",
-			name = L["SilverDragon"],
-			addonName = "SilverDragon",
-		},
-		simpleAddonManager = {
-			order = 10,
-			type = "toggle",
-			name = L["Simple Addon Manager"],
-			addonName = "SimpleAddonManager",
-		},
 		tomTom = {
 			order = 10,
 			type = "toggle",
 			name = L["TomTom"],
 			addonName = "TomTom",
 			addonskinsKey = "TomTom",
-		},
-		warpDeplete = {
-			order = 10,
-			type = "toggle",
-			name = L["WarpDeplete"],
-			addonName = "WarpDeplete",
 		},
 		whisperPop = {
 			order = 10,
@@ -3636,347 +2710,6 @@ options.libraries = {
 			order = 10,
 			type = "toggle",
 			name = L["SecureTabs"],
-		},
-	},
-}
-
-options.bigWigsSkin = {
-	order = 10,
-	type = "group",
-	name = L["BigWigs Skin"],
-	disabled = function()
-		return not E.private.WT.skins.enable or not DoesAddOnExist("BigWigs")
-	end,
-	args = {
-		alert = {
-			order = 1,
-			type = "description",
-			name = function()
-				if not DoesAddOnExist("BigWigs") then
-					return C.StringByTemplate(format(L["%s is not loaded."], L["BigWigs"]), "rose-500")
-				end
-
-				local warning = C.StringByTemplate(
-					format(
-						"%s\n%s\n\n",
-						format(L["The options below are only for BigWigs %s bar style."], W.Title),
-						format(L["You need to manually set the bar style to %s in BigWigs first."], W.Title)
-					),
-					"yellow-400"
-				)
-
-				local tips = format(
-					"%s\n%s\n%s\n\n",
-					L["How to change BigWigs bar style:"],
-					L["Open BigWigs Options UI with /bw > Bars > Style."],
-					C.StringByTemplate(L["Don't forget to set you favorite bar texture in BigWigs option!"], "rose-500")
-				)
-
-				return warning .. tips
-			end,
-			fontSize = "medium",
-		},
-		bigWigsQueueTimer = {
-			order = 2,
-			get = function(info)
-				return E.private.WT.skins.addons.bigWigsQueueTimer
-			end,
-			set = function(info, value)
-				E.private.WT.skins.addons.bigWigsQueueTimer = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-			type = "toggle",
-			name = L["BigWigs Queue Timer"],
-			disabled = false,
-			width = 1,
-		},
-		bigWigs = {
-			order = 3,
-			get = function(info)
-				return E.private.WT.skins.addons.bigWigs
-			end,
-			set = function(info, value)
-				E.private.WT.skins.addons.bigWigs = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-			type = "toggle",
-			name = L["BigWigs Bars"],
-			disabled = false,
-			width = 1,
-		},
-		normalBar = {
-			order = 4,
-			type = "group",
-			inline = true,
-			name = L["Normal Bar"],
-			get = function(info)
-				return E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]] = value
-			end,
-			disabled = function()
-				return not E.private.WT.skins.addons.bigWigs
-			end,
-			args = {
-				smooth = {
-					order = 1,
-					type = "toggle",
-					name = L["Smooth"],
-					desc = L["Smooth the bar animation with ElvUI."],
-				},
-				spark = {
-					order = 2,
-					type = "toggle",
-					name = L["Spark"],
-					desc = L["Show spark on the bar."],
-				},
-				colorOverride = {
-					order = 3,
-					type = "toggle",
-					name = L["Color Override"],
-					desc = L["Override the bar color."],
-				},
-				colorLeft = {
-					order = 4,
-					type = "color",
-					name = L["Left Color"],
-					desc = L["Gradient color of the left part of the bar."],
-					hasAlpha = false,
-					disabled = function(info)
-						return not E.private.WT.skins.addons.bigWigs
-							or not E.private.WT.skins.bigWigsSkin[info[#info - 1]].colorOverride
-					end,
-					get = function(info)
-						local db = E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						local default = V.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						return db.r, db.g, db.b, db.a, default.r, default.g, default.b, default.a
-					end,
-					set = function(info, r, g, b)
-						local db = E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						db.r, db.g, db.b, db.a = r, g, b, 1
-					end,
-				},
-				colorRight = {
-					order = 5,
-					type = "color",
-					name = L["Right Color"],
-					desc = L["Gradient color of the right part of the bar."],
-					hasAlpha = false,
-					disabled = function(info)
-						return not E.private.WT.skins.addons.bigWigs
-							or not E.private.WT.skins.bigWigsSkin[info[#info - 1]].colorOverride
-					end,
-					get = function(info)
-						local db = E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						local default = V.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						return db.r, db.g, db.b, db.a, default.r, default.g, default.b, default.a
-					end,
-					set = function(info, r, g, b)
-						local db = E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						db.r, db.g, db.b, db.a = r, g, b, 1
-					end,
-				},
-			},
-		},
-		emphasizedBar = {
-			order = 5,
-			type = "group",
-			inline = true,
-			name = L["Emphasized Bar"],
-			get = function(info)
-				return E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]] = value
-			end,
-			disabled = function()
-				return not E.private.WT.skins.addons.bigWigs
-			end,
-			args = {
-				smooth = {
-					order = 1,
-					type = "toggle",
-					name = L["Smooth"],
-					desc = L["Smooth the bar animation with ElvUI."],
-				},
-				spark = {
-					order = 2,
-					type = "toggle",
-					name = L["Spark"],
-					desc = L["Show spark on the bar."],
-				},
-				colorOverride = {
-					order = 3,
-					type = "toggle",
-					name = L["Color Override"],
-					desc = L["Override the bar color."],
-				},
-				colorLeft = {
-					order = 4,
-					type = "color",
-					name = L["Left Color"],
-					desc = L["Gradient color of the left part of the bar."],
-					hasAlpha = false,
-					disabled = function(info)
-						return not E.private.WT.skins.addons.bigWigs
-							or not E.private.WT.skins.bigWigsSkin[info[#info - 1]].colorOverride
-					end,
-					get = function(info)
-						local db = E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						local default = V.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						return db.r, db.g, db.b, db.a, default.r, default.g, default.b, default.a
-					end,
-					set = function(info, r, g, b)
-						local db = E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						db.r, db.g, db.b, db.a = r, g, b, 1
-					end,
-				},
-				colorRight = {
-					order = 5,
-					type = "color",
-					name = L["Right Color"],
-					desc = L["Gradient color of the right part of the bar."],
-					hasAlpha = false,
-					disabled = function(info)
-						return not E.private.WT.skins.addons.bigWigs
-							or not E.private.WT.skins.bigWigsSkin[info[#info - 1]].colorOverride
-					end,
-					get = function(info)
-						local db = E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						local default = V.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						return db.r, db.g, db.b, db.a, default.r, default.g, default.b, default.a
-					end,
-					set = function(info, r, g, b)
-						local db = E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						db.r, db.g, db.b, db.a = r, g, b, 1
-					end,
-				},
-			},
-		},
-		queueTimer = {
-			order = 6,
-			type = "group",
-			inline = true,
-			name = L["Queue Timer"],
-			get = function(info)
-				return E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]] = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-			disabled = function()
-				return not E.private.WT.skins.addons.bigWigsQueueTimer
-			end,
-			args = {
-				smooth = {
-					order = 1,
-					type = "toggle",
-					name = L["Smooth"],
-					desc = L["Smooth the bar animation with ElvUI."],
-				},
-				spark = {
-					order = 2,
-					type = "toggle",
-					name = L["Spark"],
-					desc = L["Show spark on the bar."],
-				},
-				colorLeft = {
-					order = 3,
-					type = "color",
-					name = L["Left Color"],
-					desc = L["Gradient color of the left part of the bar."],
-					hasAlpha = false,
-					get = function(info)
-						local db = E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						local default = V.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						return db.r, db.g, db.b, db.a, default.r, default.g, default.b, default.a
-					end,
-					set = function(info, r, g, b)
-						local db = E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						db.r, db.g, db.b, db.a = r, g, b, 1
-					end,
-				},
-				colorRight = {
-					order = 4,
-					type = "color",
-					name = L["Right Color"],
-					desc = L["Gradient color of the right part of the bar."],
-					hasAlpha = false,
-					get = function(info)
-						local db = E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						local default = V.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						return db.r, db.g, db.b, db.a, default.r, default.g, default.b, default.a
-					end,
-					set = function(info, r, g, b)
-						local db = E.private.WT.skins.bigWigsSkin[info[#info - 1]][info[#info]]
-						db.r, db.g, db.b, db.a = r, g, b, 1
-					end,
-				},
-				countDown = {
-					order = 5,
-					type = "group",
-					inline = true,
-					name = L["Count Down"],
-					get = function(info)
-						return E.private.WT.skins.bigWigsSkin[info[#info - 2]][info[#info - 1]][info[#info]]
-					end,
-					set = function(info, value)
-						E.private.WT.skins.bigWigsSkin[info[#info - 2]][info[#info - 1]][info[#info]] = value
-						E:StaticPopup_Show("PRIVATE_RL")
-					end,
-					args = {
-						name = {
-							order = 1,
-							type = "select",
-							dialogControl = "LSM30_Font",
-							name = L["Font"],
-							values = LSM:HashTable("font"),
-						},
-						style = {
-							order = 2,
-							type = "select",
-							name = L["Outline"],
-							values = {
-								NONE = L["None"],
-								OUTLINE = L["OUTLINE"],
-								THICKOUTLINE = L["THICKOUTLINE"],
-								SHADOW = L["SHADOW"],
-								SHADOWOUTLINE = L["SHADOWOUTLINE"],
-								SHADOWTHICKOUTLINE = L["SHADOWTHICKOUTLINE"],
-								MONOCHROME = L["MONOCHROME"],
-								MONOCHROMEOUTLINE = L["MONOCROMEOUTLINE"],
-								MONOCHROMETHICKOUTLINE = L["MONOCHROMETHICKOUTLINE"],
-							},
-						},
-						size = {
-							order = 3,
-							name = L["Size"],
-							type = "range",
-							min = 5,
-							max = 60,
-							step = 1,
-						},
-						offsetX = {
-							order = 4,
-							name = L["X-Offset"],
-							type = "range",
-							min = -100,
-							max = 100,
-							step = 1,
-						},
-						offsetY = {
-							order = 5,
-							name = L["Y-Offset"],
-							type = "range",
-							min = -100,
-							max = 100,
-							step = 1,
-						},
-					},
-				},
-			},
 		},
 	},
 }

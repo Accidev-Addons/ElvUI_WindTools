@@ -521,12 +521,6 @@ options.objectiveTracker = {
 					max = 60,
 					step = 1,
 				},
-				shortHeader = {
-					order = 4,
-					type = "toggle",
-					name = L["Short Header"],
-					desc = L["Use short name instead. e.g. Torghast, Tower of the Damned to Torghast."],
-				},
 				classColor = {
 					order = 5,
 					type = "toggle",
@@ -537,7 +531,6 @@ options.objectiveTracker = {
 					type = "toggle",
 					name = L["Uppercase"],
 					desc = L["Display tracker headers in uppercase."],
-					hidden = W.AsianLocale,
 				},
 				color = {
 					order = 7,
@@ -678,7 +671,6 @@ options.objectiveTracker = {
 					type = "toggle",
 					name = L["Uppercase"],
 					desc = L["Display quest titles in uppercase."],
-					hidden = W.AsianLocale,
 				},
 			},
 		},
@@ -793,71 +785,6 @@ options.objectiveTracker = {
 					type = "toggle",
 					name = L["Word Wrap"],
 					desc = L["Enable word wrap for long text."],
-				},
-			},
-		},
-		poiButton = {
-			order = 10,
-			type = "group",
-			inline = true,
-			name = L["POI Button"],
-			disabled = function()
-				return not E.private.WT.quest.objectiveTracker.enable
-			end,
-			get = function(info)
-				return E.private.WT.quest.objectiveTracker.poiButton[info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.quest.objectiveTracker.poiButton[info[#info]] = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-			args = {
-				enable = {
-					order = 1,
-					type = "toggle",
-					name = L["Enable"],
-					desc = L["Modify the position and scale of the POI button."],
-				},
-				scale = {
-					order = 2,
-					type = "range",
-					name = L["Scale"],
-					desc = L["Scale of the POI button."],
-					min = 0.05,
-					max = 3,
-					step = 0.01,
-				},
-				center = {
-					order = 3,
-					type = "toggle",
-					name = L["Center"],
-					desc = L["Move the POI button to the vertical center of the block."],
-				},
-				xOffset = {
-					order = 4,
-					type = "range",
-					name = L["X-Offset"],
-					desc = format(
-						"%s %s",
-						L["X-Offset of the POI button."],
-						L["It works whatever 'Center' is enabled or not."]
-					),
-					min = -100,
-					max = 100,
-					step = 1,
-				},
-				yOffset = {
-					order = 5,
-					type = "range",
-					name = L["Y-Offset"],
-					desc = format(
-						"%s %s",
-						L["Y-Offset of the POI button."],
-						L["It works whatever 'Center' is enabled or not."]
-					),
-					min = -100,
-					max = 100,
-					step = 1,
 				},
 			},
 		},
@@ -1067,7 +994,6 @@ local collapseStateValues = {
 	none = L["Do Nothing"],
 	collapse = L["Collapse"],
 	expand = L["Expand"],
-	hide = L["Hide"],
 }
 
 options.autoCollapse = {
@@ -1195,24 +1121,6 @@ options.autoCollapse = {
 					name = L["In Raid"],
 					values = collapseStateValues,
 				},
-				scenario = {
-					order = 6,
-					type = "select",
-					name = L["In Scenario"],
-					values = collapseStateValues,
-				},
-				neighborhood = {
-					order = 7,
-					type = "select",
-					name = L["In Housing Neighborhood"],
-					values = collapseStateValues,
-				},
-				interior = {
-					order = 8,
-					type = "select",
-					name = L["In Player House"],
-					values = collapseStateValues,
-				},
 			},
 		},
 		priority4 = {
@@ -1237,7 +1145,6 @@ options.autoCollapse = {
 }
 
 options.switchButtons = {
-	hidden = function() return not not (QP.StopRunning and TI.StopRunning) end,
 	order = 3,
 	type = "group",
 	name = L["Switch Buttons"],
@@ -1376,14 +1283,12 @@ options.switchButtons = {
 			end,
 			args = {
 				announcement = {
-					hidden = function() return not not QP.StopRunning end,
 					order = 1,
 					type = "toggle",
 					name = L["Announcement"] .. " (" .. L["Quest"] .. ")",
 					width = 1.667,
 				},
 				turnIn = {
-					hidden = function() return not not TI.StopRunning end,
 					order = 2,
 					type = "toggle",
 					name = L["Turn In"],
@@ -1395,7 +1300,6 @@ options.switchButtons = {
 }
 
 options.progress = {
-	hidden = function() return not not QP.StopRunning end,
 	order = 4,
 	type = "group",
 	name = L["Progress"],
@@ -1450,18 +1354,6 @@ options.progress = {
 			name = L["General"],
 			inline = true,
 			args = {
-				scenario = {
-					order = 1,
-					type = "toggle",
-					name = L["Scenario"],
-					desc = L["Enable scenario progress tracking."],
-				},
-				disableInMythicPlus = {
-					order = 2,
-					type = "toggle",
-					name = L["Disable In Mythic+"],
-					desc = L["Disable the progress message in Mythic+ dungeons."],
-				},
 				disableIfRequiredOver = {
 					order = 2,
 					type = "range",
@@ -1485,7 +1377,6 @@ options.progress = {
 				FormatDesc("{{level}}", L["Quest level"]),
 				FormatDesc("{{suggestedGroup}}", L["Suggested group size"]),
 				FormatDesc("{{daily}}", L["Daily quest label"]),
-				FormatDesc("{{weekly}}", L["Weekly quest label"]),
 				FormatDesc("{{tag}}", L["Quest tags (Quest series)"]),
 				FormatDesc("{{title}}", L["Quest title"]),
 				FormatDesc("{{link}}", L["Quest link"]),
@@ -2016,95 +1907,6 @@ options.progress = {
 				},
 			},
 		},
-		weekly = {
-			order = 24,
-			type = "group",
-			name = L["Weekly"],
-			disabled = function()
-				return not E.db.WT.quest.progress.enable
-			end,
-			get = function(info)
-				return E.db.WT.quest.progress.weekly[info[#info]]
-			end,
-			set = function(info, value)
-				E.db.WT.quest.progress.weekly[info[#info]] = value
-			end,
-			args = {
-				descGroup = {
-					order = 1,
-					type = "group",
-					inline = true,
-					name = L["Description"],
-					args = {
-						weekly = {
-							order = 1,
-							type = "description",
-							name = format(L["%s contains the weekly quest label."], ImportantColorString("{{weekly}}")),
-							fontSize = "medium",
-						},
-					},
-				},
-				template = {
-					order = 2,
-					type = "input",
-					name = L["Template"],
-					width = 1.5,
-				},
-				default = {
-					order = 3,
-					type = "execute",
-					name = L["Default"],
-					desc = L["Reset the template to default value."],
-					func = function()
-						E.db.WT.quest.progress.weekly.template = P.quest.progress.weekly.template
-					end,
-				},
-				color = {
-					order = 4,
-					type = "group",
-					inline = true,
-					name = L["Color"],
-					get = function(info)
-						return E.db.WT.quest.progress.weekly.color[info[#info]]
-					end,
-					set = function(info, value)
-						E.db.WT.quest.progress.weekly.color[info[#info]] = value
-					end,
-					args = {
-						left = {
-							order = 1,
-							type = "color",
-							name = L["Gradient Color 1"],
-							hasAlpha = false,
-							get = function(info)
-								local colordb = E.db.WT.quest.progress.weekly.color.left
-								local default = P.quest.progress.weekly.color.left
-								return colordb.r, colordb.g, colordb.b, nil, default.r, default.g, default.b, nil
-							end,
-							set = function(info, r, g, b)
-								local db = E.db.WT.quest.progress.weekly.color.left
-								db.r, db.g, db.b = r, g, b
-							end,
-						},
-						right = {
-							order = 2,
-							type = "color",
-							name = L["Gradient Color 2"],
-							hasAlpha = false,
-							get = function(info)
-								local colordb = E.db.WT.quest.progress.weekly.color.right
-								local default = P.quest.progress.weekly.color.right
-								return colordb.r, colordb.g, colordb.b, nil, default.r, default.g, default.b, nil
-							end,
-							set = function(info, r, g, b)
-								local db = E.db.WT.quest.progress.weekly.color.right
-								db.r, db.g, db.b = r, g, b
-							end,
-						},
-					},
-				},
-			},
-		},
 		title = {
 			order = 25,
 			type = "group",
@@ -2497,7 +2299,6 @@ options.progress = {
 }
 
 options.turnIn = {
-	hidden = function() return not not TI.StopRunning end,
 	order = 5,
 	type = "group",
 	name = L["Turn In"],
@@ -2582,21 +2383,6 @@ options.turnIn = {
 					),
 					width = "full",
 				},
-				accountCompleted = {
-					order = 2,
-					type = "toggle",
-					name = L["Account Completed"],
-					desc = L["Enable automation for the quests already completed on any character in your account."],
-					disabled = function()
-						return not E.db.WT.quest.turnIn.enable
-					end,
-					get = function(info)
-						return E.db.WT.quest.turnIn.enableCondition[info[#info]]
-					end,
-					set = function(info, value)
-						E.db.WT.quest.turnIn.enableCondition[info[#info]] = value
-					end,
-				},
 				repeatable = {
 					order = 3,
 					type = "toggle",
@@ -2661,44 +2447,6 @@ options.turnIn = {
 						return not E.db.WT.quest.turnIn.enable
 							or E.db.WT.quest.turnIn.mode == "ACCEPT"
 							or not E.db.WT.quest.turnIn.selectReward
-					end,
-				},
-			},
-		},
-		smartChat = {
-			order = 7,
-			type = "group",
-			inline = true,
-			name = L["Smart Chat"],
-			disabled = function()
-				return not E.db.WT.quest.turnIn.enable
-			end,
-			args = {
-				smartChat = {
-					order = 1,
-					type = "toggle",
-					name = L["Enable"],
-					desc = L["Chat with NPCs smartly. It will automatically select the best option for you."],
-					disabled = function()
-						return not E.db.WT.quest.turnIn.enable
-					end,
-				},
-				darkmoon = {
-					order = 2,
-					type = "toggle",
-					name = L["Dark Moon"],
-					desc = L["Accept the teleportation from Darkmoon Faire Mystic Mage automatically."],
-					disabled = function()
-						return not E.db.WT.quest.turnIn.enable or not E.db.WT.quest.turnIn.smartChat
-					end,
-				},
-				followerAssignees = {
-					order = 3,
-					type = "toggle",
-					name = L["Follower Assignees"],
-					desc = L["Open the window of follower recruit automatically."],
-					disabled = function()
-						return not E.db.WT.quest.turnIn.enable or not E.db.WT.quest.turnIn.smartChat
 					end,
 				},
 			},
@@ -2801,12 +2549,6 @@ options.achievementScreenshot = {
 			name = L["Hide Combat Alert"],
 			desc = L["Hide combat alert frame when taking screenshot."],
 		},
-		ignoreEarnedBefore = {
-			order = 4,
-			type = "toggle",
-			name = L["Ignore Earned Before"],
-			desc = L["Ignore achievements already earned by other characters on this account."],
-		},
 		forceShowUI = {
 			order = 5,
 			type = "toggle",
@@ -2823,7 +2565,6 @@ options.achievementScreenshot = {
 }
 
 options.achievementTracker = {
-	hidden = function() return not not AT.StopRunning end,
 	order = 8,
 	type = "group",
 	name = L["Achievement Tracker"],

@@ -14,13 +14,12 @@ local strupper = strupper
 local type = type
 local wipe = wipe
 
-local C_AddOns_DisableAddOn = C_AddOns.DisableAddOn
-local C_AddOns_EnableAddOn = C_AddOns.EnableAddOn
-local C_AddOns_GetNumAddOns = C_AddOns.GetNumAddOns
-
-local C_AddOns_GetAddOnInfo = C_AddOns.GetAddOnInfo
-local C_CVar_SetCVar = C_CVar.SetCVar
-local C_UI_Reload = C_UI.Reload
+local DisableAddOn = DisableAddOn
+local EnableAddOn = EnableAddOn
+local GetAddOnInfo = GetAddOnInfo
+local GetNumAddOns = GetNumAddOns
+local ReloadUI = ReloadUI
+local SetCVar = SetCVar
 
 ---Registers a new command with the WindTools addon system
 ---@param name string The name/identifier for the command
@@ -61,32 +60,32 @@ do
 	W:AddCommand("ERROR", "/wtdebug", function(msg)
 		local switch = strlower(msg)
 		if switch == "on" or switch == "1" then
-			for i = 1, C_AddOns_GetNumAddOns() do
-				local name = C_AddOns_GetAddOnInfo(i)
+			for i = 1, GetNumAddOns() do
+				local name = GetAddOnInfo(i)
 				if not AcceptableAddons[name] and E:IsAddOnEnabled(name) then
-					C_AddOns_DisableAddOn(name, E.myname)
+					DisableAddOn(name, E.myname)
 					_G.ElvDB.WT.DisabledAddOns[name] = i
 				end
 			end
 
-			C_CVar_SetCVar("scriptErrors", 1)
-			C_UI_Reload()
+			SetCVar("scriptErrors", 1)
+			ReloadUI()
 		elseif switch == "off" or switch == "0" then
-			C_CVar_SetCVar("scriptProfile", 0)
-			C_CVar_SetCVar("scriptErrors", 0)
+			SetCVar("scriptProfile", 0)
+			SetCVar("scriptErrors", 0)
 			E:Print("Lua errors off.")
 
 			if E:IsAddOnEnabled("ElvUI_CPU") then
-				C_AddOns_DisableAddOn("ElvUI_CPU")
+				DisableAddOn("ElvUI_CPU")
 			end
 
 			if next(_G.ElvDB.WT.DisabledAddOns) then
 				for name in pairs(_G.ElvDB.WT.DisabledAddOns) do
-					C_AddOns_EnableAddOn(name, E.myname)
+					EnableAddOn(name, E.myname)
 				end
 
 				wipe(_G.ElvDB.WT.DisabledAddOns)
-				C_UI_Reload()
+				ReloadUI()
 			end
 		else
 			F.PrintGradientLine()

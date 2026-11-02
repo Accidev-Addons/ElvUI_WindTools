@@ -22,7 +22,6 @@ function S:FriendsFrame()
 
 	for _, frame in pairs({
 		_G.FriendsFrame, _G.AddFriendFrame, _G.FriendsFriendsFrame,
-		_G.ChannelFrameDaughterFrame, _G.RaidInfoFrame,
 	}) do
 		self:CreateShadow(frame)
 	end

@@ -2,16 +2,11 @@
 	<!-- Core -->
 	<Script file='Core.lua' />
 	<!-- Submodule -->
-	<Script file='AntiOverride.lua' />
 	<Script file='AutoToggleChatBubble.lua' />
 	<Script file='ExtraBindingButtons.lua' />
 	<Script file='HideCrafter.lua' />
 	<Script file='KeybindAlias.lua' />
 	<Script file='KeybindTextAbove.lua' />
-	<Script file='LootPanel.lua' />
-	<Script file='Math.lua' />
-	<Script file='Mute.lua' />
-	<Script file='PauseToSlash.lua' />
 	<!-- Others -->
 	<Script file='Automation.lua' />
 	<Script file='LFGList.lua' />

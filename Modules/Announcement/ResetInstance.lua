@@ -11,9 +11,7 @@ local time = time
 
 local UnitIsGroupLeader = UnitIsGroupLeader
 
-local LE_PARTY_CATEGORY_HOME = LE_PARTY_CATEGORY_HOME
-local ERR_RAID_CONVERTED_TO_PARTY = ERR_RAID_CONVERTED_TO_PARTY
-local ERR_PARTY_CONVERTED_TO_RAID = ERR_PARTY_CONVERTED_TO_RAID
+local ERR_RAID_YOU_JOINED = ERR_RAID_YOU_JOINED
 
 local messageData = {
 	INSTANCE_RESET_SUCCESS = {
@@ -65,11 +63,7 @@ function A:ResetInstanceUpdateIgnoreState(event, text)
 			end
 		end)
 	elseif event == "CHAT_MSG_SYSTEM" then
-		if
-			E:NotSecretValue(text)
-			and text
-			and (text == ERR_RAID_CONVERTED_TO_PARTY or text == ERR_PARTY_CONVERTED_TO_RAID)
-		then
+		if text == ERR_RAID_YOU_JOINED then
 			ignoreCondition.justChangedGroupType = t
 			E:Delay(1, function()
 				if ignoreCondition.justChangedGroupType == t then
@@ -82,7 +76,7 @@ end
 
 function A:ResetInstance(text)
 	local config = self.db.resetInstance
-	if not config or not config.enable or E:IsSecretValue(text) then
+	if not config or not config.enable or not text then
 		return
 	end
 
@@ -102,7 +96,7 @@ function A:ResetInstance(text)
 			end
 
 			if data.isDifficultyChange then
-				if not config.difficultyChange or not UnitIsGroupLeader("player", LE_PARTY_CATEGORY_HOME) then
+				if not config.difficultyChange or not UnitIsGroupLeader("player") then
 					return
 				end
 			end

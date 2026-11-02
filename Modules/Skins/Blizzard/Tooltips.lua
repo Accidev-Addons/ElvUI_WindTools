@@ -12,7 +12,7 @@ local function StyleIconsInLine(line)
 	end
 
 	local text = line:GetText()
-	if E:IsSecretValue(text) or not text then
+	if not text then
 		return
 	end
 

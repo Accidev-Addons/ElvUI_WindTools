@@ -1,30 +1,29 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local FL = W:NewModule("FastLoot", "AceEvent-3.0")
 
+local GetContainerNumFreeSlots = GetContainerNumFreeSlots
+local GetCVarBool = GetCVarBool
 local GetNumLootItems = GetNumLootItems
 local GetTime = GetTime
 local IsModifiedClick = IsModifiedClick
 local IsFishingLoot = IsFishingLoot
 local LootSlot = LootSlot
 
-local C_Container_GetContainerNumFreeSlots = C_Container.GetContainerNumFreeSlots
-local C_CVar_GetCVarBool = C_CVar.GetCVarBool
-
 local NUM_BAG_SLOTS = NUM_BAG_SLOTS
 
 function FL:GetFreeSlots()
 	local numFreeSlots = 0
 	for bag = 0, NUM_BAG_SLOTS do
-		numFreeSlots = numFreeSlots + (C_Container_GetContainerNumFreeSlots(bag) or 0)
+		numFreeSlots = numFreeSlots + (GetContainerNumFreeSlots(bag) or 0)
 	end
 	return numFreeSlots
 end
 
-function FL:LOOT_READY()
+function FL:LOOT_OPENED()
 	local tDelay = 0
 	if GetTime() - tDelay >= self.db.limit then
 		tDelay = GetTime()
-		if C_CVar_GetCVarBool("autoLootDefault") ~= IsModifiedClick("AUTOLOOTTOGGLE") and not IsFishingLoot() then
+		if not GetCVarBool("autoLootDefault") ~= not IsModifiedClick("AUTOLOOTTOGGLE") and not IsFishingLoot() then
 			for i = GetNumLootItems(), 1, -1 do
 				if self:GetFreeSlots() > 0 then
 					LootSlot(i)
@@ -43,16 +42,16 @@ function FL:Initialize()
 	end
 	self.db = E.db.WT.item.fastLoot
 
-	self:RegisterEvent("LOOT_READY")
+	self:RegisterEvent("LOOT_OPENED")
 end
 
 function FL:ProfileUpdate()
 	self.db = E.db.WT.item.fastLoot
 
 	if self.db.enable then
-		self:RegisterEvent("LOOT_READY")
+		self:RegisterEvent("LOOT_OPENED")
 	else
-		self:UnregisterEvent("LOOT_READY")
+		self:UnregisterEvent("LOOT_OPENED")
 	end
 end
 

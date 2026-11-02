@@ -25,7 +25,7 @@ function S:ElvUI_ChatPanels_ToggleShadows()
 	end
 end
 
-function S:ElvUI_ChatPanels()
+function S:ElvUI_ChatDataPanels()
 	if not (E.private.WT.skins.elvui.enable and E.private.WT.skins.elvui.chatDataPanels) then
 		return
 	end
@@ -45,4 +45,4 @@ function S:ElvUI_ChatPanels()
 	self:SecureHook(LO, "ToggleChatPanels", "ElvUI_ChatPanels_ToggleShadows")
 end
 
-S:AddCallback("ElvUI_ChatPanels")
+S:AddCallback("ElvUI_ChatDataPanels")

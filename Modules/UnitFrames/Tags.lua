@@ -23,8 +23,11 @@ local UnitPower = UnitPower
 local UnitPowerMax = UnitPowerMax
 local UnitPowerType = UnitPowerType
 
-local C_StringUtil_TruncateWhenZero = C_StringUtil.TruncateWhenZero
-local Enum_PowerType_Mana = Enum.PowerType.Mana
+local SPELL_POWER_MANA = SPELL_POWER_MANA
+
+local function TruncateWhenZero(value)
+	return value and value ~= 0 and value or ""
+end
 
 local function HealthPercent(unit)
 	local maximum = UnitHealthMax(unit)
@@ -121,10 +124,8 @@ function Tags:AddTagInfo()
 		SHAMAN = L["Shaman"],
 		MAGE = L["Mage"],
 		WARLOCK = L["Warlock"],
-		MONK = L["Monk"],
 		DRUID = L["Druid"],
 		DEMONHUNTER = L["Demonhunter"],
-		EVOKER = L["Evoker"],
 	}
 
 	for i = 1, GetNumClasses() do
@@ -179,11 +180,11 @@ function Tags:Initialize()
 
 	-- Absorbs autohide
 	E:AddTag("absorbs-autohide", "UNIT_ABSORB_AMOUNT_CHANGED", function(unit)
-		return C_StringUtil_TruncateWhenZero(UnitGetTotalAbsorbs(unit))
+		return TruncateWhenZero(UnitGetTotalAbsorbs(unit))
 	end)
 
 	E:AddTag("healabsorbs-autohide", "UNIT_HEAL_ABSORB_AMOUNT_CHANGED", function(unit)
-		return C_StringUtil_TruncateWhenZero(UnitGetTotalHealAbsorbs(unit))
+		return TruncateWhenZero(UnitGetTotalHealAbsorbs(unit))
 	end)
 
 	-- Range
@@ -202,16 +203,16 @@ function Tags:Initialize()
 	end)
 
 	-- Smart power
-	E:AddTag("smart-power", "UNIT_DISPLAYPOWER UNIT_POWER_FREQUENT UNIT_MAXPOWER", function(unit)
-		if UnitPowerType(unit) == Enum_PowerType_Mana then
+	E:AddTag("smart-power", "UNIT_DISPLAYPOWER UNIT_MAXENERGY UNIT_MAXFOCUS UNIT_MAXMANA UNIT_MAXRAGE UNIT_ENERGY UNIT_FOCUS UNIT_MANA UNIT_RAGE UNIT_MAXRUNIC_POWER UNIT_RUNIC_POWER", function(unit)
+		if UnitPowerType(unit) == SPELL_POWER_MANA then
 			return format("%d%%", PowerPercent(unit))
 		end
 
 		return UnitPower(unit)
 	end)
 
-	E:AddTag("smart-power-nosign", "UNIT_DISPLAYPOWER UNIT_POWER_FREQUENT UNIT_MAXPOWER", function(unit)
-		if UnitPowerType(unit) == Enum_PowerType_Mana then
+	E:AddTag("smart-power-nosign", "UNIT_DISPLAYPOWER UNIT_MAXENERGY UNIT_MAXFOCUS UNIT_MAXMANA UNIT_MAXRAGE UNIT_ENERGY UNIT_FOCUS UNIT_MANA UNIT_RAGE UNIT_MAXRUNIC_POWER UNIT_RUNIC_POWER", function(unit)
+		if UnitPowerType(unit) == SPELL_POWER_MANA then
 			return format("%d", PowerPercent(unit))
 		end
 
@@ -234,12 +235,8 @@ function Tags:Initialize()
 	-- Class Icons
 	for _, style in pairs(F.GetClassIconStyleList()) do
 		E:AddTag("classicon-" .. style, "UNIT_NAME_UPDATE", function(unit)
-			if E:IsSecretUnit(unit) then
-				return ""
-			end
-
 			local englishClass = select(2, UnitClass(unit))
-			if E:IsSecretValue(englishClass) or not englishClass then
+			if not englishClass then
 				return ""
 			end
 

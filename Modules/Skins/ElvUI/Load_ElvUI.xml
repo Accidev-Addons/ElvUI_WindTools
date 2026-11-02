@@ -1,13 +1,11 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
 	<Script file='ActionBars.lua' />
 	<Script file='AFK.lua' />
-	<Script file='AltPowerBar.lua' />
 	<Script file='Auras.lua' />
 	<Script file='Bags.lua' />
 	<Script file='CastBars.lua' />
 	<Script file='ChatDataPanels.lua' />
 	<Script file='ChatPanels.lua' />
-	<Script file='ChatVoicePanel.lua' />
 	<Script file='ClassBars.lua' />
 	<Script file='CopyChatFrame.lua' />
 	<Script file='DataBars.lua' />

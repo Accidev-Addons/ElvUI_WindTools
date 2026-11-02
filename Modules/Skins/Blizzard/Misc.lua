@@ -19,6 +19,8 @@ function S:BlizzardMiscFrames()
 		self:CreateShadow(frame)
 	end
 
+	F.SetFontWithDB(_G.ActionStatusText, self.db.actionStatus)
+
 	for _, frame in pairs({ _G.ChatMenu, _G.EmoteMenu, _G.LanguageMenu, _G.VoiceMacroMenu }) do
 		self:CreateShadow(frame)
 		self:SecureHookScript(frame, "OnShow", "CreateShadow")

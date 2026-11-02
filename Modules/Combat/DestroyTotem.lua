@@ -4,6 +4,7 @@ local DT = W:NewModule("DestroyTotem", "AceEvent-3.0")
 local format = format
 
 local CreateFrame = CreateFrame
+local DestroyTotem = DestroyTotem
 local SetOverrideBindingClick = SetOverrideBindingClick
 
 local MAX_TOTEMS = MAX_TOTEMS
@@ -16,12 +17,13 @@ DT.Buttons = {}
 local function CreateTotemButton(slot)
 	local name = "WTDestroyTotemButton" .. slot
 
-	local button = CreateFrame("Button", name, E.UIParent, "SecureActionButtonTemplate")
+	local button = CreateFrame("Button", name, E.UIParent)
 	button:SetSize(1, 1)
 	button:Hide()
 	button:RegisterForClicks(W.UseKeyDown and "AnyDown" or "AnyUp")
-	button:SetAttribute("type", "destroytotem")
-	button:SetAttribute("totem-slot", slot)
+	button:SetScript("OnClick", function()
+		DestroyTotem(slot)
+	end)
 
 	return button
 end

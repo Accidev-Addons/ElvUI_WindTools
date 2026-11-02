@@ -31,9 +31,6 @@ local MediaPath = [[Interface\Addons\ElvUI_WindTools\Media\]]
 do
 	local cuttedIconTemplate = "|T%s:%d:%d:0:0:64:64:5:59:5:59|t"
 	local cuttedIconAspectRatioTemplate = "|T%s:%d:%d:0:0:64:64:%d:%d:%d:%d|t"
-	local textureTemplate = "|T%s:%d:%d|t"
-	local aspectRatioTemplate = "|T%s:0:aspectRatio|t"
-	local textureWithTexCoordTemplate = "|T%s:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d|t"
 	local defaultSize = 14
 
 	---Generate icon string with proper formatting and aspect ratio handling
@@ -55,46 +52,6 @@ do
 
 		width = width or height
 		return format(cuttedIconTemplate, icon, height or defaultSize, width or defaultSize)
-	end
-
-	---Generate texture string for UI display
-	---@param texture string The texture path
-	---@param height number|nil Texture height in pixels
-	---@param width number|nil Texture width in pixels
-	---@param aspectRatio boolean|nil Whether to preserve aspect ratio
-	---@return string textureString The formatted texture string
-	function F.GetTextureString(texture, height, width, aspectRatio)
-		if aspectRatio then
-			return format(aspectRatioTemplate, texture)
-		else
-			width = width or height
-			return format(textureTemplate, texture, height or defaultSize, width or defaultSize)
-		end
-	end
-
-	---Generate texture string with custom texture coordinates
-	---@param texture string The texture path
-	---@param width number|table|nil Texture width (defaults to size if not provided)
-	---@param size table Table with x and y dimensions of the texture atlas
-	---@param texCoord number[] Array of texture coordinates [left, right, top, bottom]
-	---@return string textureString The formatted texture string with coordinates
-	function F.GetTextureStringFromTexCoord(texture, width, size, texCoord)
-		width = width or size
-
-		return format(
-			textureWithTexCoordTemplate,
-			texture,
-			ceil(width * (texCoord[4] - texCoord[3]) / (texCoord[2] - texCoord[1])),
-			width,
-			0,
-			0,
-			size.x,
-			size.y,
-			texCoord[1] * size.x,
-			texCoord[2] * size.x,
-			texCoord[3] * size.y,
-			texCoord[4] * size.y
-		)
 	end
 end
 
@@ -200,10 +157,6 @@ do
 			["Male"] = "raceicon128-dracthyr-male",
 			["Female"] = "raceicon128-dracthyr-female",
 		},
-		["EarthenDwarf"] = {
-			["Male"] = "raceicon128-earthen-male",
-			["Female"] = "raceicon128-earthen-female",
-		},
 	}
 
 	---Generate race atlas string for UI display
@@ -225,7 +178,6 @@ end
 ---@param name string The base font name
 ---@return string compatibleName Font name with optional " (en)" suffix for compatibility
 function F.GetCompatibleFont(name)
-	-- [SIRUS] These bundled CFF fonts cannot be loaded by the client.
 	if name == "Montserrat" or name == "LINE Seed" then
 		return "Expressway"
 	end
@@ -250,61 +202,6 @@ local function AddRoleIconPack(pack)
 	}
 end
 
----Custom header texture system
----Provides localized header graphics for different UI sections
-do
-	AddMedia("customHeaders", "CustomHeaders.tga", "Textures")
-
-	---Texture configuration for custom headers
-	---@type table
-	local texTable = {
-		texWidth = 2048,
-		texHeight = 256,
-		headerWidth = 340,
-		headerHeight = 40,
-		type = {
-			-- OffsetX coordinates for different header types
-			SpecialAchievements = 0,
-			Raids = 348,
-			MythicPlus = 693,
-		},
-		languages = {
-			-- OffsetY coordinates for different languages
-			zhCN = 0,
-			zhTW = 52,
-			koKR = 103,
-			enUS = 155,
-			deDE = 206,
-		},
-	}
-
-	---Get custom header texture string for specified type and scale
-	---@param name string The header type name ("SpecialAchievements", "Raids", "MythicPlus")
-	---@param scale number|nil Scale factor for the header (default: 1)
-	---@return string|nil headerString The formatted header texture string, or nil if invalid
-	function F.GetCustomHeader(name, scale)
-		local offsetX = texTable.type[name]
-		local offsetY = texTable.languages[E.global.general.locale] or texTable.languages["enUS"]
-		if not offsetX or not offsetY then
-			return
-		end
-
-		scale = scale or 1
-		return format(
-			"|T%s:%d:%d:0:0:%d:%d:%d:%d:%d:%d:255:255:255|t",
-			W.Media.Textures.customHeaders,
-			ceil(texTable.headerHeight * scale),
-			ceil(texTable.headerWidth * scale),
-			texTable.texWidth,
-			texTable.texHeight,
-			offsetX,
-			offsetX + texTable.headerWidth,
-			offsetY,
-			offsetY + texTable.headerHeight
-		)
-	end
-end
-
 ---WindTools title texture system
 ---Provides localized title graphics
 do
@@ -317,9 +214,6 @@ do
 		titleHeight = 150,
 		languages = {
 			-- OffsetY coordinates for different languages
-			zhCN = 0,
-			zhTW = 160,
-			koKR = 320,
 			enUS = 480,
 			deDE = 640,
 		},
@@ -350,8 +244,6 @@ do
 		tipWidth = 512,
 		tipHeight = 170,
 		languages = {
-			zhCN = 0,
-			zhTW = 170,
 			enUS = 340,
 		},
 		type = {
@@ -476,7 +368,8 @@ function F.GetClassIconWithStyle(class, style)
 		return
 	end
 
-	if not tContains(_G.CLASS_SORT_ORDER, strupper(class)) then
+	local classFile = strupper(class)
+	if classFile ~= "DEMONHUNTER" and not tContains(_G.CLASS_SORT_ORDER, classFile) then
 		return
 	end
 
@@ -519,9 +412,6 @@ AddMedia("leader", "Leader.tga", "Icons")
 AddMedia("complete", "Complete.tga", "Icons")
 AddMedia("accept", "Accept.tga", "Icons")
 
-AddMedia("donateKofi", "Ko-fi.tga", "Icons")
-AddMedia("donateAiFaDian", "AiFaDian.tga", "Icons")
-
 AddMedia("announcement", "Categories\\Announcement.tga", "Icons")
 AddMedia("advanced", "Categories\\Advanced.tga", "Icons")
 AddMedia("social", "Categories\\Social.tga", "Icons")
@@ -535,20 +425,11 @@ AddMedia("skins", "Categories\\Skins.tga", "Icons")
 AddMedia("tooltips", "Categories\\Tooltips.tga", "Icons")
 AddMedia("unitFrames", "Categories\\UnitFrames.tga", "Icons")
 
-AddMedia("covenantKyrian", "Covenants\\Kyrian.tga", "Icons")
-AddMedia("covenantNecrolord", "Covenants\\Necrolord.tga", "Icons")
-AddMedia("covenantNightFae", "Covenants\\NightFae.tga", "Icons")
-AddMedia("covenantVenthyr", "Covenants\\Venthyr.tga", "Icons")
-
 AddMedia("discord", "Discord.tga", "Icons")
-AddMedia("github", "Github.tga", "Icons")
-AddMedia("nga", "NGA.tga", "Icons")
-AddMedia("qq", "QQ.tga", "Icons")
 
 AddMedia("convert", "Convert.tga", "Icons")
 AddMedia("favorite", "Favorite.tga", "Icons")
 AddMedia("list", "List.tga", "Icons")
-AddMedia("star", "Star.tga", "Icons")
 
 AddMedia("barAchievements", "GameBar\\Achievements.tga", "Icons")
 AddMedia("barBags", "GameBar\\Bags.tga", "Icons")
@@ -561,9 +442,6 @@ AddMedia("barGameMenu", "GameBar\\GameMenu.tga", "Icons")
 AddMedia("barGroupFinder", "GameBar\\GroupFinder.tga", "Icons")
 AddMedia("barGuild", "GameBar\\Guild.tga", "Icons")
 AddMedia("barHearthstone", "GameBar\\Hearthstone.tga", "Icons")
-AddMedia("barHome", "GameBar\\Home.tga", "Icons")
-AddMedia("barMissionReports", "GameBar\\MissionReports.tga", "Icons")
-AddMedia("barOptions", "GameBar\\Options.tga", "Icons")
 AddMedia("barPetJournal", "GameBar\\PetJournal.tga", "Icons")
 AddMedia("barProfession", "GameBar\\Profession.tga", "Icons")
 AddMedia("barScreenShot", "GameBar\\ScreenShot.tga", "Icons")
@@ -573,23 +451,13 @@ AddMedia("barToyBox", "GameBar\\ToyBox.tga", "Icons")
 AddMedia("barVolume", "GameBar\\Volume.tga", "Icons")
 AddMedia("barNotification", "GameBar\\Notification.tga", "Icons")
 
-AddMedia("buttonLock", "Button\\Lock.tga", "Icons")
-AddMedia("buttonUnlock", "Button\\Unlock.tga", "Icons")
-AddMedia("buttonMinus", "Button\\Minus.tga", "Icons")
-AddMedia("buttonPlus", "Button\\Plus.tga", "Icons")
-AddMedia("buttonForward", "Button\\Forward.tga", "Icons")
-AddMedia("buttonDelete", "Button\\Delete.tga", "Icons")
 AddMedia("buttonSetting", "Button\\Setting.tga", "Icons")
-AddMedia("buttonGoStart", "Button\\GoStart.tga", "Icons")
 AddMedia("buttonGoEnd", "Button\\GoEnd.tga", "Icons")
 AddMedia("buttonUndo", "Button\\Undo.tga", "Icons")
-AddMedia("buttonPin", "Button\\Pin.tga", "Icons")
 AddMedia("buttonCheck", "Button\\Check.tga", "Icons")
-AddMedia("buttonDiscord", "Button\\Discord.tga", "Icons")
 
 AddMedia("round", "Round.tga", "Textures")
 AddMedia("inspectGemBG", "InspectGemBG.blp", "Textures")
-AddMedia("exchange", "Exchange.tga", "Textures")
 AddMedia("illMurloc1", "Illustration\\Murloc1.tga", "Textures")
 
 AddRoleIconPack("FFXIV")

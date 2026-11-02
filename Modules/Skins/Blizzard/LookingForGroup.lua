@@ -5,18 +5,17 @@ local _G = _G
 local pairs = pairs
 
 function S:LookingForGroupFrames()
-	if not self:CheckDB("lfg", "lookingForGroup") then
+	if not self:CheckDB("lfd", "lookingForGroup") then
 		return
 	end
 
 	local frames = {
-		_G.PVEFrame,
-		_G.LFGDungeonReadyDialog,
-		_G.LFGDungeonReadyStatus,
+		_G.LFDParentFrame,
+		_G.LFDDungeonReadyDialog,
+		_G.LFDDungeonReadyStatus,
 		_G.LFDRoleCheckPopup,
 		_G.ReadyCheckFrame,
 		_G.QueueStatusFrame,
-		_G.LFDReadyCheckPopup,
 		_G.LFGListInviteDialog,
 		_G.LFGListApplicationDialog,
 	}
@@ -26,7 +25,7 @@ function S:LookingForGroupFrames()
 	end
 
 	for i = 1, 4 do
-		self:ReskinTab(_G["PVEFrameTab" .. i])
+		self:ReskinTab(_G["LFDParentFrameTab" .. i])
 	end
 
 	if _G.LFDQueueFrameRandomScrollFrameChildFrame then
@@ -36,12 +35,6 @@ function S:LookingForGroupFrames()
 		F.SetFont(frame.rewardsLabel, E.db.general.font)
 		F.SetFont(frame.rewardsDescription, E.db.general.font)
 	end
-
-	-- if no party found, the button also need skin
-	S:Proxy("HandleButton", _G.LFGListFrame.SearchPanel.ScrollBox.StartGroupButton)
-
-	_G.LFGListFrame.SearchPanel.FilterButton:Width(93)
-	F.InternalizeMethod(_G.LFGListFrame.SearchPanel.FilterButton, "SetWidth", true)
 end
 
 S:AddCallback("LookingForGroupFrames")

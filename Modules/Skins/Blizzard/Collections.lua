@@ -9,8 +9,6 @@ function S:Blizzard_Collections()
 	end
 
 	self:CreateShadow(_G.CollectionsJournal)
-	self:CreateShadow(_G.WardrobeFrame)
-	self:CreateShadow(_G.WardrobeOutfitEditFrame)
 
 	for i = 1, 6 do
 		local tab = _G["CollectionsJournalTab" .. i]
@@ -21,4 +19,4 @@ function S:Blizzard_Collections()
 	end
 end
 
-S:AddCallbackForAddon("Blizzard_Collections")
+S:AddCallback("Blizzard_Collections")

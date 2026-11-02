@@ -4,10 +4,7 @@ local C = W.Utilities.Color
 local LFGPI = W.Utilities.LFGPlayerInfo
 
 local format = format
-local ipairs = ipairs
 local pairs = pairs
-local strsplit = strsplit
-local tonumber = tonumber
 
 local cache = {
 	groupInfo = {},
@@ -106,16 +103,6 @@ options.general = {
 			type = "toggle",
 			name = L["Faction Icon"],
 			desc = L["Show a faction icon in the top right of tooltips."],
-		},
-		tierSet = {
-			order = 7,
-			type = "toggle",
-			name = L["Tier Set"],
-			desc = format(
-				"%s\n%s",
-				L["Show the number of tier set equipments."],
-				C.StringWithRGB(L["You need hold SHIFT to inspect someone."], E.db.general.valuecolor)
-			),
 		},
 	},
 }
@@ -229,71 +216,6 @@ options.elvUITweaks = {
 				},
 			},
 		},
-		betterMythicPlusInfo = {
-			order = 4,
-			type = "group",
-			name = L["Better Mythic+ Info"],
-			inline = true,
-			args = {
-				enable = {
-					order = 1,
-					type = "toggle",
-					name = L["Enable"],
-					desc = L["Enhance ElvUI Mythic Plus info with more details."],
-				},
-				icon = {
-					order = 2,
-					type = "toggle",
-					name = L["Add Icon"],
-					desc = L["Show an icon for the best dungeon."],
-					get = function(info)
-						return E.db.WT.tooltips.elvUITweaks.betterMythicPlusInfo.icon.enable
-					end,
-					set = function(info, value)
-						E.db.WT.tooltips.elvUITweaks.betterMythicPlusInfo.icon.enable = value
-					end,
-					disabled = function()
-						return not E.db.WT.tooltips.elvUITweaks.betterMythicPlusInfo.enable
-					end,
-				},
-				width = {
-					order = 3,
-					type = "range",
-					name = L["Icon Width"],
-					min = 1,
-					max = 50,
-					step = 1,
-					disabled = function()
-						return not E.db.WT.tooltips.elvUITweaks.betterMythicPlusInfo.enable
-							or not E.db.WT.tooltips.elvUITweaks.betterMythicPlusInfo.icon.enable
-					end,
-					get = function(info)
-						return E.db.WT.tooltips.elvUITweaks.betterMythicPlusInfo.icon.width
-					end,
-					set = function(info, value)
-						E.db.WT.tooltips.elvUITweaks.betterMythicPlusInfo.icon.width = value
-					end,
-				},
-				height = {
-					order = 4,
-					type = "range",
-					name = L["Icon Height"],
-					min = 1,
-					max = 50,
-					step = 1,
-					disabled = function()
-						return not E.db.WT.tooltips.elvUITweaks.betterMythicPlusInfo.enable
-							or not E.db.WT.tooltips.elvUITweaks.betterMythicPlusInfo.icon.enable
-					end,
-					get = function(info)
-						return E.db.WT.tooltips.elvUITweaks.betterMythicPlusInfo.icon.height
-					end,
-					set = function(info, value)
-						E.db.WT.tooltips.elvUITweaks.betterMythicPlusInfo.icon.height = value
-					end,
-				},
-			},
-		},
 		misc = {
 			order = 5,
 			type = "group",
@@ -318,262 +240,6 @@ options.elvUITweaks = {
 		},
 	},
 }
-
-options.progression = {
-	order = 4,
-	type = "group",
-	name = L["Progression"],
-	get = function(info)
-		return E.private.WT.tooltips.progression[info[#info]]
-	end,
-	set = function(info, value)
-		E.private.WT.tooltips.progression[info[#info]] = value
-		E:StaticPopup_Show("PRIVATE_RL")
-	end,
-	args = {
-		notice = {
-			order = 1,
-			type = "group",
-			inline = true,
-			name = L["Notice"],
-			args = {
-				notice = {
-					order = 1,
-					type = "description",
-					name = L["This feature also follows the modifier keys setting for additional information."]
-						.. "\n"
-						.. format(L["You can find the setting in [%s] - [Tooltips] - [General]."], W.Title),
-				},
-			},
-		},
-		enable = {
-			order = 2,
-			type = "toggle",
-			name = L["Enable"],
-			desc = L["Add progression information to tooltips."],
-		},
-		disableInCombat = {
-			order = 3,
-			type = "toggle",
-			name = L["Disable In Combat"],
-			desc = L["Disable progression information in combat."],
-		},
-		header = {
-			order = 4,
-			type = "select",
-			name = L["Header Style"],
-			set = function(info, value)
-				E.private.WT.tooltips.progression[info[#info]] = value
-			end,
-			values = {
-				NONE = L["None"],
-				TEXT = L["Text"],
-				TEXTURE = L["Texture"],
-			},
-		},
-		specialAchievement = {
-			order = 5,
-			type = "group",
-			name = L["Special Achievements"],
-			inline = true,
-			get = function(info)
-				return E.private.WT.tooltips.progression.specialAchievement[tonumber(info[#info])]
-			end,
-			set = function(info, value)
-				E.private.WT.tooltips.progression.specialAchievement[tonumber(info[#info])] = value
-			end,
-			disabled = function()
-				return not (
-					E.private.WT.tooltips.progression.enable
-					and E.private.WT.tooltips.progression.specialAchievement.enable
-				)
-			end,
-			args = {
-				enable = {
-					order = 1,
-					type = "toggle",
-					name = L["Enable"],
-					get = function(info)
-						return E.private.WT.tooltips.progression.specialAchievement.enable
-					end,
-					set = function(info, value)
-						E.private.WT.tooltips.progression.specialAchievement.enable = value
-					end,
-					disabled = function()
-						return not E.private.WT.tooltips.progression.enable
-					end,
-				},
-				onlyCompleted = {
-					order = 2,
-					type = "toggle",
-					name = L["Only Show Completed"],
-					desc = L["Only show the completed special achievements in the tooltip."],
-					get = function(info)
-						return E.private.WT.tooltips.progression.specialAchievement.onlyCompleted
-					end,
-					set = function(info, value)
-						E.private.WT.tooltips.progression.specialAchievement.onlyCompleted = value
-						E:StaticPopup_Show("PRIVATE_RL")
-					end,
-					disabled = function()
-						return not (
-							E.private.WT.tooltips.progression.enable
-							and E.private.WT.tooltips.progression.specialAchievement.enable
-						)
-					end,
-				},
-				sortBy = {
-					order = 3,
-					type = "select",
-					name = L["Sort By"],
-					values = {
-						DIFFICULTY = L["Difficulty"],
-						EXPANSION = L["Expansion"],
-					},
-					get = function(info)
-						return E.private.WT.tooltips.progression.specialAchievement.sortBy
-					end,
-					set = function(info, value)
-						E.private.WT.tooltips.progression.specialAchievement.sortBy = value
-					end,
-					disabled = function()
-						return not (
-							E.private.WT.tooltips.progression.enable
-							and E.private.WT.tooltips.progression.specialAchievement.enable
-						)
-					end,
-				},
-				divider = {
-					order = 4,
-					type = "description",
-					name = " ",
-					width = "full",
-				},
-			},
-		},
-		raid = {
-			order = 6,
-			type = "group",
-			name = L["Raid"],
-			inline = true,
-			get = function(info)
-				return E.private.WT.tooltips.progression.raid[tonumber(info[#info])]
-			end,
-			set = function(info, value)
-				E.private.WT.tooltips.progression.raid[tonumber(info[#info])] = value
-			end,
-			disabled = function()
-				return not (E.private.WT.tooltips.progression.enable and E.private.WT.tooltips.progression.raid.enable)
-			end,
-			args = {
-				enable = {
-					order = 1,
-					type = "toggle",
-					name = L["Enable"],
-					get = function(info)
-						return E.private.WT.tooltips.progression.raid.enable
-					end,
-					set = function(info, value)
-						E.private.WT.tooltips.progression.raid.enable = value
-					end,
-					disabled = function()
-						return not E.private.WT.tooltips.progression.enable
-					end,
-				},
-			},
-		},
-		mythicPlus = {
-			order = 7,
-			type = "group",
-			name = L["Mythic Plus"],
-			inline = true,
-			get = function(info)
-				return E.private.WT.tooltips.progression.mythicPlus[info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.tooltips.progression.mythicPlus[info[#info]] = value
-			end,
-			disabled = function()
-				return not (
-					E.private.WT.tooltips.progression.enable
-					and E.private.WT.tooltips.progression.mythicPlus.enable
-				)
-			end,
-			args = {
-				enable = {
-					order = 1,
-					type = "toggle",
-					name = L["Enable"],
-					disabled = function()
-						return not E.private.WT.tooltips.progression.enable
-					end,
-				},
-				markHighestScore = {
-					order = 2,
-					type = "toggle",
-					name = L["Mark Highest Score"],
-					desc = L["Add a small icon to indicate the highest score."],
-				},
-				showNoRecord = {
-					order = 3,
-					type = "toggle",
-					name = L["Show Dungeons with No Record"],
-					width = 1.5,
-				},
-				instances = {
-					order = 4,
-					type = "group",
-					name = L["Instances"],
-					inline = true,
-					get = function(info)
-						return E.private.WT.tooltips.progression.mythicPlus[tonumber(info[#info])]
-					end,
-					set = function(info, value)
-						E.private.WT.tooltips.progression.mythicPlus[tonumber(info[#info])] = value
-					end,
-					args = {},
-				},
-			},
-		},
-	},
-}
-
-do
-	for _, config in ipairs({
-		{
-			target = "specialAchievement",
-			data = (function()
-				local result = {}
-				for _, data in pairs(W.MythicPlusSeasonAchievementData) do
-					result[data.id] = data
-					result[data.id].desc = format("%s\n\n%s", data.abbr, data.desc)
-				end
-				return result
-			end)(),
-			order = function(id)
-				return 1e8 - id
-			end,
-			width = 2.5,
-		},
-		{ target = "raid", data = W.RaidData, order = tonumber },
-		{ target = "mythicPlus.args.instances", data = W.MythicPlusMapData, order = tonumber },
-	}) do
-		local target = options.progression.args
-		for _, key in ipairs({ strsplit(".", config.target) }) do
-			target = target[key]
-		end
-
-		for id, data in pairs(config.data) do
-			target.args[data.idString] = {
-				order = config.order(id),
-				type = "toggle",
-				name = format("|T%s:16:18:0:0:64:64:4:60:7:57:255:255:255|t %s", data.tex, data.name),
-				desc = data.desc,
-				width = config.width or "full",
-			}
-		end
-	end
-end
 
 options.keystone = {
 	order = 5,
@@ -713,12 +379,12 @@ options.groupInfo = {
 			values = function()
 				local result = {}
 				for _, style in pairs(F.GetClassIconStyleList()) do
-					local monkIcon = F.GetClassIconStringWithStyle("MONK", style)
+					local warriorIcon = F.GetClassIconStringWithStyle("WARRIOR", style)
 					local druidIcon = F.GetClassIconStringWithStyle("DRUID", style)
-					local evokerIcon = F.GetClassIconStringWithStyle("EVOKER", style)
+					local paladinIcon = F.GetClassIconStringWithStyle("PALADIN", style)
 
-					if monkIcon and druidIcon and evokerIcon then
-						result[style] = format("%s %s %s", monkIcon, druidIcon, evokerIcon)
+					if warriorIcon and druidIcon and paladinIcon then
+						result[style] = format("%s %s %s", warriorIcon, druidIcon, paladinIcon)
 					end
 				end
 				return result

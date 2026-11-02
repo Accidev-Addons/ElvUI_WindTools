@@ -8,7 +8,7 @@ function S:Blizzard_StableUI()
 		return
 	end
 
-	self:CreateShadow(_G.StableFrame)
+	self:CreateBackdropShadow(_G.PetStableFrame)
 end
 
-S:AddCallbackForAddon("Blizzard_StableUI")
+S:AddCallback("Blizzard_StableUI")

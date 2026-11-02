@@ -11,5 +11,5 @@ function A:Goodbye()
 end
 
 function A:DelayedGoodbye()
-	E:Delay(1, self.Goodbye, self)
+	E:Delay(self.db.goodbye.delay or 1, self.Goodbye, self)
 end

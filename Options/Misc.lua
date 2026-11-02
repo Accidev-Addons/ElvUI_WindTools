@@ -1,6 +1,5 @@
 local W, F, E, L, V, P, G = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable, PrivateDB, ProfileDB, GlobalDB
 local C = W.Utilities.Color
-local async = W.Utilities.Async
 local options = W.options.misc.args
 local LSM = E.Libs.LSM
 local M = W.Modules.Misc ---@class Misc
@@ -16,9 +15,9 @@ local pairs = pairs
 local tonumber = tonumber
 local tostring = tostring
 
-local C_CVar_GetCVar = C_CVar.GetCVar
-local C_CVar_GetCVarBool = C_CVar.GetCVarBool
-local C_CVar_SetCVar = C_CVar.SetCVar
+local GetCVar = GetCVar
+local GetCVarBool = GetCVarBool
+local SetCVar = SetCVar
 
 options.general = {
 	order = 1,
@@ -32,18 +31,6 @@ options.general = {
 		E:StaticPopup_Show("PRIVATE_RL")
 	end,
 	args = {
-		pauseToSlash = {
-			order = 1,
-			type = "toggle",
-			name = L["Pause to slash"],
-			desc = L["Just for Chinese and Korean players"],
-		},
-		noKanjiMath = {
-			order = 2,
-			type = "toggle",
-			name = L["Math Without Kanji"],
-			desc = L["Use alphabet rather than kanji (Only for Chinese players)"],
-		},
 		hideCrafter = {
 			order = 6,
 			type = "toggle",
@@ -56,19 +43,6 @@ options.general = {
 				E.db.WT.misc[info[#info]] = value
 			end,
 		},
-		noLootPanel = {
-			order = 7,
-			type = "toggle",
-			name = L["No Loot Panel"],
-			desc = L["Disable Blizzard loot info which auto showing after combat overed."],
-			get = function(info)
-				return E.db.WT.misc[info[#info]]
-			end,
-			set = function(info, value)
-				E.db.WT.misc[info[#info]] = value
-				M:LootPanel()
-			end,
-		},
 		keybindTextAbove = {
 			order = 8,
 			type = "toggle",
@@ -78,14 +52,6 @@ options.general = {
 				L["Show keybinds above the ElvUI cooldown and glow effect on the action buttons."],
 				C.StringWithRGB(L["Only works with ElvUI action bar and ElvUI cooldowns."], E.db.general.valuecolor)
 			),
-		},
-		antiOverride = {
-			order = 11,
-			type = "toggle",
-			name = L["Anti-override"],
-			desc = L["Unblock the profanity filter and disable model override."]
-				.. "\n"
-				.. C.StringByTemplate(L["It only applies to players who play WoW in Simplified Chinese."], "yellow-400"),
 		},
 		autoToggleChatBubble = {
 			order = 12,
@@ -185,16 +151,15 @@ options.automation = {
 	},
 }
 
--- [SIRUS] CVar names and camera bounds match the native Interface Options.
 options.cvars = {
 	order = 3,
 	type = "group",
 	name = L["CVars Editor"],
 	get = function(info)
-		return C_CVar_GetCVarBool(info[#info])
+		return GetCVarBool(info[#info])
 	end,
 	set = function(info, value)
-		C_CVar_SetCVar(info[#info], value and "1" or "0")
+		SetCVar(info[#info], value and "1" or "0")
 	end,
 	args = {
 		desc = {
@@ -233,10 +198,10 @@ options.cvars = {
 					type = "range",
 					name = L["Screenshot Quality"],
 					get = function(info)
-						return tonumber(C_CVar_GetCVar(info[#info]))
+						return tonumber(GetCVar(info[#info]))
 					end,
 					set = function(info, value)
-						return C_CVar_SetCVar(info[#info], value)
+						return SetCVar(info[#info], value)
 					end,
 					min = 1,
 					max = 10,
@@ -247,10 +212,10 @@ options.cvars = {
 					type = "select",
 					name = L["Screenshot Format"],
 					get = function(info)
-						return C_CVar_GetCVar(info[#info])
+						return GetCVar(info[#info])
 					end,
 					set = function(info, value)
-						return C_CVar_SetCVar(info[#info], value)
+						return SetCVar(info[#info], value)
 					end,
 					values = {
 						["jpeg"] = "JPG",
@@ -281,10 +246,10 @@ options.cvars = {
 					type = "range",
 					name = L["Camera Max Zoom"],
 					get = function(info)
-						return tonumber(C_CVar_GetCVar(info[#info]))
+						return tonumber(GetCVar(info[#info]))
 					end,
 					set = function(info, value)
-						return C_CVar_SetCVar(info[#info], value)
+						return SetCVar(info[#info], value)
 					end,
 					min = 1,
 					max = 6,
@@ -307,11 +272,6 @@ options.cvars = {
 					order = 2,
 					type = "toggle",
 					name = L["Death Effect"],
-				},
-				ffxNether = {
-					order = 3,
-					type = "toggle",
-					name = L["Nether Effect"],
 				},
 			},
 		},
@@ -446,170 +406,6 @@ options.moveFrames = {
 	},
 }
 
-options.mute = {
-	hidden = function() return not W.Modules.Misc.MuteAvailable end,
-	order = 5,
-	type = "group",
-	name = L["Mute"],
-	args = {
-		desc = {
-			order = 1,
-			type = "group",
-			inline = true,
-			name = L["Description"],
-			args = {
-				feature = {
-					order = 1,
-					type = "description",
-					name = L["Disable some annoying sound effects."],
-					fontSize = "medium",
-				},
-			},
-		},
-		enable = {
-			order = 2,
-			type = "toggle",
-			name = L["Enable"],
-			get = function(info)
-				return E.private.WT.misc.mute.enable
-			end,
-			set = function(info, value)
-				E.private.WT.misc.mute.enable = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-		},
-		mount = {
-			order = 3,
-			type = "group",
-			inline = true,
-			name = L["Mount"],
-			get = function(info)
-				return E.private.WT.misc.mute[info[#info - 1]][tonumber(info[#info])]
-			end,
-			set = function(info, value)
-				E.private.WT.misc.mute[info[#info - 1]][tonumber(info[#info])] = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-			args = {},
-		},
-		other = {
-			order = 4,
-			type = "group",
-			inline = true,
-			name = L["Others"],
-			get = function(info)
-				return E.private.WT.misc.mute[info[#info - 1]][info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.misc.mute[info[#info - 1]][info[#info]] = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-			args = {
-				["Tortollan"] = {
-					order = 1,
-					type = "toggle",
-					name = L["Tortollan"],
-					width = 1.3,
-				},
-				["Crying"] = {
-					order = 2,
-					type = "toggle",
-					name = L["Crying"],
-					desc = L["Mute crying sounds of all races."]
-						.. "\n"
-						.. C.StringByTemplate(L["It will affect the cry emote sound."], "rose-500"),
-					width = 1.3,
-				},
-				["Dragon"] = {
-					order = 3,
-					type = "toggle",
-					name = L["Dragon"],
-					desc = L["Mute the sound of dragons."],
-					width = 1.3,
-				},
-				["Jewelcrafting"] = {
-					order = 4,
-					type = "toggle",
-					name = L["Jewelcrafting"],
-					desc = L["Mute the sound of jewelcrafting."],
-					width = 1.3,
-				},
-			},
-		},
-	},
-}
-
-do
-	local mountInfo = {
-		[121820] = {
-			icon = 399041,
-			name = L["Obsidian Nightwing"],
-		},
-	}
-
-	for id in pairs(V.misc.mute.mount) do
-		local info = mountInfo[id]
-
-		if info then
-			local iconString = F.GetIconString(info.icon, 12, 12)
-
-			options.mute.args.mount.args[tostring(id)] = {
-				order = id,
-				type = "toggle",
-				name = iconString .. " " .. info.name,
-				width = 1.5,
-			}
-		else
-			async.WithSpellID(id, function(spell)
-				local icon = spell:GetSpellTexture()
-				local name = spell:GetSpellName()
-
-				local iconString = F.GetIconString(icon, 12, 12)
-
-				options.mute.args.mount.args[tostring(id)] = {
-					order = id,
-					type = "toggle",
-					name = iconString .. " " .. name,
-					width = 1.5,
-				}
-			end)
-		end
-	end
-
-	local itemList = {
-		["Smolderheart"] = {
-			id = 180873,
-			desc = nil,
-		},
-		["Elegy of the Eternals"] = {
-			id = 188270,
-			desc = C.StringByTemplate(L["It will also affect the crying sound of all female Blood Elves."], "rose-500"),
-		},
-	}
-
-	for _, data in pairs(itemList) do
-		async.WithItemID(data.id, function(item)
-			local icon = item:GetItemIcon()
-			local itemName = item:GetItemName()
-			local color = item:GetItemQualityColor()
-
-			if not itemName then
-				return
-			end
-
-			local iconString = F.GetIconString(icon)
-			local nameString = C.StringWithRGB(itemName, color or { 1, 1, 1 })
-			options.mute.args.other.args[itemName] = {
-				order = data.id,
-				type = "toggle",
-				name = iconString .. " " .. nameString,
-				desc = data.desc,
-				width = 1.3,
-			}
-		end)
-	end
-end
-
 options.gameBar = {
 	order = 7,
 	type = "group",
@@ -741,12 +537,6 @@ options.gameBar = {
 								E.db.WT.misc.gameBar[info[#info]] = value
 								GB:UpdateBar()
 							end,
-						},
-						notification = {
-							order = 2,
-							type = "toggle",
-							name = L["Notification"],
-							desc = L["Add an indicator icon to buttons."],
 						},
 						fadeTime = {
 							order = 3,
@@ -1181,31 +971,6 @@ options.gameBar = {
 					type = "toggle",
 					name = L["Show Bind Location"],
 					desc = L["Show the bind location of the hearthstone in tooltip."],
-				},
-			},
-		},
-		groupFinder = {
-			order = 15,
-			type = "group",
-			name = L["Group Finder"],
-			disabled = function()
-				return not E.db.WT.misc.gameBar.enable
-			end,
-			get = function(info)
-				return E.db.WT.misc.gameBar.groupFinder[info[#info]]
-			end,
-			set = function(info, value)
-				E.db.WT.misc.gameBar.groupFinder[info[#info]] = value
-				GB:UpdateGroupFinderButton()
-				GB:UpdateButtons()
-			end,
-			args = {
-				preferNetEaseMeetingStone = {
-					order = 1,
-					type = "toggle",
-					name = L["Prefer NetEase Meeting Stone"],
-					desc = L["If Meeting Stone is installed, left click the Group Finder button to open NetEase Meeting Stone instead of the Blizzard one."],
-					width = 2,
 				},
 			},
 		},
@@ -1832,10 +1597,10 @@ options.spellActivationAlert = {
 			name = L["Opacity"],
 			desc = L["Set the opacity of the spell activation alert frame. (Blizzard CVar)"],
 			get = function(info)
-				return tonumber(C_CVar_GetCVar("spellActivationOverlayOpacity"))
+				return tonumber(GetCVar("spellActivationOverlayOpacity"))
 			end,
 			set = function(info, value)
-				C_CVar_SetCVar("spellActivationOverlayOpacity", value)
+				SetCVar("spellActivationOverlayOpacity", value)
 				SA:Update()
 				SA:Preview()
 			end,

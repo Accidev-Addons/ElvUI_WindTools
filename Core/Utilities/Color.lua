@@ -264,7 +264,6 @@ W.Utilities.Color = {}
 ---| "stone-950"
 
 ---Tailwind Colors v4.1 https://tailwindcss.com/docs/colors
----Convert Script: https://github.com/wind-addons/WindToolsScripts/blob/master/CSSToRGB
 ---@type table<ColorTemplate, string> Predefined color hex values
 local colors = {
 	["red-50"] = "fef2f2",

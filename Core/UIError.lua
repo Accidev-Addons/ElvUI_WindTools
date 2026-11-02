@@ -8,8 +8,7 @@ local tinsert = tinsert
 local type = type
 local xpcall = xpcall
 
-local FrameUtil_RegisterForTopLevelParentChanged = FrameUtil.RegisterForTopLevelParentChanged
-local GenerateFlatClosure = GenerateFlatClosure
+local GenerateClosure = GenerateClosure
 
 local DEFAULT_HANDLER_PRIORITY = 1000
 
@@ -52,8 +51,6 @@ function W:HookUIError()
 		return
 	end
 
-	FrameUtil_RegisterForTopLevelParentChanged(W.UIErrorsFrame)
-
 	W.UIErrorsFrame.flashingFontStrings = {}
 
 	if not self:IsHooked(_G.UIErrorsFrame, "AddMessage") then
@@ -65,7 +62,7 @@ function W:HookUIError()
 			---@type UIErrorHandlerParams
 			local params = { frame = frame, message = message, r = r, g = g, b = b, a = a }
 			for _, handlerData in ipairs(self.UIErrorHandlers) do
-				local success, result = xpcall(GenerateFlatClosure(handlerData.handler, params), geterrorhandler())
+				local success, result = xpcall(GenerateClosure(handlerData.handler, params), geterrorhandler())
 				if not success then
 					return
 				end
@@ -82,11 +79,11 @@ function W:HookUIError()
 	end
 
 	if not self:IsHooked(_G.UIErrorsFrame, "Show") then
-		self:SecureHook(_G.UIErrorsFrame, "Show", GenerateFlatClosure(SyncVisibility, true))
+		self:SecureHook(_G.UIErrorsFrame, "Show", GenerateClosure(SyncVisibility, true))
 	end
 
 	if not self:IsHooked(_G.UIErrorsFrame, "Hide") then
-		self:SecureHook(_G.UIErrorsFrame, "Hide", GenerateFlatClosure(SyncVisibility, false))
+		self:SecureHook(_G.UIErrorsFrame, "Hide", GenerateClosure(SyncVisibility, false))
 	end
 
 	if not self:IsHooked(_G.UIErrorsFrame, "SetShown") then

@@ -172,10 +172,12 @@ function W.Utilities.LFGPlayerInfo:Update(resultID)
 
 	if not result then
 		self:Log("debug", "cache not updated correctly, the number of results is nil.")
+		return
 	end
 
 	if not result.numMembers or result.numMembers == 0 then
 		self:Log("debug", "cache not updated correctly, the number of result.numMembers is nil or 0.")
+		return
 	end
 
 	self.Composition:Clear()
@@ -210,7 +212,7 @@ end
 ---@return boolean isDungeon True if the result is for dungeon content
 function W.Utilities.LFGPlayerInfo:IsIDDungeons(resultID)
 	local result = C_LFGList_GetSearchResultInfo(resultID)
-	local activity = C_LFGList_GetActivityInfoTable(result.activityIDs[1])
+	local activity = result and C_LFGList_GetActivityInfoTable(result.activityID)
 	return activity and activity.categoryID == GROUP_FINDER_CATEGORY_ID_DUNGEONS
 end
 
@@ -357,7 +359,6 @@ function W.Utilities.LFGPlayerInfo:Conduct(template, role, class, spec, amount)
 end
 
 ---Generate a preview of template rendering using sample data
----Uses a Monk Brewmaster as sample data for demonstration
 ---@param template string|nil The template string to preview
 ---@return string result The rendered preview string, empty if template is nil
 function W.Utilities.LFGPlayerInfo:ConductPreview(template)
@@ -365,9 +366,9 @@ function W.Utilities.LFGPlayerInfo:ConductPreview(template)
 		return ""
 	end
 
-	local specName = select(2, GetSpecializationInfoForClassID(10, 1)) -- Brewmaster
+	local specName = select(2, GetSpecializationInfoForClassID(2, 2))
 
-	return self:Conduct(template, "TANK", "MONK", specName, 2)
+	return self:Conduct(template, "TANK", "PALADIN", specName, 2)
 end
 
 ---Get formatted party information using the provided template

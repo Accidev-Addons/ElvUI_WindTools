@@ -13,8 +13,7 @@ local strsplit = strsplit
 local type = type
 
 local CreateFrame = CreateFrame
-
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
+local IsAddOnLoaded = IsAddOnLoaded
 
 function W:ConstructCompatibilityFrame()
 	local frame = CreateFrame("Frame", "WTCompatibilityFrame", E.UIParent)
@@ -85,10 +84,7 @@ function W:ConstructCompatibilityFrame()
 	bottomDesc:Width(530)
 	F.SetFont(bottomDesc, nil, "-1")
 	bottomDesc:SetText(
-		E.NewSign
-			.. format(L["If you find the %s module conflicts with another addon, alert me via Discord."], W.Title)
-			.. "\n"
-			.. L["You can disable/enable compatibility check via the option in the bottom of [WindTools]-[Advanced]-[Core]."]
+		L["You can disable/enable compatibility check via the option in the bottom of [WindTools]-[Advanced]-[Core]."]
 	)
 	bottomDesc:Point("BOTTOMLEFT", frame, "BOTTOMLEFT", 10, 10)
 
@@ -212,7 +208,7 @@ end
 ---@param targetAddonLocales string The localized name of the target addon
 ---@return fun(myModuleName: string, targetAddonModuleName: string, myDB: string, targetAddonDB: string)
 local function GetCheckCompatibilityFunction(targetAddonName, targetAddonLocales)
-	if not C_AddOns_IsAddOnLoaded(targetAddonName) then
+	if not IsAddOnLoaded(targetAddonName) then
 		return E.noop
 	end
 
@@ -243,9 +239,7 @@ local function GetCheckCompatibilityFunction(targetAddonName, targetAddonLocales
 	end
 end
 
-local CheckShadowAndLight = GetCheckCompatibilityFunction("ElvUI_SLE", L["Shadow & Light"])
-local CheckmMediaTag = GetCheckCompatibilityFunction("ElvUI_mMediaTag", L["mMediaTag"])
-local CheckElvUIEnhanced = GetCheckCompatibilityFunction("ElvUI_Enhanced", L["ElvUI Enhanced Again"])
+local CheckElvUIEnhanced = GetCheckCompatibilityFunction("ElvUI_Enhanced", "ElvUI Enhanced")
 
 function W:CheckCompatibility()
 	if not E.global.WT.core.compatibilityCheck then
@@ -254,98 +248,11 @@ function W:CheckCompatibility()
 
 	self:ConstructCompatibilityFrame()
 
-	-- S&L
-	CheckShadowAndLight(
-		format("%s-%s", L["Skins"], L["Shadow"]),
-		L["Enhanced Shadow"],
-		"private.WT.skins.shadow",
-		"private.sle.module.shadows.enable"
-	)
-
-	CheckShadowAndLight(
-		format("%s-%s", L["Tooltip"], L["Progression"]),
-		format("%s-%s", L["Tooltip"], L["Raid Progression"]),
-		"private.WT.tooltips.progression.enable",
-		"db.sle.tooltip.RaidProg.enable"
-	)
-
-	CheckShadowAndLight(
-		L["Rectangle Minimap"],
-		L["Rectangle Minimap"],
-		"db.WT.maps.rectangleMinimap.enable",
-		"private.sle.minimap.rectangle"
-	)
-
-	CheckShadowAndLight(
-		L["Raid Markers"],
-		L["Raid Markers"],
-		"db.WT.combat.raidMarkers.enable",
-		"db.sle.raidmarkers.enable"
-	)
-
-	CheckShadowAndLight(
-		format("%s-%s", L["Skins"], L["Scenario"]),
-		format("%s-%s", L["Skins"], L["Key Timers"]),
-		"private.WT.skins.blizzard.scenario",
-		"private.sle.skins.objectiveTracker.keyTimers.enable"
-	)
-
-	CheckShadowAndLight(
-		format("%s-%s", L["Objective Tracker"], L["Cosmetic Bar"]),
-		format("%s-%s", L["Skins"], L["Underline"]),
-		"private.WT.quest.objectiveTracker.enable",
-		"db.sle.skins.objectiveTracker.underline"
-	)
-
-	CheckShadowAndLight(
-		format("%s-%s", L["Item"], L["Fast Loot"]),
-		L["Loot"],
-		"db.WT.item.fastLoot.enable",
-		"db.sle.loot.enable"
-	)
-
-	CheckShadowAndLight(
-		format("%s-%s", L["Item"], L["Extend Merchant Pages"]),
-		L["Merchant"],
-		"private.WT.item.extendMerchantPages.enable",
-		"private.sle.skins.merchant.enable"
-	)
-
-	-- mMediaTag
-	CheckmMediaTag(
-		format("%s-%s", L["Tooltips"], L["Icon"]),
-		L["Tooltip Icons"],
-		"private.WT.tooltips.titleIcon.enable",
-		"db.mMediaTag.tooltip.enable"
-	)
-
-	CheckmMediaTag(
-		L["Role Icon"],
-		L["Role Symbols"],
-		"private.WT.unitFrames.roleIcon.enable",
-		"db.mMediaTag.role_icons.enable"
-	)
-
-	-- Enhanced Again
-	CheckElvUIEnhanced(
-		L["Raid Markers"],
-		L["Raid Markers"],
-		"db.WT.combat.raidMarkers.enable",
-		"db.eel.raidmarkerbar.enable"
-	)
-
-	CheckElvUIEnhanced(
-		format("%s-%s", L["Tooltip"], L["Progression"]),
-		format("%s-%s", L["Tooltip"], L["Progression"]),
-		"private.WT.tooltips.progression.enable",
-		"db.eel.progression.enable"
-	)
-
 	CheckElvUIEnhanced(
 		L["Minimap Buttons"],
 		L["Minimap Button Bar"],
 		"private.WT.maps.minimapButtons.enable",
-		"db.eel.minimap.minimapbar.enable"
+		"private.enhanced.minimapButtonGrabber"
 	)
 
 	if self.CompatibilityFrame.numModules > 0 then

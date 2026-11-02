@@ -7,7 +7,7 @@ local _G = _G
 local format = format
 local ipairs = pairs
 
-local C_UI_Reload = C_UI.Reload
+local ReloadUI = ReloadUI
 
 options.core = {
 	order = 1,
@@ -84,20 +84,6 @@ options.gameFix = {
 			end,
 			set = function(info, value)
 				E.global.WT.core.cvarAlert = value
-				E:StaticPopup_Show("PRIVATE_RL")
-			end,
-			width = 2,
-		},
-		fixSetPassThroughButtons = {
-			order = 2,
-			type = "toggle",
-			name = L["Fix SetPassThroughButtons"],
-			desc = L["Fix the issue that sometimes SetPassThroughButtons got tainted."],
-			get = function(info)
-				return E.global.WT.core.fixSetPassThroughButtons
-			end,
-			set = function(info, value)
-				E.global.WT.core.fixSetPassThroughButtons = value
 				E:StaticPopup_Show("PRIVATE_RL")
 			end,
 			width = 2,
@@ -182,7 +168,7 @@ E.PopupDialogs.WINDTOOLS_RESET_MODULE = {
 	button2 = _G.CANCEL,
 	OnAccept = function(_, func)
 		func()
-		C_UI_Reload()
+		ReloadUI()
 	end,
 	whileDead = 1,
 	hideOnEscape = true,
@@ -195,21 +181,7 @@ E.PopupDialogs.WINDTOOLS_RESET_ALL_MODULES = {
 	OnAccept = function()
 		E.db.WT = P
 		E.private.WT = V
-		C_UI_Reload()
-	end,
-	whileDead = 1,
-	hideOnEscape = true,
-}
-
-E.PopupDialogs.WINDTOOLS_IMPORT_SETTING = {
-	text = format("%s\n%s", L["Are you sure you want to import the profile?"], E.InfoColor .. L["[ %s by %s ]"]),
-	button1 = _G.ACCEPT,
-	button2 = _G.CANCEL,
-	OnAccept = function(_, UISetName)
-		if UISetName then
-			W[UISetName .. "Profile"]()
-			W[UISetName .. "Private"]()
-		end
+		ReloadUI()
 	end,
 	whileDead = 1,
 	hideOnEscape = true,
@@ -226,16 +198,6 @@ options.reset = {
 			inline = true,
 			name = C.StringByTemplate(L["Announcement"], "blue-500"),
 			args = {
-				combatResurrection = {
-					order = 1,
-					type = "execute",
-					name = L["Combat Resurrection"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Combat Resurrection"], nil, function()
-							E.db.WT.announcement.combatResurrection = P.announcement.combatResurrection
-						end)
-					end,
-				},
 				goodbye = {
 					order = 2,
 					type = "execute",
@@ -243,16 +205,6 @@ options.reset = {
 					func = function()
 						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Goodbye"], nil, function()
 							E.db.WT.announcement.goodbye = P.announcement.goodbye
-						end)
-					end,
-				},
-				interrupt = {
-					order = 3,
-					type = "execute",
-					name = L["Interrupt"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Interrupt"], nil, function()
-							E.db.WT.announcement.interrupt = P.announcement.interrupt
 						end)
 					end,
 				},
@@ -273,36 +225,6 @@ options.reset = {
 					func = function()
 						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Reset Instance"], nil, function()
 							E.db.WT.announcement.resetInstance = P.announcement.resetInstance
-						end)
-					end,
-				},
-				taunt = {
-					order = 5,
-					type = "execute",
-					name = L["Taunt"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Taunt"], nil, function()
-							E.db.WT.announcement.taunt = P.announcement.taunt
-						end)
-					end,
-				},
-				thanks = {
-					order = 6,
-					type = "execute",
-					name = L["Thanks"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Thanks"], nil, function()
-							E.db.WT.announcement.thanks = P.announcement.thanks
-						end)
-					end,
-				},
-				threatTransfer = {
-					order = 7,
-					type = "execute",
-					name = L["Threat Transfer"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Threat Transfer"], nil, function()
-							E.db.WT.announcement.threatTransfer = P.announcement.threatTransfer
 						end)
 					end,
 				},
@@ -461,26 +383,6 @@ options.reset = {
 			inline = true,
 			name = C.StringByTemplate(L["Maps"], "blue-500"),
 			args = {
-				superTracker = {
-					order = 1,
-					type = "execute",
-					name = L["Super Tracker"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Super Tracker"], nil, function()
-							E.private.WT.maps.superTracker = V.maps.superTracker
-						end)
-					end,
-				},
-				whoClicked = {
-					order = 2,
-					type = "execute",
-					name = L["Who Clicked Minimap"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Who Clicked Minimap"], nil, function()
-							E.db.WT.maps.whoClicked = P.maps.whoClicked
-						end)
-					end,
-				},
 				rectangleMinimap = {
 					order = 3,
 					type = "execute",
@@ -516,18 +418,8 @@ options.reset = {
 					type = "execute",
 					name = L["Instance Difficulty"],
 					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Super Tracker"], nil, function()
+						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Instance Difficulty"], nil, function()
 							E.private.WT.maps.instanceDifficulty = V.maps.instanceDifficulty
-						end)
-					end,
-				},
-				eventTracker = {
-					order = 7,
-					type = "execute",
-					name = L["Event Tracker"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Event Tracker"], nil, function()
-							E.db.WT.maps.eventTracker = P.maps.eventTracker
 						end)
 					end,
 				},
@@ -589,16 +481,6 @@ options.reset = {
 						end)
 					end,
 				},
-				preyHunt = {
-					order = 6,
-					type = "execute",
-					name = L["Prey Hunt"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Prey Hunt"], nil, function()
-							E.db.WT.quest.preyHunt = P.quest.preyHunt
-						end)
-					end,
-				},
 				achievementScreenshot = {
 					order = 7,
 					type = "execute",
@@ -657,16 +539,6 @@ options.reset = {
 						end)
 					end,
 				},
-				contextMenu = {
-					order = 4,
-					type = "execute",
-					name = L["Context Menu"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Context Menu"], nil, function()
-							E.db.WT.social.contextMenu = P.social.contextMenu
-						end)
-					end,
-				},
 				emote = {
 					order = 5,
 					type = "execute",
@@ -714,9 +586,6 @@ options.reset = {
 							E.private.WT.tooltips.modifier = V.tooltips.modifier
 							E.private.WT.tooltips.titleIcon = V.tooltips.titleIcon
 							E.private.WT.tooltips.factionIcon = V.tooltips.factionIcon
-							E.private.WT.tooltips.petIcon = V.tooltips.petIcon
-							E.private.WT.tooltips.petId = V.tooltips.petId
-							E.private.WT.tooltips.tierSet = V.tooltips.tierSet
 						end)
 					end,
 				},
@@ -727,16 +596,6 @@ options.reset = {
 					func = function()
 						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["ElvUI Tooltip Tweaks"], nil, function()
 							E.db.WT.tooltips.elvUITweaks = P.tooltips.elvUITweaks
-						end)
-					end,
-				},
-				progression = {
-					order = 3,
-					type = "execute",
-					name = L["Progression"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Progression"], nil, function()
-							E.private.WT.tooltips.progression = V.tooltips.progression
 						end)
 					end,
 				},
@@ -840,7 +699,6 @@ options.reset = {
 							E.private.WT.skins.shadow = V.skins.shadow
 							E.private.WT.skins.increasedSize = V.skins.increasedSize
 							E.private.WT.skins.color = V.skins.color
-							E.private.WT.skins.border = V.skins.border
 							E.private.WT.skins.uiErrors = V.skins.uiErrors
 						end)
 					end,
@@ -851,28 +709,7 @@ options.reset = {
 					name = L["Font"],
 					func = function()
 						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Font"], nil, function()
-							E.private.WT.skins.ime = V.skins.ime
 							E.private.WT.skins.actionStatus = V.skins.actionStatus
-						end)
-					end,
-				},
-				cooldownViewer = {
-					order = 3,
-					type = "execute",
-					name = L["Cooldown Viewer"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Cooldown Viewer"], nil, function()
-							E.private.WT.skins.cooldownViewer = V.skins.cooldownViewer
-						end)
-					end,
-				},
-				damageMeter = {
-					order = 4,
-					type = "execute",
-					name = L["Damage Meter"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Damage Meter"], nil, function()
-							E.private.WT.skins.damageMeter = V.skins.damageMeter
 						end)
 					end,
 				},
@@ -936,16 +773,6 @@ options.reset = {
 						end)
 					end,
 				},
-				bigWigsSkin = {
-					order = 11,
-					type = "execute",
-					name = L["BigWigs Skin"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["BigWigs Skin"], nil, function()
-							E.private.WT.skins.bigWigsSkin = V.skins.bigWigsSkin
-						end)
-					end,
-				},
 			},
 		},
 		misc = {
@@ -960,18 +787,9 @@ options.reset = {
 					name = L["General"],
 					func = function()
 						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["General"], nil, function()
-							E.private.WT.misc.noKanjiMath = V.misc.noKanjiMath
-							E.private.WT.misc.pauseToSlash = V.misc.pauseToSlash
-							E.private.WT.misc.skipCutScene = V.misc.skipCutScene
-							E.private.WT.misc.onlyStopWatched = V.misc.onlyStopWatched
 							E.private.WT.misc.keybindTextAbove = V.misc.keybindTextAbove
-							E.private.WT.misc.guildNewsItemLevel = V.misc.guildNewsItemLevel
-							E.private.WT.misc.addCNFilter = V.misc.addCNFilter
 							E.private.WT.misc.autoToggleChatBubble = V.misc.autoToggleChatBubble
-							E.db.WT.misc.disableTalkingHead = P.misc.disableTalkingHead
 							E.db.WT.misc.hideCrafter = P.misc.hideCrafter
-							E.db.WT.misc.noLootPanel = P.misc.noLootPanel
-							E.db.WT.misc.reshiiWrapsUpgrade = P.misc.reshiiWrapsUpgrade
 						end)
 					end,
 				},
@@ -982,16 +800,6 @@ options.reset = {
 					func = function()
 						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Move Frames"], nil, function()
 							E.private.WT.misc.moveFrames = V.misc.moveFrames
-						end)
-					end,
-				},
-				mute = {
-					order = 3,
-					type = "execute",
-					name = L["Mute"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Mute"], nil, function()
-							E.private.WT.misc.mute = V.misc.mute
 						end)
 					end,
 				},
@@ -1035,27 +843,6 @@ options.reset = {
 						end)
 					end,
 				},
-				watchedCutscene = {
-					order = 9,
-					type = "execute",
-					name = L["Watched Cutscene"],
-					desc = L["Reset the watched cutscene history (which has been used in auto skipping)."],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Watched Cutscene"], nil, function()
-							E.global.WT.misc.watched.movies = {}
-						end)
-					end,
-				},
-				exitPhaseDiving = {
-					order = 10,
-					type = "execute",
-					name = L["Exit Phase Diving"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Exit Phase Diving"], nil, function()
-							E.db.WT.misc.exitPhaseDiving = P.misc.exitPhaseDiving
-						end)
-					end,
-				},
 			},
 		},
 		resetAllModules = {
@@ -1083,23 +870,13 @@ do
 		button2 = _G.CANCEL,
 		OnAccept = function()
 			F.Profiles.ImportByString(text)
-			C_UI_Reload()
+			ReloadUI()
 		end,
 		whileDead = 1,
 		hideOnEscape = true,
 	}
 
 	options.profiles = {
-		hidden = function()
-			local encoding = _G.C_EncodingUtil
-			return type(encoding) ~= "table"
-				or type(encoding.SerializeCBOR) ~= "function"
-				or type(encoding.DeserializeCBOR) ~= "function"
-				or type(encoding.CompressString) ~= "function"
-				or type(encoding.DecompressString) ~= "function"
-				or type(encoding.EncodeBase64) ~= "function"
-				or type(encoding.DecodeBase64) ~= "function"
-		end,
 		order = 5,
 		type = "group",
 		name = L["Profiles"],

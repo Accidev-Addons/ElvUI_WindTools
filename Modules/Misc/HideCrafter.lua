@@ -2,11 +2,11 @@ local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI
 local M = W.Modules.Misc ---@class Misc
 
 local _G = _G
+local gsub = gsub
+local ipairs = ipairs
 local strmatch = strmatch
-local tContains = tContains
 
-local TooltipDataProcessor_AddTooltipPostCall = TooltipDataProcessor.AddTooltipPostCall
-local Enum_TooltipDataType_Item = Enum.TooltipDataType.Item
+local crafterPattern = "^" .. gsub(_G.ITEM_CREATED_BY, "%%s", ".+") .. "$"
 
 local tooltips = {
 	"GameTooltip",
@@ -17,30 +17,28 @@ local tooltips = {
 	"ItemRefShoppingTooltip2",
 }
 
-local function removeCraftInformation(tooltip, data)
+local function removeCraftInformation(tooltip)
 	if not E.db.WT.misc.hideCrafter then
 		return
 	end
 
 	local tooltipName = tooltip:GetName()
-	if tContains(tooltips, tooltipName) then
-		for dataIndex = #data.lines, (10 < #data.lines and 10 or 0), -1 do
-			local line = data.lines[dataIndex] and data.lines[dataIndex].leftText
-			if line and strmatch(line, "^|cff00ff00<(.+)>|r$") then
-				for tooltipLineIndex = dataIndex, dataIndex + 2 do
-					local realLine = _G[tooltipName .. "TextLeft" .. tooltipLineIndex]
-					local realText = realLine and realLine:GetText()
-					if E:NotSecretValue(realText) and realText == line then
-						realLine:SetText("")
-					end
-				end
-			end
+	for lineIndex = tooltip:NumLines(), 1, -1 do
+		local line = _G[tooltipName .. "TextLeft" .. lineIndex]
+		local text = line and line:GetText()
+		if text and strmatch(text, crafterPattern) then
+			line:SetText("")
 		end
 	end
 end
 
 function M:HideCrafter()
-	TooltipDataProcessor_AddTooltipPostCall(Enum_TooltipDataType_Item, removeCraftInformation)
+	for _, tooltipName in ipairs(tooltips) do
+		local tooltip = _G[tooltipName]
+		if tooltip then
+			tooltip:HookScript("OnTooltipSetItem", removeCraftInformation)
+		end
+	end
 end
 
 M:AddCallback("HideCrafter")

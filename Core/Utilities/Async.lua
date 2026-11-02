@@ -14,7 +14,6 @@ local setmetatable = setmetatable
 local select = select
 local tonumber = tonumber
 
--- [SIRUS] Keep the small item/spell interface private to WindTools.
 local ItemMethods = {}
 ItemMethods.__index = ItemMethods
 function ItemMethods:IsItemEmpty() return not self.id end

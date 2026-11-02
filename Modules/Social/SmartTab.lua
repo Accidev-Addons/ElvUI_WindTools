@@ -3,8 +3,8 @@ local CB = W:GetModule("ChatBar") ---@class ChatBar
 local ST = W:NewModule("SmartTab", "AceHook-3.0", "AceEvent-3.0")
 
 local _G = _G
-local ipairs = ipairs
 local pairs = pairs
+local strsplit = strsplit
 local strsub = strsub
 local tAppendAll = tAppendAll
 local time = time
@@ -12,21 +12,21 @@ local tostring = tostring
 local unpack = unpack
 local wipe = wipe
 
-local Ambiguate = Ambiguate
+local CanEditOfficerNote = CanEditOfficerNote
 local CopyTable = CopyTable
 local IsEveryoneAssistant = IsEveryoneAssistant
 local IsInGroup = IsInGroup
 local IsInGuild = IsInGuild
 local IsInRaid = IsInRaid
+local IsRaidOfficer = IsRaidOfficer
 local UnitInBattleground = UnitInBattleground
-local UnitIsGroupAssistant = UnitIsGroupAssistant
 local UnitIsGroupLeader = UnitIsGroupLeader
 
-local C_GuildInfo_IsGuildOfficer = C_GuildInfo.IsGuildOfficer
-
-local LE_PARTY_CATEGORY_HOME = LE_PARTY_CATEGORY_HOME
-local LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE
 local RED_FONT_COLOR = RED_FONT_COLOR
+
+local function Ambiguate(name)
+	return (strsplit("-", name))
+end
 
 local ChannelList = {
 	"SAY",
@@ -43,7 +43,6 @@ local ChannelList = {
 local ChannelListWithWhisper = CopyTable(ChannelList)
 tAppendAll(ChannelListWithWhisper, {
 	"WHISPER",
-	"BN_WHISPER",
 })
 
 local NumberOfChannelList = #ChannelList
@@ -57,12 +56,12 @@ function ST:CheckAvailability(chatType)
 	if chatType == "YELL" then
 		return self.db.yell
 	elseif chatType == "PARTY" then
-		return IsInGroup(LE_PARTY_CATEGORY_HOME)
+		return IsInGroup()
 	elseif chatType == "RAID" then
 		return IsInRaid()
 	elseif chatType == "RAID_WARNING" then
 		if self.db.raidWarning and IsInRaid() then
-			if UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or IsEveryoneAssistant() then
+			if UnitIsGroupLeader("player") or IsRaidOfficer() or IsEveryoneAssistant() then
 				return true
 			end
 		end
@@ -72,7 +71,7 @@ function ST:CheckAvailability(chatType)
 	elseif chatType == "GUILD" then
 		return IsInGuild()
 	elseif chatType == "OFFICER" then
-		return self.db.officer and IsInGuild() and C_GuildInfo_IsGuildOfficer()
+		return self.db.officer and IsInGuild() and CanEditOfficerNote()
 	elseif chatType == "CHATBAR_WORLD" then
 		return self.db.world
 	end
@@ -106,7 +105,7 @@ function ST:RefreshWhisperTargets()
 end
 
 function ST:UpdateWhisperTargets(target, chatTime, type)
-	if not self.private.whisperTargets or E:IsSecretValue(target) then
+	if not self.private.whisperTargets or not target then
 		return
 	end
 
@@ -171,8 +170,7 @@ function ST:GetNext(chatType, currentTarget)
 	end
 
 	if self.db.whisperCycle then
-		if chatType == "WHISPER" or chatType == "BN_WHISPER" then
-			-- Whisper and Battle.net whisper limited search
+		if chatType == "WHISPER" then
 			newChatType, newTarget = self:GetNextWhisper(currentTarget)
 			if newChatType == "NONE" then
 				-- If there is no earlier target, try to get the last one in the table
@@ -191,7 +189,7 @@ function ST:GetNext(chatType, currentTarget)
 			end
 			newChatType = ChannelListWithWhisper[nextIndex]
 		end
-	elseif chatType == "WHISPER" or chatType == "BN_WHISPER" then
+	elseif chatType == "WHISPER" then
 		-- If currently in whisper, directly find the next whisper target
 		newChatType, newTarget = self:GetNextWhisper(currentTarget)
 		if newChatType == "NONE" then
@@ -206,7 +204,7 @@ function ST:GetNext(chatType, currentTarget)
 		end
 		-- Once cycling to the whisper part, special handling is performed
 		newChatType = ChannelListWithWhisper[nextIndex]
-		if newChatType == "WHISPER" or newChatType == "BN_WHISPER" then
+		if newChatType == "WHISPER" then
 			-- Find the next whisper target
 			newChatType, newTarget = self:GetNextWhisper(currentTarget)
 			if newChatType == "NONE" then
@@ -254,9 +252,6 @@ function ST:SecureTabPressed(frame)
 		frame:SetAttribute("tellTarget", nextTellTarget)
 	end
 
-	_G.ACTIVE_CHAT_EDIT_BOX = frame
-	_G.LAST_ACTIVE_CHAT_EDIT_BOX = frame
-
 	ChatEdit_UpdateHeader(frame)
 end
 
@@ -276,14 +271,6 @@ function ST:CHAT_MSG_WHISPER_INFORM(_, _, author)
 	self:UpdateWhisperTargets(author, nil, "WHISPER")
 end
 
-function ST:CHAT_MSG_BN_WHISPER(_, _, author)
-	self:UpdateWhisperTargets(author, nil, "BN_WHISPER")
-end
-
-function ST:CHAT_MSG_BN_WHISPER_INFORM(_, _, author)
-	self:UpdateWhisperTargets(author, nil, "BN_WHISPER")
-end
-
 function ST:Initialize()
 	self.db = E.db.WT.social.smartTab
 	self.private = E.private.WT.social.smartTab
@@ -300,8 +287,6 @@ function ST:Initialize()
 
 	self:RegisterEvent("CHAT_MSG_WHISPER")
 	self:RegisterEvent("CHAT_MSG_WHISPER_INFORM")
-	self:RegisterEvent("CHAT_MSG_BN_WHISPER")
-	self:RegisterEvent("CHAT_MSG_BN_WHISPER_INFORM")
 end
 
 function ST:ProfileUpdate()
@@ -310,8 +295,6 @@ function ST:ProfileUpdate()
 	if not self.db.enable then
 		self:UnregisterEvent("CHAT_MSG_WHISPER")
 		self:UnregisterEvent("CHAT_MSG_WHISPER_INFORM")
-		self:UnregisterEvent("CHAT_MSG_BN_WHISPER")
-		self:UnregisterEvent("CHAT_MSG_BN_WHISPER_INFORM")
 		return
 	end
 
@@ -319,8 +302,6 @@ function ST:ProfileUpdate()
 
 	self:RegisterEvent("CHAT_MSG_WHISPER")
 	self:RegisterEvent("CHAT_MSG_WHISPER_INFORM")
-	self:RegisterEvent("CHAT_MSG_BN_WHISPER")
-	self:RegisterEvent("CHAT_MSG_BN_WHISPER_INFORM")
 end
 
 W:RegisterModule(ST:GetName())

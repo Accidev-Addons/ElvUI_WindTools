@@ -6,7 +6,6 @@ local C = W.Utilities.Color ---@type ColorUtility
 local _G = _G
 local format = format
 local gmatch = gmatch
-local nop = nop
 local pairs = pairs
 local pcall = pcall
 local strmatch = strmatch
@@ -16,10 +15,10 @@ local tonumber = tonumber
 local unpack = unpack
 local xpcall = xpcall
 
+local GenerateClosure = GenerateClosure
 local InCombatLockdown = InCombatLockdown
-
-local C_PartyInfo_InviteUnit = C_PartyInfo.InviteUnit
-local C_UI_Reload = C_UI.Reload
+local InviteUnit = InviteUnit
+local ReloadUI = ReloadUI
 
 local ACCEPT, CANCEL = ACCEPT, CANCEL
 
@@ -67,11 +66,10 @@ E.PopupDialogs.WINDTOOLS_BUTTON_FIX_RELOAD = {
 	),
 	button1 = L["Reload UI"],
 	button2 = CANCEL,
-	OnAccept = C_UI_Reload,
+	OnAccept = ReloadUI,
 }
 
 -- Keybinds
-_G.BINDING_CATEGORY_ELVUI_WINDTOOLS = W.Title
 for i = 1, 5 do
 	_G["BINDING_HEADER_WTEXTRAITEMSBAR" .. i] =
 		C.StringWithRGB(L["Extra Items Bar"] .. " " .. i, E.db.general.valuecolor)
@@ -80,7 +78,6 @@ for i = 1, 5 do
 	end
 end
 
-_G.BINDING_CATEGORY_ELVUI_WINDTOOLS_EXTRA = W.Title .. " - " .. L["Extra"]
 _G.BINDING_HEADER_WTEXTRABUTTONS = L["Extra Buttons"]
 _G["BINDING_NAME_CLICK WTExtraBindingButtonLogout:LeftButton"] = L["Logout"]
 _G["BINDING_NAME_CLICK WTExtraBindingButtonLeaveGroup:LeftButton"] = L["Leave Party"]
@@ -93,7 +90,7 @@ W.LinkOperations = {
 	["changelog"] = E.PopupDialogs.WINDTOOLS_OPEN_CHANGELOG.OnAccept,
 	["invite"] = function(name)
 		if name then
-			C_PartyInfo_InviteUnit(name)
+			InviteUnit(name)
 		end
 	end,
 }
@@ -166,7 +163,7 @@ function W:InitializeModules()
 	for _, moduleName in pairs(W.RegisteredModules) do
 		local module = self:GetModule(moduleName)
 		if module.Initialize then
-			xpcall(GenerateFlatClosure(module.Initialize, module), geterrorhandler())
+			xpcall(GenerateClosure(module.Initialize, module), geterrorhandler())
 		end
 	end
 end
@@ -177,7 +174,7 @@ function W:UpdateModules()
 	for _, moduleName in pairs(self.RegisteredModules) do
 		local module = W:GetModule(moduleName)
 		if module.ProfileUpdate then
-			xpcall(GenerateFlatClosure(module.ProfileUpdate, module), geterrorhandler())
+			xpcall(GenerateClosure(module.ProfileUpdate, module), geterrorhandler())
 		end
 	end
 end
@@ -214,16 +211,9 @@ end
 function W:GameFixing()
 	if E.global.WT.core.cvarAlert then
 		self:RegisterEvent("CVAR_UPDATE", function(_, cvar, value)
-			if cvar == "ActionButtonUseKeyDown" and W.UseKeyDown ~= (value == "1") then
+			if (cvar == "ActionButtonUseKeyDown" or cvar == "ACTION_BUTTON_USE_KEY_DOWN") and W.UseKeyDown ~= (value == "1") then
 				E:StaticPopup_Show("WINDTOOLS_BUTTON_FIX_RELOAD")
 			end
 		end)
-	end
-
-	if E.global.WT.core.fixSetPassThroughButtons then
-		_G.QuestPinMixin.SetPassThroughButtons = nop
-		_G.BonusObjectivePinMixin.SetPassThroughButtons = nop
-		_G.WorldQuestPinMixin.SetPassThroughButtons = nop
-		_G.FlightPointPinMixin.SetPassThroughButtons = nop
 	end
 end

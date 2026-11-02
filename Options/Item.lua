@@ -43,14 +43,6 @@ local function generateSlotDesc()
 end
 
 local extraItemGroupTooltip = (function()
-	local tags = {
-		general = C.StringByTemplate(L["General"], "green-400"),
-		leg = C.StringByTemplate(L["Legacy"], "gray-500"),
-		sl = C.StringByTemplate(L["[ABBR] Shadowlands"], "neutral-50"),
-		df = C.StringByTemplate(L["[ABBR] Dragonflight"], "cyan-500"),
-		tww = C.StringByTemplate(L["[ABBR] The War Within"], "orange-500"),
-		mn = C.StringByTemplate(L["[ABBR] Midnight"], "violet-500"),
-	}
 	local lines = {
 		L["Set the type and order of button groups."],
 		L["You can separate the groups with a comma."],
@@ -61,42 +53,15 @@ local extraItemGroupTooltip = (function()
 		desc("SLOT:" .. C.StringByTemplate(L["number"], "blue-200") .. "|r", L["Equipment Slots (Single)"]),
 		C.StringByTemplate(L["Slot ID List"], "blue-200") .. ":",
 		generateSlotDesc(),
-		desc("POTION", format("%s - %s", L["Potions"], L["All"])),
-		desc("POTIONGN", format("%s %s", L["Potions"], tags.general)),
-		desc("POTIONLEG", format("%s %s", L["Potions"], tags.leg)),
-		desc("POTIONSL", format("%s %s", L["Potions"], tags.sl)),
-		desc("POTIONDF", format("%s %s", L["Potions"], tags.df)),
-		desc("POTIONTWW", format("%s %s", L["Potions"], tags.tww)),
-		desc("POTIONMN", format("%s %s", L["Potions"], tags.mn)),
-		desc("FLASK", format("%s - %s", L["Flasks"], L["All"])),
-		desc("FLASKLEG", format("%s %s", L["Flasks"], tags.leg)),
-		desc("FLASKSL", format("%s %s", L["Flasks"], tags.sl)),
-		desc("FLASKDF", format("%s %s", L["Flasks"], tags.df)),
-		desc("FLASKTWW", format("%s %s", L["Flasks"], tags.tww)),
-		desc("FLASKMN", format("%s %s", L["Flasks"], tags.mn)),
-		desc("RUNE", format("%s - %s", L["Runes"], L["All"])),
-		desc("RUNETWW", format("%s %s", L["Runes"], tags.tww)),
-		desc("RUNEMN", format("%s %s", L["Runes"], tags.mn)),
-		desc("VANTUS", format("%s - %s", L["Vantus Runes"], L["All"])),
-		desc("VANTUSTWW", format("%s %s", L["Vantus Runes"], tags.tww)),
-		desc("VANTUSMN", format("%s %s", L["Vantus Runes"], tags.mn)),
-		desc("FOOD", format("%s - %s", L["Crafted Food"], L["All"])),
-		desc("FOODTWW", format("%s %s", L["Crafted Food"], tags.tww)),
-		desc("FOODMN", format("%s %s", L["Crafted Food"], tags.mn)),
-		desc("FOODVENDOR", format("%s - %s %s", L["Food"], L["Sold by vendor"], tags.mn)),
+		desc("POTION", L["Potions"]),
+		desc("FLASK", L["Flasks"]),
+		desc("FOOD", L["Crafted Food"]),
+		desc("FOODVENDOR", format("%s - %s", L["Food"], L["Sold by vendor"])),
 		desc("MAGEFOOD", format("%s - %s", L["Food"], L["Crafted by mage"])),
-		desc("FISHING", format("%s - %s", L["Fishing"], L["All"])),
-		desc("FISHINGTWW", format("%s %s", L["Fishing"], tags.tww)),
-		desc("FISHINGMN", format("%s %s", L["Fishing"], tags.mn)),
+		desc("FISHING", L["Fishing"]),
 		desc("BANNER", L["Banners"]),
 		desc("UTILITY", L["Utilities"]),
 		desc("OPENABLE", L["Openable Items"]),
-		desc("PROF", format("%s - %s", L["Profession Items"], L["All"])),
-		desc("PROFTWW", format("%s %s", L["Profession Items"], tags.tww)),
-		desc("PROFMN", format("%s %s", L["Profession Items"], tags.mn)),
-		desc("SEEDS", L["Seeds"]),
-		desc("BIGDIG", L["Big Dig"]),
-		desc("DELVE", L["Delves"]),
 		desc("HOLIDAY", L["Holiday Reward Boxes"]),
 	}
 
@@ -254,25 +219,6 @@ options.extraItemsBar = {
 							E.db.WT.item.extraItemsBar.blackList[customListSelected2] = nil
 							EB:UpdateBars()
 						end
-					end,
-				},
-				betterAlign = {
-					order = 4,
-					type = "description",
-					name = " ",
-					width = "full",
-				},
-				noQuantumItems = {
-					order = 5,
-					type = "toggle",
-					name = L["No Quantum Items"],
-					desc = L["Automatically blacklist the quantum items to avoid accidentally using them."],
-					get = function()
-						return E.db.WT.item.extraItemsBar.noQuantumItems
-					end,
-					set = function(_, value)
-						E.db.WT.item.extraItemsBar.noQuantumItems = value
-						EB:ProfileUpdate()
 					end,
 				},
 			},
@@ -476,45 +422,6 @@ do -- Add options for bars
 					min = 1,
 					max = 12,
 					step = 1,
-				},
-				qualityTier = {
-					order = 13,
-					type = "group",
-					inline = true,
-					name = L["Crafting Quality Tier"],
-					get = function(info)
-						return E.db.WT.item.extraItemsBar["bar" .. i][info[#info - 1]][info[#info]]
-					end,
-					set = function(info, value)
-						E.db.WT.item.extraItemsBar["bar" .. i][info[#info - 1]][info[#info]] = value
-						EB:UpdateBar(i)
-					end,
-					args = {
-						size = {
-							order = 3,
-							name = L["Size"],
-							type = "range",
-							min = 5,
-							max = 60,
-							step = 1,
-						},
-						xOffset = {
-							order = 4,
-							name = L["X-Offset"],
-							type = "range",
-							min = -100,
-							max = 100,
-							step = 1,
-						},
-						yOffset = {
-							order = 5,
-							name = L["Y-Offset"],
-							type = "range",
-							min = -100,
-							max = 100,
-							step = 1,
-						},
-					},
 				},
 				countFont = {
 					order = 14,

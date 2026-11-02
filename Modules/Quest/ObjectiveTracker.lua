@@ -15,26 +15,14 @@ local strupper = strupper
 local tonumber = tonumber
 
 local CreateFrame = CreateFrame
-local GetKeysArray = GetKeysArray
 
 ---@type ObjectiveTrackerModuleTemplate[]
 local trackers = {
 	_G.ScenarioObjectiveTracker,
-	_G.UIWidgetObjectiveTracker,
-	_G.CampaignQuestObjectiveTracker,
 	_G.QuestObjectiveTracker,
-	_G.AdventureObjectiveTracker,
 	_G.AchievementObjectiveTracker,
-	_G.MonthlyActivitiesObjectiveTracker,
 	_G.ProfessionsRecipeTracker,
-	_G.BonusObjectiveTracker,
-	_G.WorldQuestObjectiveTracker,
-	_G.InitiativeTasksObjectiveTracker,
 }
-
----@type table<string, string>
-local replaceRules = {}
-local numReplaceRules = #GetKeysArray(replaceRules)
 
 ---Override the Blizzard text color used in objective tracker
 ---@param rgba RGBA The RGBA color table
@@ -213,23 +201,6 @@ function OT:ColorfulProgression(text)
 	text:SetText(result)
 end
 
----Shorten the header text based on the rules defined in `replaceRules`
----@param headerText ObjectiveTrackerModuleHeaderTemplate_Text
-function OT:ShortHeader(headerText)
-	if numReplaceRules == 0 or not self.db or not self.db.header or not self.db.header.shortHeader then
-		return
-	end
-
-	local key = F.Strings.Replace(headerText:GetText(), {
-		["\239\188\140"] = ", ",
-		["\239\188\141"] = ".",
-	})
-
-	if replaceRules[key] then
-		headerText:SetText(replaceRules[key])
-	end
-end
-
 ---Override SetTextColor for block header text with custom colors
 ---@param text FontString The text object
 ---@param r number Red component
@@ -280,7 +251,7 @@ function OT:HandleBlockHeader(frame)
 	end
 	text:Height(text:GetStringHeight() + 2)
 
-	if self.db.title.uppercase and not W.AsianLocale then
+	if self.db.title.uppercase then
 		local current = text:GetText()
 		if current then
 			text:SetText(current:upper())
@@ -353,73 +324,6 @@ function OT:ObjectiveTrackerBlock_AddObjective(block)
 	self:HandleLine(block.lastRegion)
 end
 
----Update scenario objective tracker criteria and hide dash icons when needed
----@param tracker ScenarioObjectiveTracker
----@param numCriteria number
-function OT:ScenarioObjectiveTracker_UpdateCriteria(tracker, numCriteria)
-	if not self.db.noDash then
-		return
-	end
-
-	local objectivesBlock = tracker.ObjectivesBlock
-	for criteriaIndex = 1, numCriteria do
-		local existingLine = objectivesBlock:GetExistingLine(criteriaIndex)
-		if existingLine then
-			local Icon = existingLine.Icon
-			if Icon then
-				Icon:Hide()
-			end
-
-			local CheckGlow = existingLine.CheckGlow
-			if CheckGlow then
-				CheckGlow:Hide()
-			end
-		end
-	end
-end
-
----Custom SetPoint handler for POI buttons to apply user-defined positioning
----@param button Button The POI button being positioned
-function OT:ObjectiveTrackerPOIButton_SetPoint(button, point, relativeTo, relativePoint, xOffset, yOffset, skip)
-	if skip then
-		return
-	end
-
-	if not self.db.poiButton.center then
-		F.Move(button, self.db.poiButton.xOffset, self.db.poiButton.yOffset)
-		return
-	end
-
-	local parent = button:GetParent()
-	if not parent then
-		return
-	end
-
-	button:ClearAllPoints()
-	button:Point("RIGHT", parent, "LEFT", self.db.poiButton.xOffset, self.db.poiButton.yOffset, true)
-end
-
----Handle POI button styling and positioning
----@param block ObjectiveTrackerBlockTemplate The objective tracker block containing the POI button
-function OT:HandleBlockPOIButton(block)
-	if not self.db.poiButton.enable then
-		return
-	end
-
-	local button = block.poiButton
-	if not button or self:IsHooked(button, "SetPoint") then
-		return
-	end
-
-	button:SetScale(self.db.poiButton.scale)
-	F.InternalizeMethod(button, "SetPoint")
-	self:SecureHook(button, "SetPoint", "ObjectiveTrackerPOIButton_SetPoint")
-end
-
-function OT:ObjectiveTrackerBlock_GetPOIButton(block, style)
-	self:HandleBlockPOIButton(block)
-end
-
 ---Handle tracker module updates, applying cosmetic bar, font styling, and header modifications
 ---@param tracker ObjectiveTrackerModuleTemplate The tracker module being updated
 function OT:ObjectiveTrackerModule_Update(tracker)
@@ -433,9 +337,7 @@ function OT:ObjectiveTrackerModule_Update(tracker)
 		F.CallMethod(headerText, "SetFontObject", nil)
 	end
 
-	self:ShortHeader(headerText)
-
-	if self.db.header.uppercase and not W.AsianLocale then
+	if self.db.header.uppercase then
 		local current = headerText:GetText()
 		local new = current and strupper(current)
 		if new and new ~= current then
@@ -452,19 +354,10 @@ end
 ---@param block any The objective tracker block that was added
 function OT:ObjectiveTrackerModule_AddBlock(tracker, block)
 	if not block or not block.AddObjective then
-		-- ScenarioObjectiveTrackerStageMixin has some custom behavior
 		return
 	end
 
-	-- Header
 	self:HandleBlockHeader(block)
-
-	-- PoiButton
-	if block.GetPOIButton and not self:IsHooked(block, "GetPOIButton") then
-		self:SecureHook(block, "GetPOIButton", "ObjectiveTrackerBlock_GetPOIButton")
-	end
-
-	self:HandleBlockPOIButton(block)
 
 	-- Lines
 	block:ForEachUsedLine(function(line, objectiveKey)
@@ -489,9 +382,6 @@ function OT:Initialize()
 		tracker:EnumerateActiveBlocks(function(block)
 			self:ObjectiveTrackerModule_AddBlock(nil, block)
 		end)
-	end
-	if _G.ScenarioObjectiveTracker.UpdateCriteria then
-		self:SecureHook(_G.ScenarioObjectiveTracker, "UpdateCriteria", "ScenarioObjectiveTracker_UpdateCriteria")
 	end
 
 	self:HandleContainerHeader(_G.ObjectiveTrackerFrame.Header)

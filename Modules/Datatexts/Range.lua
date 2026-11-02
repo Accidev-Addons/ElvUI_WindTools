@@ -27,7 +27,7 @@ local function OnUpdate(self, t)
 	int = 0.25
 
 	if UnitIsConnected("target") and not UnitIsUnit("target", "player") then
-		local minRange, maxRange = RangeCheck and RangeCheck:GetRange("target")
+		local minRange, maxRange = RangeCheck:GetRange("target")
 		if not forceUpdate and (minRange == curMinRange and maxRange == curMaxRange) then
 			return
 		end

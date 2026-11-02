@@ -3,13 +3,12 @@ local S = W.Modules.Skins ---@type Skins
 
 local _G = _G
 
-function S:Blizzard_Channels()
-	if not self:CheckDB("channels") then
+function S:ChannelFrame()
+	if not self:CheckDB("friends", "channels") then
 		return
 	end
 
-	self:CreateShadow(_G.ChannelFrame)
-	self:CreateShadow(_G.CreateChannelPopup)
+	self:CreateShadow(_G.ChannelFrameDaughterFrame)
 end
 
-S:AddCallbackForAddon("Blizzard_Channels")
+S:AddCallback("ChannelFrame")

@@ -1,14 +1,7 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local A = W:GetModule("Announcement") ---@class Announcement
 
-local IsInGroup = IsInGroup
 local RunNextFrame = RunNextFrame
-local UnitName = UnitName
-
-local C_RestrictedActions_IsAddOnRestrictionActive = C_RestrictedActions.IsAddOnRestrictionActive
-
-local LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE
-local Enum_AddOnRestrictionType_ChallengeMode = Enum.AddOnRestrictionType.ChallengeMode
 
 A.EventList = {
 	"CHALLENGE_MODE_COMPLETED",
@@ -47,23 +40,17 @@ function A:CHAT_MSG_GUILD(event, ...)
 end
 
 function A:LFG_COMPLETION_REWARD()
-	E:Delay(1, self.Goodbye, self)
+	self:DelayedGoodbye()
 end
 
 function A:CHALLENGE_MODE_COMPLETED()
-	E:Delay(1, self.Goodbye, self)
+	self:DelayedGoodbye()
 end
 
-function A:UNIT_SPELLCAST_SUCCEEDED(_, unit, _, spellID)
-	if C_RestrictedActions_IsAddOnRestrictionActive(Enum_AddOnRestrictionType_ChallengeMode) then
-		return
+function A:UNIT_SPELLCAST_SUCCEEDED(_, unit, spellName)
+	if unit == "player" and spellName then
+		self:Utility(spellName)
 	end
-
-	if E:IsSecretValue(spellID) or not spellID then
-		return
-	end
-
-	self:Utility(spellID)
 end
 
 function A:PARTY_LEADER_CHANGED(event)

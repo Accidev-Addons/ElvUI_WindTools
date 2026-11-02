@@ -20,7 +20,6 @@ function A:UpdateStatusBarTexture(bar, texture, dbKey)
 	bar:SetStatusBarTexture(custom or texture)
 end
 
--- [SIRUS] ElvUI 9.07 owns HealComm4 bars and the over-absorb glow.
 function A:Configure_HealComm(_, frame)
 	local obj = frame.HealCommBar
 	if not obj then

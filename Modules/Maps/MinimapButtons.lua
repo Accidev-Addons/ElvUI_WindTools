@@ -29,9 +29,7 @@ local wipe = wipe
 local ContainsIf = ContainsIf
 local CreateFrame = CreateFrame
 local InCombatLockdown = InCombatLockdown
-
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-local C_Spell_GetSpellTexture = C_Spell.GetSpellTexture
+local IsAddOnLoaded = IsAddOnLoaded
 
 local BuildinIgnoreSettings = {
 	full = {
@@ -75,7 +73,7 @@ local BuildinIgnoreSettings = {
 	},
 	checker = {
 		RXPGuidesMapPin = function(_, frame)
-			if C_AddOns_IsAddOnLoaded("RXPGuides") and frame.inner and frame.text and frame.render then
+			if IsAddOnLoaded("RXPGuides") and frame.inner and frame.text and frame.render then
 				return true
 			end
 		end,
@@ -151,62 +149,6 @@ function MB:HandleLibDBIconButton(button, name)
 	end
 
 	return button:IsShown()
-end
-
-function MB:HandleExpansionButton(...)
-	self.hooks[EM].HandleExpansionButton(...)
-	self:Unhook(EM, "HandleExpansionButton")
-
-	-- Run this post hook lazily and safely
-	F.WaitFor(function()
-		return MB ~= nil and MB.db ~= nil
-	end, function()
-		if not MB.db.enable or not MB.db.expansionLandingPage then
-			return
-		end
-
-		local button = _G.ExpansionLandingPageMinimapButton
-		if not button then
-			return
-		end
-
-		self:SkinButton(button, true)
-
-		EM:SetIconParent(button)
-		EM:SetScale(button, 1)
-
-		F.InternalizeMethod(button, "ClearAllPoints", true)
-		F.InternalizeMethod(button, "SetPoint", true)
-		F.InternalizeMethod(button, "SetParent", true)
-		F.InternalizeMethod(button, "SetSize", true)
-		F.InternalizeMethod(button, "SetScale", true)
-		F.InternalizeMethod(button, "SetFrameStrata", true)
-		F.InternalizeMethod(button, "SetFrameLevel", true)
-		F.InternalizeMethod(button, "SetMovable", true)
-
-		local box = _G.GarrisonLandingPageTutorialBox
-		if box then
-			box:SetScale(1)
-			box:SetClampedToScreen(true)
-		end
-
-		button:SetHitRectInsets(0, 0, 0, 0)
-		if button.AlertText then
-			button.AlertText:Kill()
-			button.AlertText.SetText = function(_, text)
-				if text and MB.db.garrisonAlertMsg then
-					local event = C.StringWithRGB(button.title or L["Garrison"], E.db.general.valuecolor)
-					F.Print(event .. " " .. text)
-				end
-			end
-		end
-
-		if button.AlertBG then
-			button.AlertBG:Kill()
-		end
-
-		F.TaskManager:OutOfCombat(MB.UpdateLayout, MB)
-	end, 0.1, 100)
 end
 
 function MB:SetButtonMouseOver(button, frame, rawhook)
@@ -312,7 +254,7 @@ function MB:SkinButton(button, force)
 
 	-- If the relative frame is Minimap, then replace it to fake Minimap
 	-- It must run before FarmHud moving the Minimap
-	if C_AddOns_IsAddOnLoaded("FarmHud") then
+	if IsAddOnLoaded("FarmHud") then
 		if not self:IsHooked(button, "SetPoint") then
 			self:RawHook(button, "SetPoint", function(...)
 				local relativeTo = select(3, ...)
@@ -328,7 +270,7 @@ function MB:SkinButton(button, force)
 	if name == "DBMMinimapButton" then
 		button:SetNormalTexture("Interface\\Icons\\INV_Helmet_87")
 	elseif name == "SmartBuff_MiniMapButton" then
-		button:SetNormalTexture(C_Spell_GetSpellTexture(12051))
+		button:SetNormalTexture("Interface\\Icons\\Spell_Nature_Purge")
 	elseif name == "GRM_MinimapButton" then
 		button.GRM_MinimapButtonBorder:Hide()
 		button:SetPushedTexture("")
@@ -364,7 +306,7 @@ function MB:SkinButton(button, force)
 		F.InternalizeMethod(button.timer, "SetScript", true)
 	elseif name == "MRPMinimapButton" then
 		for _, region in pairs({ button:GetRegions() }) do
-			if region:GetTexture() > 0 then
+			if region:IsObjectType("Texture") and region:GetTexture() then
 				region:Hide()
 			end
 		end
@@ -927,7 +869,7 @@ function MB:PLAYER_ENTERING_WORLD()
 end
 
 function MB:Initialize()
-	if C_AddOns_IsAddOnLoaded("BasicMinimap") then
+	if IsAddOnLoaded("BasicMinimap") then
 		self.StopRunning = "BasicMinimap"
 		return
 	end
@@ -953,7 +895,4 @@ function MB:Initialize()
 	end)
 end
 
-if EM.HandleExpansionButton then
-	MB:RawHook(EM, "HandleExpansionButton")
-end
 W:RegisterModule(MB:GetName())

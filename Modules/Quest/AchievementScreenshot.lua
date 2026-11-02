@@ -1,35 +1,33 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
-local AS = W:NewModule("AchievementScreenshot", "AceEvent-3.0", "AceHook-3.0") ---@class AchievementScreenshot : AceModule, AceEvent-3.0, AceHook-3.0
+local AS = W:NewModule("AchievementScreenshot", "AceEvent-3.0") ---@class AchievementScreenshot : AceModule, AceEvent-3.0
 local CA = W:GetModule("CombatAlert") ---@class CombatAlert
 
 local _G = _G
 
 local RunNextFrame = RunNextFrame
 
-local blizzardAlertFrame ---@type Frame?
 local isProcessingScreenshot = false
 
-function AS:DelayScreenshot(_, _, alreadyEarnedOnAccount)
-	if isProcessingScreenshot then
-		return
+local function IsAchievementAlertShown()
+	for i = 1, _G.MAX_ACHIEVEMENT_ALERTS or 2 do
+		local frame = _G["AchievementAlertFrame" .. i]
+		if frame and frame:IsShown() then
+			return true
+		end
 	end
 
-	if alreadyEarnedOnAccount and self.db.ignoreEarnedBefore then
+	return false
+end
+
+function AS:DelayScreenshot()
+	if isProcessingScreenshot then
 		return
 	end
 
 	isProcessingScreenshot = true
 
-	-- Add a slight delay to ensure achievements earned simultaneously are processed only once
 	E:Delay(0.1, function()
-		F.WaitFor(function()
-			if blizzardAlertFrame and blizzardAlertFrame.IsShown and blizzardAlertFrame:IsShown() then
-				return true
-			end
-
-			return false
-		end, function()
-			--- Cache the config for async operations
+		F.WaitFor(IsAchievementAlertShown, function()
 			local hideCombatAlert = self.db
 				and self.db.hideCombatAlert
 				and CA
@@ -64,15 +62,6 @@ function AS:DelayScreenshot(_, _, alreadyEarnedOnAccount)
 	end)
 end
 
-function AS:AddAlertFrame(_, frame)
-	blizzardAlertFrame = frame
-	E:Delay(2, function()
-		if frame == blizzardAlertFrame then
-			blizzardAlertFrame = nil
-		end
-	end)
-end
-
 function AS:Initialize()
 	self.db = E.db.WT.quest.achievementScreenshot
 
@@ -81,16 +70,15 @@ function AS:Initialize()
 	end
 
 	self:RegisterEvent("ACHIEVEMENT_EARNED", "DelayScreenshot")
-	self:SecureHook(_G.AchievementAlertSystem:GetAlertContainer(), "AddAlertFrame")
 
 	self.initialized = true
 end
+
 function AS:ProfileUpdate()
 	self:Initialize()
 
 	if self.initialized and not self.db.enable then
 		self:UnregisterEvent("ACHIEVEMENT_EARNED")
-		self:UnhookAll()
 		self.initialized = false
 	end
 end

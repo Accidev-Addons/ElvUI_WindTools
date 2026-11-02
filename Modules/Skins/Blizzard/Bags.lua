@@ -3,7 +3,6 @@ local S = W.Modules.Skins ---@type Skins
 
 local _G = _G
 local hooksecurefunc = hooksecurefunc
-local select = select
 
 local NUM_CONTAINER_FRAMES = NUM_CONTAINER_FRAMES
 
@@ -12,24 +11,7 @@ function S:Bank()
 		return
 	end
 
-	local bankFrame = _G.BankFrame
-	local bankPanel = _G.BankPanel
-
-	self:CreateBackdropShadow(bankFrame)
-
-	if bankFrame.TabSystem then
-		for i = 1, bankFrame.TabSystem:GetNumChildren() do
-			self:ReskinTab(select(i, bankFrame.TabSystem:GetChildren()))
-		end
-	end
-
-	if bankPanel and bankPanel.bankTabPool then
-		hooksecurefunc(bankPanel.bankTabPool, "Acquire", function(_pool)
-			for tab in _pool:EnumerateActive() do
-				self:CreateBackdropShadow(tab.Icon)
-			end
-		end)
-	end
+	self:CreateBackdropShadow(_G.BankFrame)
 end
 
 local skinnedButtons = {}

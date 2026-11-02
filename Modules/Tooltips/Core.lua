@@ -128,17 +128,12 @@ function T:InspectInfo(tt, data, triedTimes)
 		end
 	end
 
-	if E:IsSecretValue(unit) or not unit then
-		return
-	end
-
 	local guid = UnitGUID(unit)
 	if not guid or data and data.guid ~= guid then
 		return
 	end
 
 	data = data or { guid = guid }
-	-- [SIRUS] A delayed inspect belongs to this tooltip's current unit display.
 	tt.windInspectData = data
 
 	-- Run all registered callbacks (normal)

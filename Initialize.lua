@@ -14,7 +14,7 @@ local strfind = strfind
 local strmatch = strmatch
 local tContains = tContains
 
-local C_AddOns_GetAddOnMetadata = C_AddOns.GetAddOnMetadata
+local GetAddOnMetadata = GetAddOnMetadata
 
 ---@class WindTools : AceAddon, AceConsole-3.0, AceEvent-3.0, AceTimer-3.0, AceHook-3.0
 local W = AceAddon:NewAddon(addonName, "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0", "AceHook-3.0")
@@ -33,8 +33,8 @@ addon[7] = G.WT
 
 _G["WindTools"] = addon
 
-local versionString = C_AddOns_GetAddOnMetadata(addonName, "Version")
-local xVersionString = C_AddOns_GetAddOnMetadata(addonName, "X-Version")
+local versionString = GetAddOnMetadata(addonName, "Version")
+local xVersionString = GetAddOnMetadata(addonName, "X-Version")
 
 local function getVersion()
 	local version, variant, subversion
@@ -144,17 +144,10 @@ do
 				local icon = addon[2].GetIconString(self.Media.Textures.smallLogo, 14)
 				print(
 					format(
-						icon
-							.. " "
-							.. L["%s %s Loaded."]
-							.. " "
-							.. L["You can send your suggestions or bugs via %s, %s, %s and the thread in %s."],
+						icon .. " " .. L["%s %s Loaded."] .. " " .. L["Join our Discord: %s"],
 						self.Title,
 						self.Version,
-						L["QQ Group"],
-						L["Discord"],
-						L["GitHub"],
-						L["NGA.cn"]
+						"https://discord.gg/CXtYebMBb"
 					)
 				)
 			end

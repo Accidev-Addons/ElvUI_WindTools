@@ -16,7 +16,6 @@ function S:ElvUI_Bags()
 	self:CreateShadow(B.BagFrame)
 	self:CreateShadow(B.BagFrame.ContainerHolder)
 	self:CreateShadow(B.BankFrame)
-	self:CreateShadow(B.BankFrame.BankTabs)
 	self:CreateShadow(B.BankFrame.ContainerHolder)
 end
 

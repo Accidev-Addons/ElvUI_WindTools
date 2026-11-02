@@ -14,7 +14,6 @@ function S:Blizzard_InspectUI()
 	end
 
 	self:CreateShadow(_G.InspectPaperDollFrame.ViewButton)
-	self:CreateShadow(_G.InspectPaperDollItemsFrame.InspectTalents)
 
 	-- Remove character model background
 	local InspectModelFrame = _G.InspectModelFrame

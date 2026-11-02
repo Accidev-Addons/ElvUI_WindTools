@@ -12,14 +12,11 @@ local wipe = wipe
 
 local FriendsFrame_Update = FriendsFrame_Update
 
-local customListSelected
-
 local CB = W:GetModule("ChatBar")
 local CL = W:GetModule("ChatLink")
 local CT = W:GetModule("ChatText")
 local WE = W:GetModule("Emote")
 local FL = W:GetModule("FriendList")
-local CM = W:GetModule("ContextMenu")
 local ST = W:GetModule("SmartTab")
 
 local worldChannelTemp = {}
@@ -381,6 +378,7 @@ options.chatBar = {
 										ALL = L["All"],
 										Horde = _G.FACTION_HORDE,
 										Alliance = _G.FACTION_ALLIANCE,
+										Renegade = _G.FACTION_RENEGADE,
 									},
 
 									get = function(info)
@@ -410,7 +408,7 @@ options.chatBar = {
 									func = function()
 										local region = worldChannelTemp.region
 										local faction = worldChannelTemp.faction
-										local onlyThisRealm = worldChannelTemp.onlyThisRealm
+										local onlyThisRealm = region ~= "ALL" and worldChannelTemp.onlyCurrentRealm
 										local name = worldChannelTemp.name
 										local autoJoin = worldChannelTemp.autoJoin
 
@@ -483,6 +481,8 @@ options.chatBar = {
 												factionName = _G.FACTION_ALLIANCE
 											elseif faction == "Horde" then
 												factionName = _G.FACTION_HORDE
+											elseif faction == "Renegade" then
+												factionName = _G.FACTION_RENEGADE
 											end
 
 											local value =
@@ -517,71 +517,6 @@ options.chatBar = {
 									end,
 								},
 							},
-						},
-					},
-				},
-				community = {
-					order = 101,
-					type = "group",
-					name = L["Community"],
-					get = function(info)
-						return E.db.WT.social.chatBar.channels.community[info[#info]]
-					end,
-					set = function(info, value)
-						E.db.WT.social.chatBar.channels.community[info[#info]] = value
-						CB:UpdateBar()
-					end,
-					args = {
-						enable = {
-							order = 1,
-							type = "toggle",
-							name = L["Enable"],
-						},
-						color = {
-							order = 2,
-							type = "color",
-							name = L["Color"],
-							hasAlpha = true,
-							get = function(info)
-								local colordb = E.db.WT.social.chatBar.channels.community.color
-								local default = P.social.chatBar.channels.community.color
-								return colordb.r,
-									colordb.g,
-									colordb.b,
-									colordb.a,
-									default.r,
-									default.g,
-									default.b,
-									default.a
-							end,
-							set = function(info, r, g, b, a)
-								E.db.WT.social.chatBar.channels.community.color = {
-									r = r,
-									g = g,
-									b = b,
-									a = a,
-								}
-								CB:UpdateBar()
-							end,
-						},
-						abbr = {
-							order = 3,
-							type = "input",
-							hidden = function()
-								return not (E.db.WT.social.chatBar.style == "TEXT")
-							end,
-							name = L["Abbreviation"],
-						},
-						name = {
-							order = 4,
-							type = "input",
-							name = L["Channel Name"],
-						},
-						communityDesc = {
-							order = 5,
-							type = "description",
-							width = "full",
-							name = L["Please use Blizzard Communities UI add the channel to your main chat frame first."],
 						},
 					},
 				},
@@ -717,13 +652,12 @@ options.chatBar = {
 }
 
 do -- Normal Channels
-	local channels = { "SAY", "YELL", "EMOTE", "PARTY", "INSTANCE", "RAID", "RAID_WARNING", "GUILD", "OFFICER" }
+	local channels = { "SAY", "YELL", "EMOTE", "PARTY", "RAID", "RAID_WARNING", "GUILD", "OFFICER" }
 	local locales = {
 		SAY = L["Say"],
 		YELL = L["Yell"],
 		EMOTE = L["Emote"],
 		PARTY = L["Party"],
-		INSTANCE = L["Instance"],
 		RAID = L["Raid"],
 		RAID_WARNING = L["Raid Warning"],
 		GUILD = L["Guild"],
@@ -825,13 +759,6 @@ options.chatLink = {
 					type = "toggle",
 					name = L["Level"],
 					desc = L["Display the level of the item on the item link."],
-					width = 1.5,
-				},
-				numericalQualityTier = {
-					order = 2,
-					type = "toggle",
-					name = L["Numerical Quality Tier"],
-					desc = L["Use numerical quality tier rather the icon on the item link."],
 					width = 1.5,
 				},
 				translateItem = {
@@ -989,13 +916,6 @@ do
 						type = "toggle",
 						name = L["Remove Brackets"],
 					},
-					trimEditBoxHeader = {
-						order = 2,
-						type = "toggle",
-						hidden = W.Locale ~= "zhCN",
-						name = L["Trim Edit Box Header"],
-						desc = L["Remove extra leading and trailing spaces from the edit box prefix."],
-					},
 					classIcon = {
 						order = 3,
 						type = "toggle",
@@ -1012,23 +932,15 @@ do
 						values = function()
 							local v = {}
 							for _, style in pairs(F.GetClassIconStyleList()) do
-								local monkSample = F.GetClassIconStringWithStyle("WARRIOR", style, 16, 16)
+								local warriorSample = F.GetClassIconStringWithStyle("WARRIOR", style, 16, 16)
 								local druidSample = F.GetClassIconStringWithStyle("DRUID", style, 16, 16)
 								local paladinSample = F.GetClassIconStringWithStyle("PALADIN", style, 16, 16)
 
-								local sample = monkSample .. " " .. druidSample .. " " .. paladinSample
+								local sample = warriorSample .. " " .. druidSample .. " " .. paladinSample
 								v[style] = sample
 							end
 							return v
 						end,
-					},
-					factionIcon = {
-						order = 5,
-						type = "toggle",
-						name = L["Faction Icon"],
-						desc = L["Show the faction icon before the player name."]
-							.. "\n"
-							.. L["This feature only works for message that sent by this module."],
 					},
 				},
 			},
@@ -1070,24 +982,6 @@ do
 						type = "toggle",
 						name = L["Merge Achievement"],
 						desc = L["Merge the achievement message into one line."],
-						width = 1.2,
-					},
-					bnetFriendOnline = {
-						order = 4,
-						type = "toggle",
-						name = L["BNet Friend Online"],
-						desc = L["Show a message when a Battle.net friend's WoW character comes online."]
-							.. "\n"
-							.. L["The message will only be shown in the chat frame (or chat tab) with Blizzard service alert channel on."],
-						width = 1.2,
-					},
-					bnetFriendOffline = {
-						order = 5,
-						type = "toggle",
-						name = L["BNet Friend Offline"],
-						desc = L["Show a message when a Battle.net friend's WoW character goes offline."]
-							.. "\n"
-							.. L["The message will only be shown in the chat frame (or chat tab) with Blizzard service alert channel on."],
 						width = 1.2,
 					},
 				},
@@ -1260,184 +1154,6 @@ do
 	}
 end
 
-options.contextMenu = {
-	order = 4,
-	type = "group",
-	name = L["Context Menu"],
-	get = function(info)
-		return E.db.WT.social.contextMenu[info[#info]]
-	end,
-	set = function(info, value)
-		E.db.WT.social.contextMenu[info[#info]] = value
-		CM:ProfileUpdate()
-	end,
-	args = {
-		desc = {
-			order = 0,
-			type = "group",
-			inline = true,
-			name = L["Description"],
-			args = {
-				feature = {
-					order = 1,
-					type = "description",
-					name = format(
-						"%s\n\n%s\n%s",
-						L["Add features to context menu based on menu types."],
-						C.StringByTemplate(
-							L["Because of Blizzard 'Visit Home' button taint issue, the additional options only will be added when you pressing Ctrl key while right-clicking."],
-							"amber-500"
-						),
-						C.StringByTemplate(
-							format(L["Do not click 'Visit Home' button when %s options are shown."], W.Title),
-							"rose-500"
-						)
-					),
-					fontSize = "medium",
-				},
-			},
-		},
-		enable = {
-			order = 1,
-			type = "toggle",
-			name = L["Enable"],
-		},
-		sectionTitle = {
-			order = 2,
-			type = "toggle",
-			name = L["Section Title"],
-			desc = L["Add a styled section title to the context menu."],
-		},
-		align = {
-			order = 3,
-			type = "description",
-			name = " ",
-			width = "full",
-		},
-		normalConfig = {
-			order = 4,
-			type = "group",
-			inline = true,
-			name = L["General"],
-			disabled = function()
-				return not E.db.WT.social.contextMenu.enable
-			end,
-			args = {
-				guildInvite = {
-					order = 1,
-					type = "toggle",
-					name = L["Guild Invite"],
-				},
-				who = {
-					order = 2,
-					type = "toggle",
-					name = L["Who"],
-				},
-				reportStats = {
-					order = 3,
-					type = "toggle",
-					name = L["Report Stats"],
-				},
-			},
-		},
-		armoryConfig = {
-			order = 5,
-			type = "group",
-			inline = true,
-			name = L["Armory"],
-			disabled = function()
-				return not E.db.WT.social.contextMenu.enable
-			end,
-			args = {
-				armory = {
-					order = 1,
-					type = "toggle",
-					name = L["Enable"],
-					get = function(info)
-						return E.db.WT.social.contextMenu[info[#info]]
-					end,
-					set = function(info, value)
-						E.db.WT.social.contextMenu[info[#info]] = value
-						CM:ProfileUpdate()
-					end,
-				},
-				setArea = {
-					order = 2,
-					type = "select",
-					name = L["Set Area"],
-					desc = L["If the game language is different from the primary language in this server, you need to specify which area you play on."],
-					get = function()
-						local list = E.db.WT.social.contextMenu.armoryOverride
-						if list[E.myrealm] then
-							return list[E.myrealm]
-						else
-							return "NONE"
-						end
-					end,
-					set = function(_, value)
-						local list = E.db.WT.social.contextMenu.armoryOverride
-						if value == "NONE" then
-							list[E.myrealm] = nil
-						else
-							list[E.myrealm] = value
-						end
-					end,
-					values = {
-						NONE = L["Auto-detect"],
-						tw = L["Taiwan"],
-						kr = L["Korea"],
-						us = L["Americas & Oceania"],
-						eu = L["Europe"],
-					},
-				},
-				list = {
-					order = 3,
-					type = "select",
-					name = L["Server List"],
-					get = function()
-						return customListSelected
-					end,
-					set = function(_, value)
-						customListSelected = value
-					end,
-					values = function()
-						local list = E.db.WT.social.contextMenu.armoryOverride
-
-						local displayName = {
-							tw = L["Taiwan"],
-							kr = L["Korea"],
-							us = L["Americas & Oceania"],
-							eu = L["Europe"],
-						}
-
-						local result = {}
-						for key, value in pairs(list) do
-							result[key] = key .. " > " .. displayName[value]
-						end
-
-						return result
-					end,
-					width = 2,
-				},
-				deleteButton = {
-					order = 4,
-					type = "execute",
-					name = L["Delete"],
-					desc = L["Delete the selected NPC."],
-					func = function()
-						if customListSelected then
-							local list = E.db.WT.social.contextMenu.armoryOverride
-							if list[customListSelected] then
-								list[customListSelected] = nil
-							end
-						end
-					end,
-				},
-			},
-		},
-	},
-}
-
 options.emote = {
 	order = 5,
 	type = "group",
@@ -1569,17 +1285,6 @@ options.friendList = {
 						square = L["Square"],
 					},
 				},
-				gameIcon = {
-					name = L["Game Icon Style for WoW"],
-					order = 2,
-					type = "select",
-					width = 1.2,
-					values = {
-						BLIZZARD = L["Default Blizzard Style"],
-						FACTION = L["Use faction icon"],
-						PATCH = L["Use patch icon"],
-					},
-				},
 			},
 		},
 		name = {
@@ -1610,19 +1315,13 @@ options.friendList = {
 					name = L["Use Note As Name"],
 					desc = L["Replace the Real ID or the character name of friends with your notes."],
 				},
-				useClientColor = {
-					order = 4,
-					type = "toggle",
-					name = L["Use Client Color"],
-					desc = L["Change the color of the name to the in-playing game style."],
-				},
 				useClassColor = {
-					order = 5,
+					order = 4,
 					type = "toggle",
 					name = L["Use Class Color"],
 				},
 				font = {
-					order = 6,
+					order = 5,
 					type = "group",
 					name = L["Font Setting"],
 					get = function(info)

@@ -11,7 +11,7 @@ local gsub = gsub
 local ipairs = ipairs
 local strfind = strfind
 
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
+local IsAddOnLoaded = IsAddOnLoaded
 
 local ROLE_ICON_PATTERN = "^|A:groupfinder%-icon%-role%-micro"
 
@@ -31,7 +31,7 @@ end
 local function clearEmptyTooltipLine(line)
 	if line then
 		local raw = line:GetText()
-		if E:NotSecretValue(raw) and raw and gsub(raw, "%s+$", "") == "" then
+		if raw and gsub(raw, "%s+$", "") == "" then
 			line:SetText("")
 		end
 	end
@@ -48,7 +48,7 @@ local function cleanupBlizzardGroupInfo(tooltip)
 		local line = _G["GameTooltipTextLeft" .. i] ---@type FontString?
 		local raw = line and line:GetText()
 		---@cast line FontString
-		if E:NotSecretValue(raw) and raw then
+		if raw then
 			if raw == _G.MEMBERS_COLON then
 				line:SetText("")
 				clearEmptyTooltipLine(_G["GameTooltipTextLeft" .. (i - 1)])
@@ -124,7 +124,7 @@ function T:AddGroupInfo(tooltip, resultID)
 end
 
 function T:GroupInfo()
-	if C_AddOns_IsAddOnLoaded("PremadeGroupsFilter") and E.db.WT.tooltips.groupInfo.enable then
+	if IsAddOnLoaded("PremadeGroupsFilter") and E.db.WT.tooltips.groupInfo.enable then
 		F.Print(
 			format(
 				L["%s detected, %s will be disabled automatically."],

@@ -1,6 +1,5 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local AC = W:NewModule("AutoCollapse", "AceHook-3.0", "AceEvent-3.0") ---@class AutoCollapse: AceModule, AceHook-3.0, AceEvent-3.0
-local BL = E:GetModule("Blizzard")
 
 local _G = _G
 local ipairs = ipairs
@@ -14,9 +13,6 @@ local instanceTypeKeyMap = {
 	arena = "arena",
 	party = "dungeon",
 	raid = "raid",
-	scenario = "scenario",
-	neighborhood = "neighborhood",
-	interior = "interior",
 }
 
 function AC:UpdateState(event)
@@ -51,28 +47,15 @@ function AC:UpdateState(event)
 end
 
 local function ApplyCollapseState(tracker, state)
-	if state == "hide" then
-		if not BL:ObjectiveTracker_IsCollapsed(tracker) then
-			BL:ObjectiveTracker_Collapse(tracker)
-		end
-		return
-	end
-
-	if BL:ObjectiveTracker_IsCollapsed(tracker) then
-		BL:ObjectiveTracker_Expand(tracker)
-	end
-
-	local isCollapsed = tracker:IsCollapsed()
-	if state == "collapse" and not isCollapsed or state == "expand" and isCollapsed then
-		tracker:SetCollapsed(not isCollapsed)
+	local collapse = state ~= "expand"
+	local isCollapsed = tracker:IsCollapsed() and true or false
+	if isCollapsed ~= collapse then
+		tracker:SetCollapsed(collapse)
 	end
 end
 
 function AC:Apply(event, arg1)
-	if
-		(event == "UNIT_ENTERED_VEHICLE" or event == "UNIT_EXITED_VEHICLE")
-		and (E:IsSecretValue(arg1) or arg1 ~= "player")
-	then
+	if (event == "UNIT_ENTERED_VEHICLE" or event == "UNIT_EXITED_VEHICLE") and arg1 ~= "player" then
 		return
 	end
 

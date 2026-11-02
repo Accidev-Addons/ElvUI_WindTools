@@ -6,34 +6,10 @@ W, F, E, L, V, P, G = unpack((select(2, ...)))
 
 local C = W.Utilities.Color
 
-local pairs = pairs
-local GetLocale = GetLocale
-
 local norm = C.StringByTemplate(L["[ABBR] Normal"], "green-500")
 local hero = C.StringByTemplate(L["[ABBR] Heroic"], "blue-500")
 local myth = C.StringByTemplate(L["[ABBR] Mythic"], "purple-500")
 local lfr = C.StringByTemplate(L["[ABBR] Looking for raid"], "orange-500")
-
--- The helper function for progression data.
-local function configTable(t, sourceMetadata)
-	for k in pairs(sourceMetadata) do
-		if t[k] == nil then
-			t[k] = true
-		end
-	end
-
-	return t
-end
-
-local function achievementConfigTable(t, sourceMetadata)
-	for _, data in pairs(sourceMetadata) do
-		if t[data.id] == nil and data.on then
-			t[data.id] = true
-		end
-	end
-
-	return t
-end
 
 ---@class PrivateDB.combat
 V.combat = {
@@ -134,9 +110,7 @@ V.maps = {
 		inverseDirection = false,
 		reverseOrder = false,
 		orientation = "HORIZONTAL",
-		expansionLandingPage = false,
-		garrisonAlertMsg = false,
-		sortingPriority = "^Expansion, _BugSack, _Saved, _Wind",
+		sortingPriority = "_BugSack, _Saved, _Wind",
 		hiddenPatterns = "",
 		ignorePatterns = "",
 	},
@@ -144,11 +118,8 @@ V.maps = {
 
 ---@class PrivateDB.misc
 V.misc = {
-	noKanjiMath = false,
-	pauseToSlash = true,
 	keybindTextAbove = false,
 	autoToggleChatBubble = false,
-	antiOverride = GetLocale() == "zhCN",
 	---@class PrivateDB.misc.moveFrames
 	moveFrames = {
 		enable = true,
@@ -157,26 +128,6 @@ V.misc = {
 		rememberPositions = false,
 		autoResetOffScreenFrames = true,
 		framePositions = {},
-	},
-	---@class PrivateDB.misc.mute
-	mute = {
-		enable = false,
-		mount = {
-			[63796] = false,
-			[229385] = false,
-			[339588] = false,
-			[312762] = false,
-			[40192] = false,
-			[121820] = false,
-		},
-		other = {
-			["Crying"] = false,
-			["Tortollan"] = false,
-			["Smolderheart"] = false,
-			["Elegy of the Eternals"] = false,
-			["Dragon"] = false,
-			["Jewelcrafting"] = false,
-		},
 	},
 	---@class PrivateDB.misc.lfgList
 	lfgList = {
@@ -219,7 +170,7 @@ V.misc = {
 			autoRefresh = true,
 			autoJoin = false,
 			skipConfirmation = false,
-			adjustFontSize = W.ChineseLocale and 1 or 0,
+			adjustFontSize = 0,
 			filterButtonTooltip = true,
 		},
 	},
@@ -248,7 +199,6 @@ V.quest = {
 			style = "OUTLINE",
 			classColor = false,
 			color = { r = 1, g = 1, b = 1 },
-			shortHeader = true,
 			uppercase = false,
 		},
 		cosmeticBar = {
@@ -304,13 +254,6 @@ V.quest = {
 				style = "OUTLINE",
 			},
 		},
-		poiButton = {
-			enable = false,
-			scale = 1,
-			xOffset = 0,
-			yOffset = 0,
-			center = false,
-		},
 	},
 }
 
@@ -322,35 +265,6 @@ V.skins = {
 	merathilisUISkin = true,
 	shadow = true,
 	increasedSize = 0,
-	bigWigsSkin = {
-		queueTimer = {
-			smooth = true,
-			spark = true,
-			colorLeft = { r = 0.32941, g = 0.52157, b = 0.93333, a = 1 },
-			colorRight = { r = 0.25882, g = 0.84314, b = 0.86667, a = 1 },
-			countDown = {
-				name = F.GetCompatibleFont("Montserrat"),
-				size = 16,
-				style = "OUTLINE",
-				offsetX = 0,
-				offsetY = -3,
-			},
-		},
-		normalBar = {
-			smooth = true,
-			spark = true,
-			colorOverride = true,
-			colorLeft = { r = 0.32941, g = 0.52157, b = 0.93333, a = 1 },
-			colorRight = { r = 0.25882, g = 0.84314, b = 0.86667, a = 1 },
-		},
-		emphasizedBar = {
-			smooth = true,
-			spark = true,
-			colorOverride = true,
-			colorLeft = { r = 0.92549, g = 0.00000, b = 0.54902, a = 1 },
-			colorRight = { r = 0.98824, g = 0.40392, b = 0.40392, a = 1 },
-		},
-	},
 	color = { r = 0, g = 0, b = 0 },
 	uiErrors = {
 		enable = true,
@@ -360,19 +274,6 @@ V.skins = {
 		normalTextColor = C.GetRGBFromTemplate("neutral-50"),
 		redTextColor = C.GetRGBFromTemplate("red-500"),
 		yellowTextColor = C.GetRGBFromTemplate("yellow-300"),
-	},
-	ime = {
-		label = {
-			name = F.GetCompatibleFont("Montserrat"),
-			size = 14,
-			style = "OUTLINE",
-		},
-		candidate = {
-			name = E.db.general.font,
-			size = E.db.general.fontSize,
-			style = "OUTLINE",
-		},
-		transparentBackdrop = false,
 	},
 	actionStatus = {
 		name = E.db.general.font,
@@ -501,71 +402,6 @@ V.skins = {
 			},
 		},
 	},
-	cooldownViewer = {
-		enable = true,
-		general = {
-			-- useBlizzardGlow = true,
-			iconShadow = true,
-			barShadow = true,
-			removeDebuffBorder = true,
-		},
-		essential = {
-			enable = true,
-			frameStrata = "LOW",
-			frameLevel = 1,
-			iconHeightRatio = 0.7,
-			chargeCountText = {
-				name = F.GetCompatibleFont("Montserrat"),
-				size = 9,
-				style = "OUTLINE",
-				justifyH = "CENTER",
-				point = "CENTER",
-				relativePoint = "BOTTOM",
-				offsetX = 1,
-				offsetY = 0,
-			},
-		},
-		utility = {
-			enable = true,
-			frameStrata = "LOW",
-			frameLevel = 1,
-			iconHeightRatio = 0.7,
-			chargeCountText = {
-				name = F.GetCompatibleFont("Montserrat"),
-				size = 7,
-				style = "OUTLINE",
-				justifyH = "CENTER",
-				point = "CENTER",
-				relativePoint = "BOTTOM",
-				offsetX = 1,
-				offsetY = 0,
-			},
-		},
-		buffIcon = {
-			enable = true,
-			frameStrata = "LOW",
-			frameLevel = 1,
-			iconHeightRatio = 0.7,
-			chargeCountText = {
-				name = F.GetCompatibleFont("Montserrat"),
-				size = 9,
-				style = "OUTLINE",
-				justifyH = "CENTER",
-				point = "CENTER",
-				relativePoint = "BOTTOM",
-				offsetX = 1,
-				offsetY = 0,
-			},
-		},
-		buffBar = {
-			enable = true,
-			frameStrata = "MEDIUM",
-			frameLevel = 1,
-			barTexture = "WindTools Glow",
-			colorLeft = { r = 0.32941, g = 0.52157, b = 0.93333, a = 1 },
-			colorRight = { r = 0.25882, g = 0.84314, b = 0.86667, a = 1 },
-		},
-	},
 	lossOfControl = {
 		enable = true,
 		icon = {
@@ -602,34 +438,15 @@ V.skins = {
 		},
 	},
 	addons = {
-		advancedInterfaceOptions = true,
-		angleur = true,
-		angryKeystones = true,
-		appearanceTooltip = true,
 		auctionator = true,
-		bigWigs = true,
-		bigWigsQueueTimer = true,
-		btWQuests = true,
 		bugSack = true,
-		extraQuestButton = true,
-		handyNotesMapNotes = true,
 		immersion = true,
-		meetingStone = true,
-		multiLanguage = true,
-		murlokExport = true,
-		myslot = true,
-		mythicDungeonTools = true,
 		omniCD = true,
 		omniCDExtraBar = true,
 		omniCDIcon = true,
 		omniCDStatusBar = true,
 		postal = true,
-		premadeGroupsFilter = true,
-		rareScanner = true,
-		silverDragon = true,
-		simpleAddonManager = true,
 		tomTom = true,
-		warpDeplete = true,
 		whisperPop = true,
 	},
 	libraries = {
@@ -642,7 +459,6 @@ V.skins = {
 	blizzard = {
 		enable = true,
 		achievements = true,
-		addonManager = true,
 		alerts = true,
 		auctionHouse = true,
 		bags = true,
@@ -657,9 +473,7 @@ V.skins = {
 		collections = true,
 		debugTools = true,
 		dressingRoom = true,
-		editModeManager = true,
 		encounterJournal = true,
-		eventTrace = true,
 		friends = true,
 		gameMenu = true,
 		gossip = true,
@@ -668,7 +482,6 @@ V.skins = {
 		help = true,
 		inspect = true,
 		itemSocketing = true,
-		itemUpgrade = true,
 		lookingForGroup = true,
 		loot = true,
 		lossOfControl = true,
@@ -679,9 +492,6 @@ V.skins = {
 		mirrorTimers = true,
 		misc = true,
 		objectiveTracker = true,
-		playerSpells = true,
-		professions = true,
-		professionBook = true,
 		quest = true,
 		raidInfo = true,
 		scenario = true,
@@ -696,8 +506,6 @@ V.skins = {
 		trainer = true,
 		transmogrify = true,
 		tutorial = true,
-		uiErrors = true,
-		warboard = true,
 		worldMap = true,
 	},
 	elvui = {
@@ -705,14 +513,12 @@ V.skins = {
 		actionBarsBackdrop = true,
 		actionBarsButton = true,
 		afk = true,
-		altPowerBar = true,
 		auras = true,
 		bags = true,
 		castBars = true,
 		chatCopyFrame = true,
 		chatDataPanels = true,
 		chatPanels = true,
-		chatVoicePanel = true,
 		classBars = true,
 		dataBars = true,
 		dataPanels = true,
@@ -738,20 +544,6 @@ V.tooltips = {
 		height = 18,
 	},
 	factionIcon = true,
-	petIcon = true,
-	petId = true,
-	tierSet = true,
-	progression = {
-		enable = true,
-		disableInCombat = true,
-		header = "TEXTURE",
-		raid = configTable({ enable = true }, W.RaidData),
-		specialAchievement = achievementConfigTable(
-			{ enable = true, onlyCompleted = true, sortBy = "EXPANSION" },
-			W.MythicPlusSeasonAchievementData
-		),
-		mythicPlus = configTable({ enable = true, markHighestScore = true, showNoRecord = true }, W.MythicPlusMapData),
-	},
 }
 
 ---@class PrivateDB.social

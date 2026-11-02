@@ -79,14 +79,6 @@ function S:ElvUI_ActionBar_PositionAndSizeBarShapeShift()
 	self:ElvUI_ActionBar_SkinBar(_G.ElvUI_StanceBar, "STANCE")
 end
 
-function S:SkinZoneAbilities(button)
-	for spellButton in button.SpellButtonContainer:EnumerateActive() do
-		if spellButton and spellButton.IsSkinned then
-			self:CreateShadow(spellButton)
-		end
-	end
-end
-
 function S:ElvUI_ActionBar_LoadKeyBinder()
 	local frame = _G.ElvUIBindPopupWindow
 	if not frame then
@@ -135,11 +127,6 @@ function S:ElvUI_ActionBars()
 		return
 	end
 
-	-- Extra action bar
-	if _G.ZoneAbilityFrame and _G.ZoneAbilityFrame.UpdateDisplayedZoneAbilities then
-		self:SecureHook(_G.ZoneAbilityFrame, "UpdateDisplayedZoneAbilities", "SkinZoneAbilities")
-	end
-
 	-- [SIRUS] Extra action buttons are exposed as a list; child count includes decorative frames.
 	local extraBar = _G.ExtraActionBarFrame
 	for _, button in ipairs(extraBar and (extraBar.Buttons or extraBar.ExtraButtons) or {}) do
@@ -179,13 +166,6 @@ function S:ElvUI_ActionBars()
 			tex:SetTexture(nil)
 			tex:Hide()
 		end
-	end
-
-	-- [SIRUS] The retail flyout constructor is not part of ElvUI 9.07.
-	if AB.SetupFlyoutButton then
-		self:SecureHook(AB, "SetupFlyoutButton", function(_, button)
-			self:CreateShadow(button)
-		end)
 	end
 
 	-- Keybind

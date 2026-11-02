@@ -18,23 +18,27 @@ local ipairs = ipairs
 local math_pi = math.pi
 local max = max
 local pairs = pairs
-local pcall = pcall
 local select = select
 local strfind = strfind
 local strmatch = strmatch
 local tContains = tContains
 local tinsert = tinsert
 local tonumber = tonumber
-local tostring = tostring
 local tremove = tremove
 local type = type
 local wipe = wipe
 
-local AbbreviateNumbers = AbbreviateNumbers
+local ChatEdit_ActivateChat = ChatEdit_ActivateChat
+local ChatEdit_ChooseBoxForSend = ChatEdit_ChooseBoxForSend
+local ChatEdit_InsertLink = ChatEdit_InsertLink
 local CreateFrame = CreateFrame
 local GetInventoryItemLink = GetInventoryItemLink
-local GetSpecializationInfoByID = E.GetSpecializationInfoByID
-local ItemLocation = ItemLocation
+local GetItemGem = GetItemGem
+local GetItemInfo = GetItemInfo
+local GetItemInfoInstant = GetItemInfoInstant
+local GetItemQualityColor = GetItemQualityColor
+local GetItemStats = GetItemStats
+local IsAddOnLoaded = IsAddOnLoaded
 local Mixin = Mixin
 local SetPortraitTexture = SetPortraitTexture
 local UnitClass = UnitClass
@@ -43,22 +47,12 @@ local UnitHealthMax = UnitHealthMax
 local UnitLevel = UnitLevel
 local UnitName = UnitName
 
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-local C_Item_GetCurrentItemLevel = C_Item.GetCurrentItemLevel
-local C_Item_GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo
-local C_Item_GetItemGem = GetItemGem
-local C_Item_GetItemInfo = C_Item.GetItemInfo
-local C_Item_GetItemQualityColor = GetItemQualityColor
-local C_Item_GetItemStats = GetItemStats
-local C_SpecializationInfo_GetInspectSpecialization = E.GetInspectSpecialization
-local C_SpecializationInfo_GetSpecialization = E.GetSpecialization
-local C_SpecializationInfo_GetSpecializationInfo = E.GetSpecializationInfo
-local ChatFrameUtil_ActivateChat = ChatFrameUtil.ActivateChat
-local ChatFrameUtil_ChooseBoxForSend = ChatFrameUtil.ChooseBoxForSend
-local ChatFrameUtil_InsertLink = ChatFrameUtil.InsertLink
+local GetInspectSpecialization = E.GetInspectSpecialization
+local GetSpecialization = E.GetSpecialization
+local GetSpecializationInfo = E.GetSpecializationInfo
+local GetSpecializationInfoByID = E.GetSpecializationInfoByID
 
 local EMPTY = EMPTY
-local Enum_ItemClass = Enum.ItemClass
 local Enum_ItemQuality = Enum.ItemQuality
 local INVSLOT_MAINHAND = INVSLOT_MAINHAND
 local INVSLOT_NECK = INVSLOT_NECK
@@ -72,7 +66,6 @@ local PANEL_COMPONENT_SPACING = 4
 local STAT_ROW_SEPARATOR_SPACING = 3
 local STAT_ROW_HEIGHT = 20
 local STAT_PADDING = 10
-local SECRET_VALUE_WIDTH = 80
 local ITEM_LEVEL_CHECK_INTERVAL = 0.08
 local INSPECT_WAIT_MAX_SECONDS = 3
 local INSPECT_WAIT_MAX_ROUNDS = floor(INSPECT_WAIT_MAX_SECONDS / ITEM_LEVEL_CHECK_INTERVAL)
@@ -96,16 +89,19 @@ end
 local INVSLOT_ENCHANT = {
 	[INVSLOT_HEAD] = true,
 	[INVSLOT_SHOULDER] = true,
+	[INVSLOT_BACK] = true,
 	[INVSLOT_CHEST] = true,
 	[INVSLOT_WRIST] = true,
 	[INVSLOT_HAND] = true,
 	[INVSLOT_LEGS] = true,
 	[INVSLOT_FEET] = true,
-	[INVSLOT_FINGER1] = true,
-	[INVSLOT_FINGER2] = true,
 	[INVSLOT_MAINHAND] = true,
 	[INVSLOT_OFFHAND] = true,
 }
+
+local ITEM_CLASS_WEAPON = 2
+local ITEM_CLASS_ARMOR = 4
+local ITEM_SUBCLASS_SHIELD = 6
 
 local STATS_CONFIG = {
 	groups = {
@@ -140,11 +136,6 @@ local STATS_CONFIG = {
 			rows = {
 				{ key = "crit", name = L["[ABBR] Critical Strike"], diffType = "percent" },
 				{ key = "haste", name = L["[ABBR] Haste"], diffType = "percent" },
-				{ key = "mastery", name = L["[ABBR] Mastery"], diffType = "percent" },
-				{ key = "versatility", name = L["[ABBR] Versatility"], diffType = "percent" },
-				{ key = "leech", name = L["[ABBR] Leech"], diffType = "percent" },
-				{ key = "speed", name = L["[ABBR] Speed"], diffType = "percent" },
-				{ key = "avoidance", name = L["[ABBR] Avoidance"], diffType = "percent", color = "green-400" },
 			},
 		},
 	},
@@ -153,9 +144,10 @@ local STATS_CONFIG = {
 ---Checks if an enchantment can be applied to a specific slot based on quality and class
 ---@param slotIndex number The inventory slot index
 ---@param itemQuality Enum.ItemQuality The quality of the enchantment
----@param itemClass Enum.ItemClass The class ID of the enchantment
+---@param itemClass number The class ID of the item
+---@param itemSubClass number The subclass ID of the item
 ---@return boolean
-local function CheckEnchantmentSlot(slotIndex, itemQuality, itemClass)
+local function CheckEnchantmentSlot(slotIndex, itemQuality, itemClass, itemSubClass)
 	if not INVSLOT_ENCHANT[slotIndex] then
 		return false
 	end
@@ -167,7 +159,11 @@ local function CheckEnchantmentSlot(slotIndex, itemQuality, itemClass)
 		return false
 	end
 
-	if slotIndex == INVSLOT_OFFHAND and itemClass ~= Enum_ItemClass.Weapon then
+	if
+		slotIndex == INVSLOT_OFFHAND
+		and itemClass ~= ITEM_CLASS_WEAPON
+		and not (itemClass == ITEM_CLASS_ARMOR and itemSubClass == ITEM_SUBCLASS_SHIELD)
+	then
 		return false
 	end
 
@@ -194,7 +190,7 @@ function circleIconPrototype:OnEnter()
 	if self.itemLink then
 		_G.GameTooltip:SetHyperlink(self.itemLink)
 	elseif self.itemID then
-		_G.GameTooltip:SetItemByID(self.itemID)
+		_G.GameTooltip:SetHyperlink("item:" .. self.itemID)
 	elseif self.name and self.name ~= "" then
 		_G.GameTooltip:AddLine(self.name, 1, 1, 1)
 	end
@@ -223,14 +219,6 @@ function circleIconPrototype:UpdateSize(size)
 	self:Size(size)
 	self.Texture:Size(size - 2)
 	self.Border:Size(size + 4)
-end
-
----Updates the crafting level style of the circle icon
----@param config { name: string, size: number, style: string, xOffset: number, yOffset: number }
-function circleIconPrototype:UpdateCraftingTierStyle(config)
-	F.SetFontWithDB(self.CraftingTierText, config)
-	self.CraftingTierText:ClearAllPoints()
-	self.CraftingTierText:Point("CENTER", self.Texture, "BOTTOM", config.xOffset, config.yOffset)
 end
 
 ---Sets the data for the circle icon
@@ -302,8 +290,7 @@ end
 ---@param texture number|string The texture path or texture ID
 ---@param quality Enum.ItemQuality? The item quality for the border color
 ---@param colorTemplate ColorTemplate? The color template for the border
----@param craftingTier number? The crafting quality level for the overlay
-function circleIconPrototype:UpdateStyle(texture, quality, colorTemplate, craftingTier)
+function circleIconPrototype:UpdateStyle(texture, quality, colorTemplate)
 	self.Texture:SetTexture(texture)
 	self.Texture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
@@ -317,23 +304,11 @@ function circleIconPrototype:UpdateStyle(texture, quality, colorTemplate, crafti
 
 	local r, g, b, a
 	if quality then
-		r, g, b = C_Item_GetItemQualityColor(quality)
+		r, g, b = GetItemQualityColor(quality)
 		a = 1
 	else
 		r, g, b = C.ExtractRGBFromTemplate(colorTemplate or "red-800")
 		a = 0.7
-	end
-
-	if craftingTier then
-		self.CraftingTierText:SetText(tostring(craftingTier))
-		local tierColorTemplate = "amber-300" ---@type ColorTemplate
-		if craftingTier < 3 then
-			tierColorTemplate = "yellow-600"
-		end
-		self.CraftingTierText:SetTextColor(C.ExtractRGBFromTemplate(tierColorTemplate))
-		self.CraftingTierText:Show()
-	else
-		self.CraftingTierText:Hide()
 	end
 
 	self.Border:SetVertexColor(r, g, b, a)
@@ -352,12 +327,6 @@ function circleIconPool:CreateIcon()
 	frame.Texture = frame:CreateTexture(nil, "ARTWORK")
 	frame.Texture:Point("CENTER")
 	frame.Texture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-
-	frame.CraftingTierText = frame:CreateFontString(nil, "OVERLAY")
-	frame.CraftingTierText:Point("CENTER", frame.Texture, "BOTTOM")
-	F.SetFont(frame.CraftingTierText, F.GetCompatibleFont("Chivo Mono"), 8)
-	frame.CraftingTierText:SetJustifyH("CENTER")
-	frame.CraftingTierText:SetJustifyV("MIDDLE")
 
 	frame.Border = frame:CreateTexture(nil, "BORDER")
 	frame.Border:SetTexture(W.Media.Textures.inspectGemBG)
@@ -398,7 +367,7 @@ end
 ---@return SocketGemInfo[]? gemInfo Array of gem information including empty sockets
 local function GetItemGemInfo(itemLink)
 	local info = {} ---@type SocketGemInfo[]
-	local stats = C_Item_GetItemStats(itemLink)
+	local stats = GetItemStats(itemLink)
 
 	if not stats then
 		return info
@@ -412,7 +381,7 @@ local function GetItemGemInfo(itemLink)
 		end
 	end
 	for i = 1, 4 do
-		local name, link = C_Item_GetItemGem(itemLink, i)
+		local name, link = GetItemGem(itemLink, i)
 		if link then
 			if info[i] then
 				info[i].name, info[i].link = name, link
@@ -471,7 +440,8 @@ local function GetItemEnchantInfo(itemInfo)
 	local enchantID = tonumber(strmatch(itemInfo.link, "item:%d+:(%d+):"))
 
 	if not enchantID or enchantID == 0 then
-		local isMissing = CheckEnchantmentSlot(itemInfo.slotIndex, itemInfo.quality, itemInfo.classID)
+		local isMissing =
+			CheckEnchantmentSlot(itemInfo.slotIndex, itemInfo.quality, itemInfo.classID, itemInfo.subClassID)
 		return isMissing and { name = L["Enchant Missing"] } or nil
 	end
 
@@ -483,14 +453,13 @@ local function GetItemEnchantInfo(itemInfo)
 end
 
 ---@alias InspectItemInfo {
---- classID: Enum.ItemClass,
---- cleanLink: string,
---- craftingAtlas: string?,
+--- classID: number,
 --- level: number,
 --- link: string,
 --- name: string,
 --- quality: Enum.ItemQuality,
 --- slotIndex: number,
+--- subClassID: number,
 --- subType: string,
 --- texture: string,
 --- type: string,
@@ -506,52 +475,28 @@ local function GetUnitSlotItemInfo(unit, slotIndex)
 		return
 	end
 
-	local itemName, _, itemQuality, baseItemLevel, _, itemType, itemSubType, _, _, itemTexture, _, _, itemClassID =
-		C_Item_GetItemInfo(link)
+	local itemName, _, itemQuality, baseItemLevel, _, itemType, itemSubType, _, _, itemTexture = GetItemInfo(link)
+	local _, _, _, _, _, itemClassID, itemSubClassID = GetItemInfoInstant(link)
 
 	local actualItemLevel = baseItemLevel
-
-	if C_Item_GetCurrentItemLevel and unit == "player" then
-		local itemLocation = ItemLocation:CreateFromEquipmentSlot(slotIndex) --[[@as ItemLocation]]
-		actualItemLevel = C_Item_GetCurrentItemLevel(itemLocation)
-	end
 
 	local slotInfo = E:GetGearSlotInfo(unit, slotIndex)
 	if type(slotInfo) == "table" and type(slotInfo.iLvl) == "number" then
 		actualItemLevel = slotInfo.iLvl
 	end
 
-	if C_Item_GetDetailedItemLevelInfo and (not actualItemLevel or actualItemLevel <= 0) then
-		local detailedItemLevel, _, sparseItemLevel = C_Item_GetDetailedItemLevelInfo(link)
-		if detailedItemLevel and detailedItemLevel > 0 then
-			actualItemLevel = detailedItemLevel
-		elseif sparseItemLevel and sparseItemLevel > 0 then
-			actualItemLevel = sparseItemLevel
-		end
-	end
-
 	if not actualItemLevel or actualItemLevel <= 0 then
 		actualItemLevel = GetDisplayedItemLevelFromHyperlink(link)
 	end
 
-	local craftingAtlas ---@type string?
-	local cleanLink = gsub(link, "|h%[(.+)%]|h", function(raw)
-		local name = gsub(raw, "(%s*)(|A:.-|a)", function(_, atlasString)
-			craftingAtlas = gsub(atlasString, "|A:(.-):%d+:%d+::%d+|a", "%1")
-			return ""
-		end)
-		return "|h" .. name .. "|h"
-	end)
-
 	return {
 		classID = itemClassID,
-		cleanLink = cleanLink,
-		craftingAtlas = craftingAtlas,
 		level = actualItemLevel,
 		link = link,
 		name = itemName,
 		quality = itemQuality,
 		slotIndex = slotIndex,
+		subClassID = itemSubClassID,
 		subType = itemSubType,
 		texture = itemTexture,
 		type = itemType,
@@ -560,14 +505,17 @@ end
 
 local function GetUnitSpecializationInfo(unit)
 	if unit == "player" then
-		-- [SIRUS] GetSpecialization also returns the name and spent points.
-		local specIndex = C_SpecializationInfo_GetSpecialization()
-		local _, name, _, icon = C_SpecializationInfo_GetSpecializationInfo(specIndex)
+		local specIndex = GetSpecialization()
+		if not specIndex then
+			return
+		end
+
+		local _, name, _, icon = GetSpecializationInfo(specIndex)
 		return { icon = icon, name = name }
 	end
 
-	local specID = C_SpecializationInfo_GetInspectSpecialization(unit)
-	if E:IsSecretValue(specID) or not specID or specID == 0 then
+	local specID = GetInspectSpecialization(unit)
+	if not specID or specID == 0 then
 		return
 	end
 
@@ -582,28 +530,6 @@ end
 ---@field intellect number
 ---@field crit number
 ---@field haste number
----@field mastery number
----@field versatility number
----@field leech number
----@field speed number
----@field avoidance number
-
-local function HasDisplayableNumber(value)
-	return not E:NotSecretValue(value) or value ~= nil
-end
-
-local function FormatDisplayNumber(value)
-	if E:NotSecretValue(value) then
-		return E:ShortValue(value, 1)
-	end
-
-	return AbbreviateNumbers(value, E.Abbreviate.short)
-end
-
-local function GetPublicStringWidth(fontString, fallbackWidth)
-	local width = fontString:GetStringWidth()
-	return E:NotSecretValue(width) and width or fallbackWidth
-end
 
 ---Calculates stats from all equipped items
 ---@param unit UnitToken The unit to collect stats from
@@ -617,16 +543,11 @@ local function CalculateStatsFromEquipment(unit)
 		intellect = 0,
 		crit = 0,
 		haste = 0,
-		mastery = 0,
-		versatility = 0,
-		leech = 0,
-		speed = 0,
-		avoidance = 0,
 	}
 	for _, slotInfo in ipairs(DISPLAY_SLOTS) do
 		local itemLink = GetInventoryItemLink(unit, slotInfo.index)
 		if itemLink then
-			local itemStats = C_Item_GetItemStats(itemLink)
+			local itemStats = GetItemStats(itemLink)
 			if itemStats then
 				stats.stamina = stats.stamina + (itemStats["ITEM_MOD_STAMINA_SHORT"] or 0)
 				stats.strength = stats.strength + (itemStats["ITEM_MOD_STRENGTH_SHORT"] or 0)
@@ -634,11 +555,6 @@ local function CalculateStatsFromEquipment(unit)
 				stats.intellect = stats.intellect + (itemStats["ITEM_MOD_INTELLECT_SHORT"] or 0)
 				stats.crit = stats.crit + (itemStats["ITEM_MOD_CRIT_RATING_SHORT"] or 0)
 				stats.haste = stats.haste + (itemStats["ITEM_MOD_HASTE_RATING_SHORT"] or 0)
-				stats.mastery = stats.mastery + (itemStats["ITEM_MOD_MASTERY_RATING_SHORT"] or 0)
-				stats.versatility = stats.versatility + (itemStats["ITEM_MOD_VERSATILITY"] or 0)
-				stats.leech = stats.leech + (itemStats["ITEM_MOD_CR_LIFESTEAL_SHORT"] or 0)
-				stats.speed = stats.speed + (itemStats["ITEM_MOD_CR_SPEED_SHORT"] or 0)
-				stats.avoidance = stats.avoidance + (itemStats["ITEM_MOD_CR_AVOIDANCE_SHORT"] or 0)
 			end
 		end
 	end
@@ -660,7 +576,7 @@ local function GetUnitStats(unit, itemLevel)
 
 	result.level = UnitLevel(unit)
 	result.health = UnitHealthMax(unit)
-	result.itemLevel = itemLevel or 0
+	result.itemLevel = type(itemLevel) == "number" and itemLevel or 0
 
 	---@cast result UnitStatistics
 
@@ -718,7 +634,6 @@ function I:CreatePanel(parent)
 
 	MF:InternalHandle(frame, MF:GetMoveTarget(parent) or parent)
 
-	-- [SIRUS] The follower portrait template is unavailable; only its portrait and level are needed.
 	frame.PortraitFrame = CreateFrame("Frame", nil, frame)
 	frame.PortraitFrame:Size(50)
 	frame.PortraitFrame:Point("TOPLEFT", frame, "TOPLEFT", 16, -12)
@@ -743,7 +658,6 @@ function I:CreatePanel(parent)
 	frame.PlayerName:Point("TOPLEFT", frame, "TOPLEFT", 75, -17)
 	frame.PlayerItemLevel:Point("TOPLEFT", frame, "TOPLEFT", 75, -42)
 
-	-- [SIRUS] Mouse scripts belong to a frame, not a texture.
 	frame.SpecIcon = CreateFrame("Button", nil, frame)
 	frame.SpecIcon:Size(38)
 	frame.SpecIcon:Point("TOPRIGHT", frame, "TOPRIGHT", -28, -17)
@@ -846,8 +760,8 @@ function I:CreatePanel(parent)
 
 		line:SetScript("OnDoubleClick", function(this)
 			if this.link then
-				ChatFrameUtil_ActivateChat(ChatFrameUtil_ChooseBoxForSend())
-				ChatFrameUtil_InsertLink(this.link)
+				ChatEdit_ActivateChat(ChatEdit_ChooseBoxForSend())
+				ChatEdit_InsertLink(this.link)
 			end
 		end)
 	end
@@ -869,7 +783,7 @@ function I:ShowPanel(unit, parent, ilevel)
 	frame.unit = unit
 
 	local _, class = UnitClass(unit)
-	if E:IsSecretValue(class) or not class then
+	if not class then
 		if parent and parent.WTInspect then
 			parent.WTInspect:Hide()
 		end
@@ -916,7 +830,7 @@ function I:ShowPanel(unit, parent, ilevel)
 
 		if itemInfo and itemInfo.level and itemInfo.level > 0 then
 			line.ItemLevel:SetText(format("%d", itemInfo.level))
-			line.ItemName:SetText(itemInfo.cleanLink or itemInfo.link or itemInfo.name)
+			line.ItemName:SetText(itemInfo.link or itemInfo.name)
 		else
 			line.ItemLevel:SetText("")
 			line.ItemName:SetText(L["Not Equipped"])
@@ -931,7 +845,7 @@ function I:ShowPanel(unit, parent, ilevel)
 				line.ItemTextureFrame.Texture:SetTexture(itemInfo.texture)
 				local r, g, b = E.db.general.bordercolor.r, E.db.general.bordercolor.g, E.db.general.bordercolor.b
 				if self.db.itemIcon.qualityBorder then
-					r, g, b = C_Item_GetItemQualityColor(itemInfo.quality or Enum_ItemQuality.Common)
+					r, g, b = GetItemQualityColor(itemInfo.quality or Enum_ItemQuality.Common)
 				end
 				line.ItemTextureFrame:SetBackdropBorderColor(r, g, b)
 				line.ItemTextureFrame:Show()
@@ -979,7 +893,6 @@ function I:ShowPanel(unit, parent, ilevel)
 				icon:SetParent(line)
 				icon:AsEnchant(enchantInfo)
 				icon:UpdateSize(self.db.enchantIcon.size)
-				icon:UpdateCraftingTierStyle(self.db.enchantIcon.craftingTier)
 				UpdateCircleIconPosition(icon)
 				tinsert(line.circleIcons, icon)
 			end
@@ -993,7 +906,6 @@ function I:ShowPanel(unit, parent, ilevel)
 				icon:SetParent(line)
 				icon:AsGemSocket(data)
 				icon:UpdateSize(self.db.gemIcon.size)
-				icon:UpdateCraftingTierStyle(self.db.gemIcon.craftingTier)
 				UpdateCircleIconPosition(icon)
 				tinsert(line.circleIcons, icon)
 			end
@@ -1115,7 +1027,7 @@ function I:UpdateStatsComparePanel(frame, inspectedUnit, inspectedItemLevel)
 	local playerName = UnitName("player")
 	local inspectedClassFile = select(2, UnitClass(inspectedUnit))
 	local inspectedClassColor = E:ClassColor(E.myclass, true)
-	if E:NotSecretValue(inspectedClassFile) and inspectedClassFile then
+	if inspectedClassFile then
 		inspectedClassColor = E:ClassColor(inspectedClassFile, true) or inspectedClassColor
 	end
 	local playerClassColor = E:ClassColor(E.myclass, true)
@@ -1147,28 +1059,17 @@ function I:UpdateStatsComparePanel(frame, inspectedUnit, inspectedItemLevel)
 		else
 			local inspectedValue = inspectedStats[def.key]
 			local playerValue = playerStats[def.key]
-			local canCompareValues = E:NotSecretValue(inspectedValue) and E:NotSecretValue(playerValue)
 
-			isVisible = HasDisplayableNumber(inspectedValue)
-				and HasDisplayableNumber(playerValue)
-				and not (
-					canCompareValues
-					and self.db.statistics.comparison.hideIfBothZero
-					and inspectedValue == 0
-					and playerValue == 0
-				)
+			isVisible = inspectedValue ~= nil
+				and playerValue ~= nil
+				and not (self.db.statistics.comparison.hideIfBothZero and inspectedValue == 0 and playerValue == 0)
 
 			if isVisible then
 				row.label:SetText(def.name)
 
-				local inspectedText, playerText = FormatDisplayNumber(inspectedValue), FormatDisplayNumber(playerValue)
+				local inspectedText, playerText = E:ShortValue(inspectedValue, 1), E:ShortValue(playerValue, 1)
 
-				if
-					self.db.statistics.comparison.enable
-					and canCompareValues
-					and playerValue > 0
-					and inspectedValue > 0
-				then
+				if self.db.statistics.comparison.enable and playerValue > 0 and inspectedValue > 0 then
 					local diffText, isPositive = "", false
 
 					if def.diffType == "value" then
@@ -1197,15 +1098,13 @@ function I:UpdateStatsComparePanel(frame, inspectedUnit, inspectedItemLevel)
 
 				local colorTemplate = def.color or row.groupColor ---@type ColorTemplate
 				row.label:SetTextColor(C.ExtractRGBFromTemplate(colorTemplate))
-				local inspectedColorTemplate = E:NotSecretValue(inspectedValue) and inspectedValue == 0 and "gray-500"
-					or "neutral-50" ---@type ColorTemplate
+				local inspectedColorTemplate = inspectedValue == 0 and "gray-500" or "neutral-50" ---@type ColorTemplate
 				row.inspectedValue:SetTextColor(C.ExtractRGBFromTemplate(inspectedColorTemplate))
-				local playerColorTemplate = E:NotSecretValue(playerValue) and playerValue == 0 and "gray-500"
-					or "neutral-50" ---@type ColorTemplate
+				local playerColorTemplate = playerValue == 0 and "gray-500" or "neutral-50" ---@type ColorTemplate
 				row.playerValue:SetTextColor(C.ExtractRGBFromTemplate(playerColorTemplate))
 
-				inspectedWidth = GetPublicStringWidth(row.inspectedValue, SECRET_VALUE_WIDTH)
-				playerWidth = GetPublicStringWidth(row.playerValue, SECRET_VALUE_WIDTH)
+				inspectedWidth = row.inspectedValue:GetStringWidth()
+				playerWidth = row.playerValue:GetStringWidth()
 			end
 		end
 
@@ -1306,13 +1205,13 @@ function I:NotifyInspect(unit)
 		end
 	end
 
-	local success, guid = pcall(UnitGUID, unit)
-	if success and E:NotSecretValue(guid) and guid then
+	local guid = UnitGUID(unit)
+	if guid then
 		self.inspecting[guid] = unit
 	end
 end
 
-function I:INSPECT_READY(_, guid)
+function I:INSPECT_TALENT_READY(_, guid)
 	if not self.inspecting[guid] then
 		return
 	end
@@ -1350,7 +1249,7 @@ function I:UNIT_INVENTORY_CHANGED(_, unit)
 	if _G.InspectFrame and _G.InspectFrame.unit and _G.InspectFrame.unit == unit then
 		local guid = UnitGUID(unit)
 		if guid then
-			self:INSPECT_READY(_, guid)
+			self:INSPECT_TALENT_READY(_, guid)
 		end
 	end
 end
@@ -1358,7 +1257,7 @@ end
 function I:Initialize()
 	self.db = E.db.WT.item.inspect
 
-	if C_AddOns_IsAddOnLoaded("TinyInspect") then
+	if IsAddOnLoaded("TinyInspect") then
 		self.StopRunning = "TinyInspect"
 		return
 	end
@@ -1373,12 +1272,12 @@ function I:Initialize()
 	end)
 
 	self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED", "ShowAllPlayerPanels")
-	self:RegisterEvent("PLAYER_AVG_ITEM_LEVEL_UPDATE", "ShowAllPlayerPanels")
+	E:RegisterEventForObject("PLAYER_AVG_ITEM_LEVEL_READY", self, self.ShowAllPlayerPanels)
 
 	-- Inspect
 	self.inspecting = {}
 	self:SecureHook("NotifyInspect")
-	self:RegisterEvent("INSPECT_READY")
+	self:RegisterEvent("INSPECT_TALENT_READY")
 	self:RegisterEvent("UNIT_INVENTORY_CHANGED")
 
 	self.initialized = true

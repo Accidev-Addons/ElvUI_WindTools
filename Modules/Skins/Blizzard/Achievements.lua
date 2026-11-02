@@ -11,12 +11,11 @@ function S:Blizzard_AchievementUI()
 	S:CreateShadow(_G.AchievementFrame)
 	S:CreateBackdropShadow(_G.AchievementFrameComparisonHeader)
 
-	for i = 1, 3 do
+	for i = 1, 2 do
 		self:ReskinTab(_G["AchievementFrameTab" .. i])
 	end
 
-	self:CreateBackdropShadow(_G.AchievementFrame.SearchPreviewContainer)
-	self:CreateBackdropShadow(_G.AchievementFrame.SearchResults)
+	self:CreateBackdropShadow(_G.AchievementFrame.searchResults)
 end
 
 S:AddCallbackForAddon("Blizzard_AchievementUI")

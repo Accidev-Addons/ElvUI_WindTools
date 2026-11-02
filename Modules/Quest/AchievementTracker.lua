@@ -1,11 +1,5 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local AT = W:NewModule("AchievementTracker", "AceEvent-3.0", "AceHook-3.0") ---@class AchievementTracker : AceModule, AceEvent-3.0, AceHook-3.0
-
--- [SIRUS] Keep the native UI until this enhancement has a native API port.
-if not (C_ContentTracking and C_ContentTracking.GetTrackedIDs) then
-	AT.StopRunning = "Sirus: content tracking unavailable"
-	return
-end
 local C = W.Utilities.Color
 local async = W.Utilities.Async
 local MF = W.Modules.MoveFrames
@@ -32,6 +26,7 @@ local tostring = tostring
 local tremove = tremove
 local unpack = unpack
 
+local AddTrackedAchievement = AddTrackedAchievement
 local CreateDataProvider = CreateDataProvider
 local CreateFrame = CreateFrame
 local CreateFramePool = CreateFramePool
@@ -45,19 +40,12 @@ local GetCategoryInfo = GetCategoryInfo
 local GetCategoryList = GetCategoryList
 local GetCategoryNumAchievements = GetCategoryNumAchievements
 local GetKeysArray = GetKeysArray
+local GetNumTrackedAchievements = GetNumTrackedAchievements
+local IsTrackedAchievement = IsTrackedAchievement
 local PlaySound = PlaySound
+local RemoveTrackedAchievement = RemoveTrackedAchievement
 
-local C_AchievementInfo_GetRewardItemID = C_AchievementInfo.GetRewardItemID
-local C_AchievementInfo_IsGuildAchievement = C_AchievementInfo.IsGuildAchievement
-local C_AchievementInfo_IsValidAchievement = C_AchievementInfo.IsValidAchievement
-local C_ContentTracking_GetTrackedIDs = C_ContentTracking.GetTrackedIDs
-local C_ContentTracking_IsTracking = C_ContentTracking.IsTracking
-local C_ContentTracking_StartTracking = C_ContentTracking.StartTracking
-local C_ContentTracking_StopTracking = C_ContentTracking.StopTracking
-
-local Constants_ContentTrackingConsts = Constants.ContentTrackingConsts
-local Enum_ContentTrackingStopType = Enum.ContentTrackingStopType
-local Enum_ContentTrackingType = Enum.ContentTrackingType
+local MAX_TRACKED_ACHIEVEMENTS = MAX_TRACKED_ACHIEVEMENTS
 local RED_FONT_COLOR = RED_FONT_COLOR
 local SOUNDKIT = SOUNDKIT
 local ScrollBoxConstants = ScrollBoxConstants
@@ -83,7 +71,7 @@ local REWARDS_ICON_OFFSET_X = 80
 ---@field category { id: number, name: string }
 ---@field criteriaData AchievementCriteriaData
 ---@field flags number
----@field reward { itemID: number|nil, text: string|nil }
+---@field reward { text: string|nil }
 ---@field isExpanded? boolean whether the element is expanded to show details
 ---@field isLastElement? boolean used to avoid cutting off the last element when expanding
 
@@ -239,9 +227,9 @@ function AT:ScanAchievements()
 				end
 
 				local id = select(1, GetAchievementInfo(categoryID, i))
-				if id and C_AchievementInfo_IsValidAchievement(id) and not C_AchievementInfo_IsGuildAchievement(id) then
+				if id then
 					async.WithAchievementID(id, function(data)
-						local _, name, _, completed, _, _, _, description, flags, icon, rewardText = unpack(data)
+						local _, name, _, completed, _, _, _, description, flags, icon, rewardText = unpack(data, 1, 11)
 						if completed then
 							return
 						end
@@ -257,7 +245,6 @@ function AT:ScanAchievements()
 							criteriaData = GetCriteriaData(id),
 							flags = flags,
 							reward = {
-								itemID = C_AchievementInfo_GetRewardItemID(id),
 								text = strlen(rewardText or "") > 0 and rewardText or nil,
 							},
 						}
@@ -312,8 +299,7 @@ function AT:UpdateView()
 
 			local isNumber = tostring(tonumber(filters.pattern)) == filters.pattern
 			if isNumber then
-				local id = tonumber(filters.pattern)
-				if id and (id == data.id or id == data.reward.itemID) then
+				if tonumber(filters.pattern) == data.id then
 					found = true
 				end
 			else
@@ -473,7 +459,7 @@ function AT:ScrollElementInitializer(frame, data, scrollBox)
 
 		local Background = ProgressBackdrop:CreateTexture(nil, "BACKGROUND")
 		Background:SetAllPoints()
-		Background:SetColorTexture(C.ExtractRGBFromTemplate("neutral-950"))
+		Background:SetTexture(C.ExtractRGBFromTemplate("neutral-950"))
 		frame.ProgressBackdrop.Background = Background
 
 		local IconFrame = CreateFrame("Frame", nil, frame, "BackdropTemplate")
@@ -531,11 +517,7 @@ function AT:ScrollElementInitializer(frame, data, scrollBox)
 		RewardsIcon:SetTexCoords()
 		RewardsIcon:SetScript("OnEnter", function(icon)
 			GameTooltip:SetOwner(icon, "ANCHOR_RIGHT")
-			if frame.data.reward.itemID then
-				GameTooltip:SetItemByID(frame.data.reward.itemID)
-			else
-				GameTooltip:AddLine(frame.data.reward.text, nil, nil, nil, true)
-			end
+			GameTooltip:AddLine(frame.data.reward.text, nil, nil, nil, true)
 			GameTooltip:Show()
 		end)
 		RewardsIcon:SetScript("OnLeave", function()
@@ -603,30 +585,20 @@ function AT:ScrollElementInitializer(frame, data, scrollBox)
 					scrollBox:ScrollToEnd()
 				end
 			elseif button == "MiddleButton" then
-				if not C_ContentTracking_IsTracking(Enum_ContentTrackingType.Achievement, f.data.id) then
-					local trackedCount = #C_ContentTracking_GetTrackedIDs(Enum_ContentTrackingType.Achievement)
-					if trackedCount >= Constants_ContentTrackingConsts.MaxTrackedAchievements then
+				if not IsTrackedAchievement(f.data.id) then
+					if GetNumTrackedAchievements() >= MAX_TRACKED_ACHIEVEMENTS then
 						_G.UIErrorsFrame:AddMessage(
-							format(
-								L["Cannot track more than %d achievements"],
-								Constants_ContentTrackingConsts.MaxTrackedAchievements
-							),
+							format(L["Cannot track more than %d achievements"], MAX_TRACKED_ACHIEVEMENTS),
 							RED_FONT_COLOR:GetRGBA()
 						)
 						return
 					end
 
-					local err = C_ContentTracking_StartTracking(Enum_ContentTrackingType.Achievement, f.data.id)
-					if not err then
-						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
-						IndicatorFrame.TrackingText:SetShown(true)
-					end
+					AddTrackedAchievement(f.data.id)
+					PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
+					IndicatorFrame.TrackingText:SetShown(true)
 				else
-					C_ContentTracking_StopTracking(
-						Enum_ContentTrackingType.Achievement,
-						f.data.id,
-						Enum_ContentTrackingStopType.Manual
-					)
+					RemoveTrackedAchievement(f.data.id)
 					PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF)
 					IndicatorFrame.TrackingText:SetShown(false)
 				end
@@ -697,26 +669,10 @@ function AT:ScrollElementInitializer(frame, data, scrollBox)
 	local color = GetCachedProgressColor(data.criteriaData.percent, self.states.cache.progressColors)
 	frame.ProgressBackdrop:SetStatusBarColor(color.r, color.g, color.b)
 	frame.ProgressBackdrop:SetValue(data.criteriaData.percent)
-	frame.IndicatorFrame.TrackingText:SetShown(
-		C_ContentTracking_IsTracking(Enum_ContentTrackingType.Achievement, data.id)
-	)
+	frame.IndicatorFrame.TrackingText:SetShown(IsTrackedAchievement(data.id))
 	frame.IndicatorFrame.RewardsIcon:Hide()
 	frame.IndicatorFrame.RewardsIcon.backdrop:Hide()
-	if data.reward.itemID then
-		async.WithItemID(data.reward.itemID, function(item)
-			if not item then
-				return
-			end
-			frame.IndicatorFrame.RewardsIcon:SetTexture(item:GetItemIcon())
-			if item:GetItemQuality() then
-				frame.IndicatorFrame.RewardsIcon.backdrop:SetBackdropBorderColor(item:GetItemQualityColorRGB())
-			else
-				frame.IndicatorFrame.RewardsIcon.backdrop:SetBackdropBorderColor(unpack(E.media.bordercolor))
-			end
-			frame.IndicatorFrame.RewardsIcon:Show()
-			frame.IndicatorFrame.RewardsIcon.backdrop:Show()
-		end)
-	elseif data.reward.text then
+	if data.reward.text then
 		frame.IndicatorFrame.RewardsIcon:SetTexture(237282)
 		frame.IndicatorFrame.RewardsIcon.backdrop:SetBackdropBorderColor(unpack(E.media.bordercolor))
 		frame.IndicatorFrame.RewardsIcon:Show()
@@ -793,7 +749,6 @@ function AT:Construct()
 	ThresholdSlider:Size(140, 16)
 	ThresholdSlider:Point("LEFT", ControlFrame1, "LEFT", 11, -8)
 	ThresholdSlider:SetOrientation("HORIZONTAL")
-	ThresholdSlider:SetObeyStepOnDrag(true)
 	ThresholdSlider:SetMinMaxValues(0, 100)
 	ThresholdSlider:SetValueStep(1)
 	ThresholdSlider:SetValue(self.db.threshold)
@@ -816,7 +771,7 @@ function AT:Construct()
 	ShowAllButton:Size(80, 25)
 	ShowAllButton:Point("LEFT", ThresholdSlider, "RIGHT", 15, 8)
 	ShowAllButton:SetText(L["All"])
-	F.SetFont(ShowAllButton.Text, E.db.general.font)
+	F.SetFont(ShowAllButton:GetFontString(), E.db.general.font)
 	S:Proxy("HandleButton", ShowAllButton)
 	ShowAllButton:SetScript("OnClick", function()
 		self.states.filters.pattern = ""
@@ -833,7 +788,7 @@ function AT:Construct()
 	NearlyCompleteButton:Size(80, 25)
 	NearlyCompleteButton:Point("LEFT", ShowAllButton, "RIGHT", 8, 0)
 	NearlyCompleteButton:SetText("95%+")
-	F.SetFont(NearlyCompleteButton.Text)
+	F.SetFont(NearlyCompleteButton:GetFontString())
 	S:Proxy("HandleButton", NearlyCompleteButton)
 	NearlyCompleteButton:SetScript("OnClick", function()
 		self.db.threshold = 95
@@ -870,7 +825,7 @@ function AT:Construct()
 	ControlFrame2:SetTemplate("Transparent")
 	MainFrame.ControlFrame2 = ControlFrame2
 
-	local CategoryDropdown = CreateFrame("DropdownButton", nil, ControlFrame2, "WowStyle1DropdownTemplate")
+	local CategoryDropdown = CreateFrame("Button", nil, ControlFrame2, "WowStyle1DropdownTemplate")
 	CategoryDropdown:Point("LEFT", ControlFrame2, "LEFT", 8, 0)
 	S:Proxy("HandleDropDownBox", CategoryDropdown, 150)
 	CategoryDropdown:SetupMenu(function(_, rootDescription)
@@ -934,9 +889,9 @@ function AT:Construct()
 	local RewardsCheckButton = CreateFrame("CheckButton", nil, ControlFrame2, "UICheckButtonTemplate")
 	RewardsCheckButton:Size(22)
 	RewardsCheckButton:Point("LEFT", CategoryDropdown, "RIGHT", 15, 0)
-	RewardsCheckButton.Text:SetText(L["Rewards"])
-	RewardsCheckButton.Text:SetTextColor(1, 1, 1)
-	F.SetFont(RewardsCheckButton.Text)
+	RewardsCheckButton.text:SetText(L["Rewards"])
+	RewardsCheckButton.text:SetTextColor(1, 1, 1)
+	F.SetFont(RewardsCheckButton.text)
 	S:Proxy("HandleCheckBox", RewardsCheckButton)
 	RewardsCheckButton:SetChecked(self.states.filters.hasRewards)
 	RewardsCheckButton:SetScript("OnClick", function()
@@ -965,7 +920,7 @@ function AT:Construct()
 	SortOrderButton:UpdateArrow()
 	ControlFrame2.SortOrderButton = SortOrderButton
 
-	local SortDropdown = CreateFrame("DropdownButton", nil, ControlFrame2, "WowStyle1DropdownTemplate")
+	local SortDropdown = CreateFrame("Button", nil, ControlFrame2, "WowStyle1DropdownTemplate")
 	SortDropdown:Point("RIGHT", SortOrderButton, "LEFT", -8, 0)
 	local sortOptions = {
 		{ text = L["Percentage"], value = "percent" },
@@ -996,13 +951,13 @@ function AT:Construct()
 	ScrollFrame:SetClipsChildren(true)
 	MainFrame.ScrollFrame = ScrollFrame
 
-	local ScrollBar = CreateFrame("EventFrame", nil, ScrollFrame, "MinimalScrollBar")
+	local ScrollBar = CreateFrame("Frame", nil, ScrollFrame, "MinimalScrollBar")
 	ScrollBar:Point("TOPRIGHT", ScrollFrame, "TOPRIGHT", -5, 0)
 	ScrollBar:Point("BOTTOMRIGHT", ScrollFrame, "BOTTOMRIGHT", -5, 0)
 	S:Proxy("HandleTrimScrollBar", ScrollBar)
 	ScrollFrame.ScrollBar = ScrollBar
 
-	local ScrollBox = CreateFrame("Frame", nil, ScrollFrame, "WowScrollBoxList")
+	local ScrollBox = CreateFrame("ScrollFrame", nil, ScrollFrame, "WowScrollBoxList")
 	ScrollBox:Point("TOPLEFT", ScrollFrame, "TOPLEFT", 0, 0)
 	ScrollBox:Point("BOTTOMRIGHT", ScrollBar, "BOTTOMLEFT", -8, 0)
 	ScrollBox:SetTemplate("Transparent")
@@ -1106,12 +1061,7 @@ end
 
 ---Handle ACHIEVEMENT_EARNED event
 ---@param id number
----@param alreadyEarned boolean
-function AT:ACHIEVEMENT_EARNED(id, alreadyEarned)
-	if alreadyEarned and #self.states.results > 0 then
-		return
-	end
-
+function AT:ACHIEVEMENT_EARNED(_, id)
 	for i, achievement in ipairs(self.states.results) do
 		if achievement.id == id then
 			tremove(self.states.results, i)
@@ -1158,7 +1108,7 @@ function AT:UpdatePosition()
 		self.ToggleButton = CreateFrame("Button", nil, _G.AchievementFrame, "UIPanelButtonTemplate")
 		self.ToggleButton:Point("BOTTOMRIGHT", _G.AchievementFrame, "BOTTOMRIGHT", -4, 4)
 		self.ToggleButton:SetText(F.GetWindStyleText(L["Achievement Tracker"]))
-		F.SetFont(self.ToggleButton.Text, E.db.general.font, 10)
+		F.SetFont(self.ToggleButton:GetFontString(), E.db.general.font, 10)
 		local buttonWidth = 20 + max(40, F.GetAdaptiveTextWidth(E.media.normFont, 10, "OUTLINE", L["Achievement Tracker"]))
 		self.ToggleButton:Size(buttonWidth, 18)
 		self.ToggleButton:SetScript("OnClick", function()

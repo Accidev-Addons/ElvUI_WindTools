@@ -44,7 +44,9 @@ end
 ---@param args table? Arguments to pass to the callback
 local function runTask(callback, args)
 	if callback and type(callback) == "function" then
-		xpcall(GenerateFlatClosure(callback, unpack(args or {})), geterrorhandler())
+		xpcall(function()
+			return callback(unpack(args or {}))
+		end, geterrorhandler())
 	end
 end
 

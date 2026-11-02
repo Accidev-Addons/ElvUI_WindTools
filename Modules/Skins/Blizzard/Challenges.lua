@@ -4,11 +4,11 @@ local S = W.Modules.Skins ---@type Skins
 local _G = _G
 
 function S:Blizzard_ChallengesUI()
-	if not self:CheckDB("lfg", "challenges") then
+	if not self:CheckDB("lfd", "challenges") then
 		return
 	end
 
 	self:CreateShadow(_G.ChallengesKeystoneFrame)
 end
 
-S:AddCallbackForAddon("Blizzard_ChallengesUI")
+S:AddCallback("Blizzard_ChallengesUI")

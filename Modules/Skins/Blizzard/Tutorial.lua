@@ -4,11 +4,11 @@ local S = W.Modules.Skins ---@type Skins
 local _G = _G
 
 function S:TutorialFrame()
-	if not self:CheckDB("tutorials", "tutorial") then
+	if not self:CheckDB("tutorial") then
 		return
 	end
 
-	self:CreateShadow(_G.TutorialFrame)
+	self:CreateBackdropShadow(_G.TutorialFrame)
 end
 
 S:AddCallback("TutorialFrame")

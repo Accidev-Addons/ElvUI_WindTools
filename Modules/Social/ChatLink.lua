@@ -3,25 +3,24 @@ local C = W.Utilities.Color
 local CL = W:NewModule("ChatLink") ---@class ChatLink : AceModule
 
 local _G = _G
-local format = format
 local gsub = gsub
 local pairs = pairs
 local select = select
 local strmatch = strmatch
 local tonumber = tonumber
 
-local ChatFrameUtil_AddMessageEventFilter = ChatFrameUtil.AddMessageEventFilter
+local ChatFrame_AddMessageEventFilter = ChatFrame_AddMessageEventFilter
 local GetAchievementInfo = GetAchievementInfo
-local GetPvpTalentInfoByID = GetPvpTalentInfoByID
-local GetTalentInfoByID = GetTalentInfoByID
+local GetItemInfo = GetItemInfo
 
 local C_ChallengeMode_GetMapUIInfo = C_ChallengeMode.GetMapUIInfo
-local C_CurrencyInfo_GetCurrencyInfo = C_CurrencyInfo.GetCurrencyInfo
-local C_Item_GetItemInfo = C_Item.GetItemInfo
+
 local function GetSpellIcon(spellID)
 	return select(3, GetSpellInfo(spellID))
 end
 
+local ITEM_CLASS_ARMOR = ITEM_CLASS_4
+local ITEM_CLASS_WEAPON = ITEM_CLASS_2
 local RETRIEVING_ITEM_INFO = RETRIEVING_ITEM_INFO
 local ITEM_LEVEL = ITEM_LEVEL
 local ITEM_LEVEL_ALT = ITEM_LEVEL_ALT
@@ -40,7 +39,6 @@ local function ParseItemLevelFromTooltipLine(text)
 	return ilvl and tonumber(ilvl)
 end
 
---- Prefer the level displayed by the native item tooltip.
 local function GetDisplayedItemLevelFromHyperlink(link)
 	local info = E:ScanTooltip_HyperlinkInfo(link)
 	if not info or not info.lines then
@@ -93,39 +91,15 @@ local abbrList = {
 	INVTYPE_TRINKET = L["[ABBR] Trinket"],
 }
 
-local tierColor = {
-	["1"] = "|cffa5493b",
-	["2"] = "|cffaaaeb2",
-	["3"] = "|cffe4c55b",
-	["4"] = "|cff09d3ff",
-	["5"] = "|cffe8ac1b",
-}
-
 local function AddItemInfo(link)
-	-- [SIRUS] GetItemInfo is the native tuple; cache misses must not suppress chat.
-	local localizedName, _, _, nativeLevel, _, itemType, itemSubType, _, itemEquipLoc, icon = C_Item_GetItemInfo(link)
+	local localizedName, _, _, nativeLevel, _, itemType, itemSubType, _, itemEquipLoc, icon = GetItemInfo(link)
 	if not localizedName then
 		return link
 	end
 
 	if CL.db.translateItem then
-		if localizedName then
-			local professionIcon = strmatch(link, "|A:Professions.-|a")
-			if professionIcon then
-				localizedName = localizedName .. " " .. professionIcon
-			end
-			link = gsub(link, "|h%[(.+)%]|h", function()
-				return "|h[" .. localizedName .. "]|h"
-			end)
-		end
-	end
-
-	if CL.db.numericalQualityTier then
-		link = gsub(link, "|A:Professions%-ChatIcon%-Quality%-Tier(%d):(%d+):(%d+)::1|a", function(tier, width, height)
-			if tierColor[tier] then
-				return tierColor[tier] .. tier .. "|r"
-			end
-			return format("|A:Professions-ChatIcon-Quality-Tier%s:%s:%s::1|a", tier, width, height)
+		link = gsub(link, "|h%[(.+)%]|h", function()
+			return "|h[" .. localizedName .. "]|h"
 		end)
 	end
 
@@ -137,14 +111,10 @@ local function AddItemInfo(link)
 	end
 
 	-- armor
-	if itemType == _G.ARMOR and CL.db.armorCategory then
+	if itemType == ITEM_CLASS_ARMOR and CL.db.armorCategory then
 		if itemEquipLoc and itemEquipLoc ~= "" then
 			if SearchArmorType[itemEquipLoc] then
-				if E.global.general.locale == "zhTW" or E.global.general.locale == "zhCN" then
-					slot = itemSubType .. (abbrList[itemEquipLoc] or _G[itemEquipLoc])
-				else
-					slot = itemSubType .. " " .. (abbrList[itemEquipLoc] or _G[itemEquipLoc])
-				end
+				slot = itemSubType .. " " .. (abbrList[itemEquipLoc] or _G[itemEquipLoc])
 			else
 				slot = abbrList[itemEquipLoc] or _G[itemEquipLoc]
 			end
@@ -152,7 +122,7 @@ local function AddItemInfo(link)
 	end
 
 	-- weapon
-	if itemType == _G.WEAPON and CL.db.weaponCategory then
+	if itemType == ITEM_CLASS_WEAPON and CL.db.weaponCategory then
 		if itemEquipLoc and itemEquipLoc ~= "" then
 			slot = itemSubType or abbrList[itemEquipLoc] or _G[itemEquipLoc]
 		end
@@ -174,8 +144,8 @@ local function AddItemInfo(link)
 end
 
 local function AddKeystoneIcon(link)
-	local itemID, mapID, level = strmatch(link, "Hkeystone:(%d-):(%d-):(%d-):")
-	if not (itemID and mapID and level and itemID == "180653") then
+	local mapID = strmatch(link, "Hkeystone:%d+:%d+:(%d+):%d+:")
+	if not mapID then
 		return
 	end
 
@@ -193,7 +163,7 @@ end
 
 local function AddSpellInfo(link)
 	-- spell icon
-	local id = strmatch(link, "Hspell:(%d-):")
+	local id = strmatch(link, "Hspell:(%d+)")
 	if not id then
 		return
 	end
@@ -229,44 +199,6 @@ local function AddEnchantInfo(link)
 	return link
 end
 
-local function AddPvPTalentInfo(link)
-	-- PVP talent
-	local id = strmatch(link, "Hpvptal:(%d-)|")
-	if not id then
-		return
-	end
-
-	if CL.db.icon then
-		local pvpTalentIDNum = tonumber(id)
-		local texture = pvpTalentIDNum and GetPvpTalentInfoByID and select(3, GetPvpTalentInfoByID(pvpTalentIDNum))
-		local icon = texture and F.GetIconString(texture, CL.db.iconHeight, CL.db.iconWidth, CL.db.keepRatio)
-		if icon then
-			link = icon .. " " .. link
-		end
-	end
-
-	return link
-end
-
-local function AddTalentInfo(link)
-	-- talent
-	local id = strmatch(link, "Htalent:(%d-)|")
-	if not id then
-		return
-	end
-
-	if CL.db.icon then
-		local talentIDNum = tonumber(id)
-		local texture = talentIDNum and GetTalentInfoByID and select(3, GetTalentInfoByID(talentIDNum))
-		local icon = texture and F.GetIconString(texture, CL.db.iconHeight, CL.db.iconWidth, CL.db.keepRatio)
-		if icon then
-			link = icon .. " " .. link
-		end
-	end
-
-	return link
-end
-
 local function AddAchievementInfo(link)
 	-- achievement
 	local id = strmatch(link, "Hachievement:(%d+)")
@@ -286,33 +218,12 @@ local function AddAchievementInfo(link)
 	return link
 end
 
-local function AddCurrencyInfo(link)
-	-- currency
-	local id = strmatch(link, "Hcurrency:(%d+)")
-	if not id then
-		return
-	end
-
-	if CL.db.icon then
-		local texture = select(3, C_CurrencyInfo_GetCurrencyInfo(tonumber(id)))
-		local icon = texture and F.GetIconString(texture, CL.db.iconHeight, CL.db.iconWidth, CL.db.keepRatio)
-		if icon then
-			link = icon .. " " .. link
-		end
-	end
-
-	return link
-end
-
 function CL:Filter(event, msg, ...)
-	if CL.db.enable and E:NotSecretValue(msg) then
-		msg = gsub(msg, "(|cffa335ee|Hkeystone:%d+:.-|h.-|h|r)", AddKeystoneIcon)
+	if CL.db.enable and msg then
+		msg = gsub(msg, "(|c%x+|Hkeystone:%d+:.-|h.-|h|r)", AddKeystoneIcon)
 		msg = gsub(msg, "(|Hitem:%d+:.-|h.-|h)", AddItemInfo)
-		msg = gsub(msg, "(|Hcurrency:%d+:.-|h.-|h)", AddCurrencyInfo)
-		msg = gsub(msg, "(|Hspell:%d+:%d+|h.-|h)", AddSpellInfo)
+		msg = gsub(msg, "(|Hspell:%d+|h.-|h)", AddSpellInfo)
 		msg = gsub(msg, "(|Henchant:%d+|h.-|h)", AddEnchantInfo)
-		msg = gsub(msg, "(|Htalent:%d+|h.-|h)", AddTalentInfo)
-		msg = gsub(msg, "(|Hpvptal:%d+|h.-|h)", AddPvPTalentInfo)
 		msg = gsub(msg, "(|Hachievement:%d+:.-|h.-|h)", AddAchievementInfo)
 	end
 	return false, msg, ...
@@ -324,13 +235,9 @@ function CL:Initialize()
 	local events = {
 		"CHAT_MSG_ACHIEVEMENT",
 		"CHAT_MSG_BATTLEGROUND",
-		"CHAT_MSG_BN_WHISPER",
 		"CHAT_MSG_CHANNEL",
-		"CHAT_MSG_COMMUNITIES_CHANNEL",
 		"CHAT_MSG_EMOTE",
 		"CHAT_MSG_GUILD",
-		"CHAT_MSG_INSTANCE_CHAT",
-		"CHAT_MSG_INSTANCE_CHAT_LEADER",
 		"CHAT_MSG_LOOT",
 		"CHAT_MSG_OFFICER",
 		"CHAT_MSG_PARTY",
@@ -345,7 +252,7 @@ function CL:Initialize()
 	}
 
 	for _, event in pairs(events) do
-		ChatFrameUtil_AddMessageEventFilter(event, self.Filter)
+		ChatFrame_AddMessageEventFilter(event, self.Filter)
 	end
 
 	self.initialized = true

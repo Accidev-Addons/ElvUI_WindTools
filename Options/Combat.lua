@@ -15,8 +15,6 @@ local wipe = wipe
 
 local CopyTable = CopyTable
 
-local Constants_PartyCountdownConstants_MaxCountdownSeconds = Constants.PartyCountdownConstants.MaxCountdownSeconds
-
 local options = W.options.combat.args
 
 options.raidMarkers = {
@@ -201,7 +199,7 @@ options.raidMarkers = {
 					name = L["Count Down Time"],
 					desc = L["Count down time in seconds."],
 					min = 1,
-					max = Constants_PartyCountdownConstants_MaxCountdownSeconds,
+					max = 10,
 					step = 1,
 				},
 			},

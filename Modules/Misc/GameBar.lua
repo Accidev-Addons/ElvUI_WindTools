@@ -30,6 +30,8 @@ local CloseMenus = CloseMenus
 local CreateFrame = CreateFrame
 local GenerateClosure = GenerateClosure
 local GetBindLocation = GetBindLocation
+local GetCVar = GetCVar
+local GetCVarBool = GetCVarBool
 local GetGameTime = GetGameTime
 local GetNumGuildMembers = GetNumGuildMembers
 local GetTime = GetTime
@@ -42,18 +44,16 @@ local IsShiftKeyDown = IsShiftKeyDown
 local PlaySound = PlaySound
 local PlayerHasToy = PlayerHasToy
 local RegisterStateDriver = RegisterStateDriver
+local ReloadUI = ReloadUI
 local ResetCPUUsage = ResetCPUUsage
 local Screenshot = Screenshot
+local SetCVar = SetCVar
 local ShowUIPanel = ShowUIPanel
 local ToggleCalendar = ToggleCalendar
 local ToggleCharacter = ToggleCharacter
 local ToggleTimeManager = ToggleTimeManager
 local UnregisterStateDriver = UnregisterStateDriver
 
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-local C_CVar_GetCVar = C_CVar.GetCVar
-local C_CVar_GetCVarBool = C_CVar.GetCVarBool
-local C_CVar_SetCVar = C_CVar.SetCVar
 local C_Item_GetItemCooldown = GetItemCooldown
 local C_Item_GetItemCount = GetItemCount
 local C_SpellBook_IsSpellKnown = IsSpellKnown
@@ -61,7 +61,6 @@ local C_Spell_GetSpellCooldown = GetSpellCooldown
 local function C_Timer_NewTicker(delay, callback)
 	return C_Timer:NewTicker(delay, callback)
 end
-local C_UI_Reload = C_UI.Reload
 
 local RED_FONT_COLOR = RED_FONT_COLOR
 
@@ -103,108 +102,23 @@ local friendOffline = gsub(_G.ERR_FRIEND_OFFLINE_S, "%%s", "")
 GB.AnimationManager = { frame = nil, groups = nil }
 
 local hearthstones = {
-	6948, -- 炉石
-	54452, -- 虚灵之门
-	64488, -- 旅店老板的女儿
-	93672, -- 黑暗之门
-	142542, -- 城镇传送之书
-	162973, -- 冬天爷爷的炉石
-	163045, -- 无头骑士的炉石
-	165669, -- 春节长者的炉石
-	165670, -- 小匹德菲特的可爱炉石
-	165802, -- 复活节的炉石
-	166746, -- 吞火者的炉石
-	166747, -- 美酒节狂欢者的炉石
-	168907, -- 全息数字化炉石
-	172179, -- 永恒旅者的炉石
-	180290, -- 法夜炉石
-	182773, -- 通灵领主炉石
-	183716, -- 温西尔罪碑
-	184353, -- 格里恩炉石
-	188952, -- 被统御的炉石
-	190196, -- 开悟者炉石
-	193588, -- 时光旅行者的炉石
-	200630, -- 欧恩伊尔轻风贤者的炉石
-	206195, -- 纳鲁之路
-	208704, -- 幽邃住民的土灵炉石
-	209035, -- 烈焰炉石
-	210455, -- 德莱尼全息宝石
-	212337, -- 炉之石
-	228940, -- 恶名丝线炉石
-	235016, -- 重部署模块
-	236687, -- 高爆炉石
-	245970, -- P.O.S.T.总管的特快炉石
-	246565, -- 星瀚炉石
-	257736, -- 圣光呼唤炉石
-	263489, -- 纳鲁的拥怀
-	263933, -- 寻猎者的炉石
-	265100, -- 核心守卫的炉石
+	6948,
+	54452,
+	64488,
+	93672,
 }
 
 local hearthstoneAndToyIDList = {
-	-- Special Hearthstones
-	6948, -- 炉石
-	-- Hearthstones Toys
-	-- https://www.wowhead.com/items?filter=107:216:17;0:1:-2324;%3CHearthstone+Location%3E:0:0
-	54452, -- 虚灵之门
-	64488, -- 旅店老板的女儿
-	93672, -- 黑暗之门
-	142542, -- 城镇传送之书
-	162973, -- 冬天爷爷的炉石
-	163045, -- 无头骑士的炉石
-	165669, -- 春节长者的炉石
-	165670, -- 小匹德菲特的可爱炉石
-	165802, -- 复活节的炉石
-	166746, -- 吞火者的炉石
-	166747, -- 美酒节狂欢者的炉石
-	168907, -- 全息数字化炉石
-	172179, -- 永恒旅者的炉石
-	180290, -- 法夜炉石
-	182773, -- 通灵领主炉石
-	183716, -- 温西尔罪碑
-	184353, -- 格里恩炉石
-	188952, -- 被统御的炉石
-	190196, -- 开悟者炉石
-	193588, -- 时光旅行者的炉石
-	200630, -- 欧恩伊尔轻风贤者的炉石
-	206195, -- 纳鲁之路
-	208704, -- 幽邃住民的土灵炉石
-	209035, -- 烈焰炉石
-	210455, -- 德莱尼全息宝石
-	212337, -- 炉之石
-	228940, -- 恶名丝线炉石
-	235016, -- 重部署模块
-	236687, -- 高爆炉石
-	245970, -- P.O.S.T.总管的特快炉石
-	246565, -- 星瀚炉石
-	257736, -- 圣光呼唤炉石
-	263489, -- 纳鲁的拥怀
-	263933, -- 寻猎者的炉石
-	265100, -- 核心守卫的炉石
-	-- Patch Items
-	110560, -- 要塞炉石
-	140192, -- 达拉然炉石
-	141605, -- 飞行管理员的哨子
-	180817, -- 位移密文
-	253629, -- 奥术秘社的私人钥匙
-	-- Engineering Wormholes
-	-- https://www.wowhead.com/items/name:Generator?filter=86:195;5:2;0:0
-	18984, -- 空间撕裂器 - 永望镇
-	18986, -- 安全传送器：加基森
-	30542, -- 空间撕裂器 - 52区
-	30544, -- 超级安全传送器：托什雷的基地
-	48933, -- 虫洞发生器：诺森德
-	87215, -- 虫洞发生器：潘达利亚
-	112059, -- 虫洞离心机
-	132517, -- 达拉然内部虫洞发生器
-	132524, -- 里弗斯模块：虫洞发生器模式
-	151652, -- 虫洞发生器：阿古斯
-	168807, -- 虫洞发生器：库尔提拉斯
-	168808, -- 虫洞发生器：赞达拉
-	172924, -- 虫洞发生器：暗影界
-	198156, -- 龙洞发生器：巨龙群岛
-	221966, -- 虫洞发生器：卡兹阿加
-	248485, -- 虫洞发生器：奎尔萨拉斯
+	6948,
+	54452,
+	64488,
+	93672,
+	18984,
+	18986,
+	30542,
+	30544,
+	48933,
+	87215,
 }
 
 local hearthstonesAndToysData
@@ -429,10 +343,6 @@ local function AddDoubleLineForItem(actionData, prefix, button, side)
 	end
 
 	local name = actionData.name
-	if actionData.actionType == "item" and actionData.actionID == 180817 then
-		local charge = C_Item_GetItemCount(actionData.actionID, nil, true)
-		name = name .. format(" (%d)", charge)
-	end
 
 	if actionData.actionType == "random" then
 		name = L["Random Hearthstone"]
@@ -466,43 +376,20 @@ local function AddDoubleLineForItem(actionData, prefix, button, side)
 	)
 end
 
--- Fake DataText for no errors throwed from ElvUI
 local VirtualDTEvent = {
 	Friends = nil,
 	Guild = "GUILD_ROSTER_UPDATE",
 	Time = "UPDATE_INSTANCE_INFO",
 }
 
-local VirtualDT = {
-	Friends = {
-		name = "Friends",
-		text = {
-			SetFormattedText = E.noop,
-		},
-	},
-	System = {
-		name = "System",
-	},
-	Time = {
-		name = "Time",
-		text = {
-			SetFormattedText = E.noop,
-		},
-	},
-	Guild = {
-		name = "Guild",
-		text = {
-			SetFormattedText = E.noop,
-			SetText = E.noop,
-		},
-		GetScript = function()
-			return E.noop
-		end,
-		IsMouseOver = function()
-			return false
-		end,
-	},
-}
+local VirtualDT = {}
+for _, name in ipairs({ "Friends", "Guild", "System", "Time" }) do
+	local frame = CreateFrame("Frame")
+	frame:Hide()
+	frame.name = name
+	frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	VirtualDT[name] = frame
+end
 
 local sharedCache = {
 	friends = {},
@@ -598,17 +485,12 @@ local ButtonTypes = {
 		end,
 		tooltips = "Friends",
 		events = {
-			"BN_FRIEND_ACCOUNT_ONLINE",
-			"BN_FRIEND_ACCOUNT_OFFLINE",
-			"BN_FRIEND_INFO_CHANGED",
 			"FRIENDLIST_UPDATE",
 			"CHAT_MSG_SYSTEM",
 		},
 		eventHandler = function(button, event, message)
 			if event == "CHAT_MSG_SYSTEM" then
-				if
-					E:IsSecretValue(message) or not (strfind(message, friendOnline) or strfind(message, friendOffline))
-				then
+				if not (strfind(message, friendOnline) or strfind(message, friendOffline)) then
 					return
 				end
 			end
@@ -665,7 +547,7 @@ local ButtonTypes = {
 			RightButton = "/script if not InCombatLockdown() then ToggleGuildFrame() end",
 		},
 		additionalText = function()
-			return IsInGuild() and select(2, GetNumGuildMembers()) or ""
+			return IsInGuild() and GetNumGuildMembers() or ""
 		end,
 		tooltips = "Guild",
 		events = {
@@ -675,7 +557,6 @@ local ButtonTypes = {
 		eventHandler = function(button, event, message)
 			button.additionalText:SetFormattedText(button.additionalTextFormat, button.additionalTextFunc())
 		end,
-		notification = true,
 	},
 	HEARTHSTONE = {
 		name = L["Hearthstone"],
@@ -803,22 +684,22 @@ local ButtonTypes = {
 		icon = W.Media.Icons.barVolume,
 		click = {
 			LeftButton = function()
-				local vol = C_CVar_GetCVar("Sound_MasterVolume")
+				local vol = GetCVar("Sound_MasterVolume")
 				local volNum = vol and tonumber(vol) or 0
-				C_CVar_SetCVar("Sound_MasterVolume", min(volNum + 0.1, 1))
+				SetCVar("Sound_MasterVolume", min(volNum + 0.1, 1))
 			end,
 			MiddleButton = function()
-				local enabled = tonumber(C_CVar_GetCVar("Sound_EnableAllSound")) == 1
-				C_CVar_SetCVar("Sound_EnableAllSound", enabled and 0 or 1)
+				local enabled = tonumber(GetCVar("Sound_EnableAllSound")) == 1
+				SetCVar("Sound_EnableAllSound", enabled and 0 or 1)
 			end,
 			RightButton = function()
-				local vol = C_CVar_GetCVar("Sound_MasterVolume")
+				local vol = GetCVar("Sound_MasterVolume")
 				local volNum = vol and tonumber(vol) or 0
-				C_CVar_SetCVar("Sound_MasterVolume", max(volNum - 0.1, 0))
+				SetCVar("Sound_MasterVolume", max(volNum - 0.1, 0))
 			end,
 		},
 		tooltips = function(button)
-			local vol = C_CVar_GetCVar("Sound_MasterVolume")
+			local vol = GetCVar("Sound_MasterVolume")
 			local volNum = vol and tonumber(vol) or 0
 			DT.tooltip:ClearLines()
 			DT.tooltip:SetText(L["Volume"] .. format(": %d%%", volNum * 100))
@@ -829,7 +710,7 @@ local ButtonTypes = {
 			DT.tooltip:Show()
 
 			button.tooltipsUpdateTimer = C_Timer_NewTicker(0.3, function()
-				local _vol = C_CVar_GetCVar("Sound_MasterVolume")
+				local _vol = GetCVar("Sound_MasterVolume")
 				local _volNum = _vol and tonumber(_vol) or 0
 				DT.tooltip:ClearLines()
 				DT.tooltip:SetText(L["Volume"] .. format(": %d%%", _volNum * 100))
@@ -847,32 +728,6 @@ local ButtonTypes = {
 		end,
 	},
 }
-
-function GB:UpdateGroupFinderButton()
-	if not C_AddOns_IsAddOnLoaded("MeetingStone") then
-		return
-	end
-
-	if self.db.groupFinder.preferNetEaseMeetingStone then
-		ButtonTypes.GROUP_FINDER.macro.LeftButton = "/meetingstone"
-		ButtonTypes.GROUP_FINDER.macro.RightButton = "/click LFDMicroButton"
-		ButtonTypes.GROUP_FINDER.tooltips = {
-			L["Group Finder"],
-			"\n",
-			LEFT_BUTTON_ICON .. " " .. L["Meeting Stone"],
-			RIGHT_BUTTON_ICON .. " " .. L["Group Finder"],
-		}
-	else
-		ButtonTypes.GROUP_FINDER.macro.LeftButton = "/click LFDMicroButton"
-		ButtonTypes.GROUP_FINDER.macro.RightButton = "/meetingstone"
-		ButtonTypes.GROUP_FINDER.tooltips = {
-			L["Group Finder"],
-			"\n",
-			LEFT_BUTTON_ICON .. " " .. L["Group Finder"],
-			RIGHT_BUTTON_ICON .. " " .. L["Meeting Stone"],
-		}
-	end
-end
 
 function GB:OnEnter()
 	if self.db and self.db.mouseOver then
@@ -1060,8 +915,8 @@ function GB:ConstructTimeArea()
 	self.bar.middlePanel:SetScript("OnClick", function(_, mouseButton)
 		if IsShiftKeyDown() then
 			if IsControlKeyDown() then
-				C_CVar_SetCVar("scriptProfile", C_CVar_GetCVarBool("scriptProfile") and 0 or 1)
-				C_UI_Reload()
+				SetCVar("scriptProfile", GetCVarBool("scriptProfile") and 0 or 1)
+				ReloadUI()
 			else
 				collectgarbage("collect")
 				ResetCPUUsage()
@@ -1078,7 +933,7 @@ function GB:ConstructTimeArea()
 			ToggleTimeManager()
 		elseif mouseButton == "MiddleButton" then
 			if not InCombatLockdown() or not self.db.time.avoidReloadInCombat then
-				C_UI_Reload()
+				ReloadUI()
 			end
 		end
 	end)
@@ -1238,12 +1093,6 @@ function GB:ConstructButton()
 	animationSetFinished(mainTex.group.anim)
 	button.mainTex = mainTex
 
-	local notificationTex = button:CreateTexture(nil, "OVERLAY")
-	notificationTex:SetTexture(W.Media.Icons.barNotification)
-	notificationTex:Point("TOPRIGHT")
-	notificationTex:Size(0.38 * self.db.buttonSize)
-	button.notificationTex = notificationTex
-
 	local additionalText = button:CreateFontString(nil, "OVERLAY")
 	additionalText:Point(self.db.additionalText.anchor, self.db.additionalText.x, self.db.additionalText.y)
 	F.SetFontWithDB(additionalText, self.db.additionalText.font)
@@ -1284,7 +1133,6 @@ function GB:UpdateButton(button, buttonType)
 	button.tooltips = config.tooltips
 	button.tooltipsLeave = config.tooltipsLeave
 
-	-- [SIRUS] Clear only the secure action fields owned by this button.
 	for _, attribute in ipairs(BUTTON_ACTION_ATTRIBUTES) do
 		button:SetAttribute(attribute, nil)
 	end
@@ -1371,11 +1219,6 @@ function GB:UpdateButton(button, buttonType)
 		button.additionalText:Hide()
 	end
 
-	button.notificationTex:Hide()
-	if config.notification then
-		button.notificationTex:SetVertexColor(self.mouseOverRGB.r, self.mouseOverRGB.g, self.mouseOverRGB.b, 1)
-	end
-
 	button:Show()
 end
 
@@ -1397,8 +1240,6 @@ function GB:UpdateButtons()
 		self:UpdateButton(self.buttons[i], self.db.left[i])
 		self:UpdateButton(self.buttons[i + NUM_PANEL_BUTTONS], self.db.right[i])
 	end
-
-	self:UpdateGuildButton()
 end
 
 function GB:UpdateLayout()
@@ -1491,12 +1332,6 @@ function GB:UpdateLayout()
 	self.bar:Size(areaWidth, areaHeight)
 end
 
-function GB:NEW_TOY_ADDED(_, toyID)
-	if toyID and tContains(hearthstoneAndToyIDList, toyID) then
-		self:UpdateHearthStoneTable()
-	end
-end
-
 function GB:PLAYER_ENTERING_WORLD()
 	E:Delay(1, function()
 		F.TaskManager:OutOfCombat(function()
@@ -1525,7 +1360,6 @@ function GB:Initialize()
 		end
 	end
 
-	self:UpdateGroupFinderButton()
 	self:UpdateMetadata()
 	self:UpdateHearthStoneTable()
 	self:ConstructBar()
@@ -1535,11 +1369,7 @@ function GB:Initialize()
 	self:UpdateButtons()
 	self:UpdateLayout()
 	self:UpdateBar()
-	self:RegisterEvent("NEW_TOY_ADDED")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
-	if _G.GuildMicroButton and _G.GuildMicroButton.UpdateNotificationIcon then
-		self:SecureHook(_G.GuildMicroButton, "UpdateNotificationIcon", "UpdateGuildButton")
-	end
 	self.initialized = true
 end
 
@@ -1581,7 +1411,6 @@ function GB:ProfileUpdate()
 	end
 
 	if self.db.enable then
-		self:UpdateGroupFinderButton()
 		self:UpdateMetadata()
 		if self.initialized then
 			self.bar:Show()
@@ -1604,24 +1433,6 @@ function GB:ProfileUpdate()
 	end
 end
 
-function GB:UpdateGuildButton()
-	if not self.db or not self.db.notification then
-		return
-	end
-
-	if not _G.GuildMicroButton or not _G.GuildMicroButton.NotificationOverlay then
-		return
-	end
-
-	local isShown = _G.GuildMicroButton.NotificationOverlay:IsShown()
-
-	for i = 1, 2 * NUM_PANEL_BUTTONS do
-		if self.buttons[i].type == "GUILD" then
-			self.buttons[i].notificationTex:SetShown(isShown)
-		end
-	end
-end
-
 function GB:GetNextRandomHearthstone(currentIndex, times)
 	if not availableHearthstones or #availableHearthstones <= 1 or times and times >= 10 then
 		return 1, 6948
@@ -1636,7 +1447,6 @@ function GB:GetNextRandomHearthstone(currentIndex, times)
 	return randomIndex, itemID
 end
 
--- [SIRUS] Learned toys are secure spell actions, as in the native ToyBox.
 local function HearthstoneMacro(actionData)
 	if actionData.actionType == "spell" or actionData.actionType == "toy" then
 		return "/cast " .. actionData.name

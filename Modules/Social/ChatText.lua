@@ -8,7 +8,6 @@ local _G = _G
 local format = format
 local gsub = gsub
 local ipairs = ipairs
-local next = next
 local pairs = pairs
 local select = select
 local strjoin = strjoin
@@ -16,41 +15,21 @@ local strlen = strlen
 local strmatch = strmatch
 local strsplit = strsplit
 local strsub = strsub
-local strtrim = strtrim
 local strupper = strupper
-local time = time
 local tinsert = tinsert
-local type = type
 local unpack = unpack
 local utf8sub = string.utf8sub
 local wipe = wipe
 
-local Ambiguate = Ambiguate
-local BNGetNumFriends = BNGetNumFriends
 local GetAchievementLink = GetAchievementLink
-local GetBNPlayerLink = GetBNPlayerLink
 local GetChannelName = GetChannelName
-local GetClientTexture = BNet_GetClientEmbeddedTexture
-local GetTitleIconTexture = C_Texture.GetTitleIconTexture
 
-
-local C_BattleNet_GetFriendAccountInfo = C_BattleNet.GetFriendAccountInfo
-local C_BattleNet_GetFriendGameAccountInfo = C_BattleNet.GetFriendGameAccountInfo
-local C_BattleNet_GetFriendNumGameAccounts = C_BattleNet.GetFriendNumGameAccounts
-local C_Club_GetClubInfo = C_Club.GetClubInfo
-
-local Constants_ChatFrameConstants_MaxChatWindows = Constants.ChatFrameConstants.MaxChatWindows
-local TitleIconVersion_Small = Enum.TitleIconVersion.Small
-local WOW_PROJECT_MAINLINE = WOW_PROJECT_MAINLINE
+local function Ambiguate(name)
+	return (strsplit("-", name))
+end
 
 CT.cache = { RoleIcons = CH.RoleIcons }
 local initRecord = {}
-
-local factionTextures = {
-	["Neutral"] = [[Interface\Addons\ElvUI_WindTools\Media\FriendList\GameIcons\Classic]],
-	["Alliance"] = [[Interface\Addons\ElvUI_WindTools\Media\FriendList\GameIcons\Alliance]],
-	["Horde"] = [[Interface\Addons\ElvUI_WindTools\Media\FriendList\GameIcons\Horde]],
-}
 
 local offlineMessageTemplate = "%s" .. _G.ERR_FRIEND_OFFLINE_S
 local offlineMessagePattern = gsub(_G.ERR_FRIEND_OFFLINE_S, "%%s", "(.+)")
@@ -62,9 +41,6 @@ onlineMessagePattern = format("^%s$", onlineMessagePattern)
 
 local achievementMessageTemplate = L["%player% has earned the achievement %achievement%!"]
 local achievementMessageTemplateMultiplePlayers = L["%players% have earned the achievement %achievement%!"]
-
-local bnetFriendOnlineMessageTemplate = L["%players% (%bnet%) has come online."]
-local bnetFriendOfflineMessageTemplate = L["%players% (%bnet%) has gone offline."]
 
 local guildPlayerCache = {}
 local achievementMessageCache = {
@@ -79,9 +55,6 @@ local elvuiAbbrStrings = {
 	OFFICER = L["O"],
 	PARTY_LEADER = L["PL"],
 	RAID_LEADER = L["RL"],
-	INSTANCE_CHAT = L["I"],
-	INSTANCE_CHAT_LEADER = L["IL"],
-	PET_BATTLE_COMBAT_LOG = _G.PET_BATTLE_COMBAT_LOG,
 }
 
 local abbrStrings = {
@@ -92,11 +65,7 @@ local abbrStrings = {
 	PARTY_LEADER = L["[ABBR] Party Leader"],
 	RAID_LEADER = L["[ABBR] Raid Leader"],
 	RAID_WARNING = L["[ABBR] Raid Warning"],
-	INSTANCE_CHAT = L["[ABBR] Instance"],
-	INSTANCE_CHAT_LEADER = L["[ABBR] Instance Leader"],
-	PET_BATTLE_COMBAT_LOG = _G.PET_BATTLE_COMBAT_LOG,
 }
-
 
 local roleIcons
 
@@ -106,65 +75,11 @@ CT.cache.elvuiRoleIconsPath = {
 	DPS = E.Media.Textures.DPS,
 }
 
--- [SIRUS] Inline role globals are absent; use the native LFGFrame texture regions.
 CT.cache.blizzardRoleIcons = {
-	Tank = _G.INLINE_TANK_ICON or "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:0:64:64:0:19:22:41|t",
-	Healer = _G.INLINE_HEALER_ICON or "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:0:64:64:20:39:1:20|t",
-	DPS = _G.INLINE_DAMAGER_ICON or "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:0:64:64:20:39:22:41|t",
+	Tank = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:0:64:64:0:19:22:41|t",
+	Healer = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:0:64:64:20:39:1:20|t",
+	DPS = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:16:16:0:0:64:64:20:39:22:41|t",
 }
-
-local windIcon = F.GetIconString(W.Media.Textures.smallLogo, 14)
-local authorIcons = {
-	-- zhCN Server
-	["Player-2133-0EA906AC"] = windIcon, -- Tabideath-影之哀伤
-	["Player-2133-0EA9374F"] = windIcon, -- Tabimonk-影之哀伤
-	["Player-2133-0EDB2623"] = windIcon, -- Tabidruid-影之哀伤
-	["Player-858-0390AAA9"] = windIcon, -- Tabiwarrior-寒冰皇冠
-	["Player-858-03954572"] = windIcon, -- Tabihunter-寒冰皇冠
-	["Player-858-05BB0270"] = windIcon, -- Tabipaladin-寒冰皇冠
-	["Player-858-05BB1B12"] = windIcon, -- Tabimonk-寒冰皇冠
-	["Player-877-063EB5E7"] = windIcon, -- Tabimonk-回音山
-	["Player-877-063FCBC6"] = windIcon, -- Tabideath-回音山
-	["Player-877-063FCBF2"] = windIcon, -- Tabishaman-回音山
-	["Player-877-064192F7"] = windIcon, -- Tabidemon-回音山
-	["Player-877-0641A41C"] = windIcon, -- Tabilock-回音山
-	["Player-877-0641A424"] = windIcon, -- Tabihunter-回音山
-	["Player-877-0641A42C"] = windIcon, -- Tabiwarrior-回音山
-	["Player-877-0641A431"] = windIcon, -- Tabimage-回音山
-	["Player-877-0641A435"] = windIcon, -- Tabidruid-回音山
-	["Player-877-0641A43A"] = windIcon, -- Tabipriest-回音山
-	["Player-877-0641A43C"] = windIcon, -- Tabirogue-回音山
-	["Player-877-0641A443"] = windIcon, -- Tabipaladin-回音山
-	-- zhTW Server
-	["Player-963-04504559"] = windIcon, -- Tabidruid-暗影之月
-	["Player-963-0450457B"] = windIcon, -- Tabilock-暗影之月
-	["Player-963-0450459F"] = windIcon, -- Tabishaman-暗影之月
-	["Player-963-045045AA"] = windIcon, -- Tabipaladin-暗影之月
-	["Player-963-04507626"] = windIcon, -- Tabiwarrior-暗影之月
-	["Player-963-046DDD41"] = windIcon, -- Tabidh-暗影之月
-	["Player-963-04C27464"] = windIcon, -- Tabimonk-暗影之月
-	["Player-963-04CBB42D"] = windIcon, -- Tabikaeru-暗影之月
-	["Player-963-04CBB440"] = windIcon, -- Tabihunter-暗影之月
-	["Player-963-04DD3C38"] = windIcon, -- Tabideath-暗影之月
-	["Player-963-06DB939B"] = windIcon, -- Tabievoker-暗影之月
-	["Player-980-06DCA63A"] = windIcon, -- Tabievoker-水晶之刺
-	["Player-980-07E14771"] = windIcon, -- Tabidruid-水晶之刺
-	["Player-980-07E1E1DC"] = windIcon, -- Tabipaladin-水晶之刺
-	["Player-980-07E1E1F0"] = windIcon, -- Tabimonk-水晶之刺
-}
-
-CH:AddPluginIcons(function(sender)
-	if authorIcons[sender] then
-		return authorIcons[sender]
-	end
-end)
-
-local function AddSpaceForAsianText(text, revert)
-	if W.Locale == "zhCN" or W.Locale == "zhTW" or W.Locale == "koKR" then
-		return revert and " " .. text or text .. " "
-	end
-	return text
-end
 
 function CT:UpdateRoleIcons()
 	if not self.db then
@@ -184,30 +99,18 @@ function CT:UpdateRoleIcons()
 			HEALER = E:TextureString(CT.cache.elvuiRoleIconsPath.Healer, sizeString .. ":0:0:64:64:2:56:2:56"),
 			DAMAGER = E:TextureString(CT.cache.elvuiRoleIconsPath.DPS, sizeString),
 		}
-
-		_G.INLINE_TANK_ICON = CT.cache.blizzardRoleIcons.Tank
-		_G.INLINE_HEALER_ICON = CT.cache.blizzardRoleIcons.Healer
-		_G.INLINE_DAMAGER_ICON = CT.cache.blizzardRoleIcons.DPS
 	elseif pack == "BLIZZARD" then
 		roleIcons = {
 			TANK = gsub(CT.cache.blizzardRoleIcons.Tank, ":16:16", sizeString),
 			HEALER = gsub(CT.cache.blizzardRoleIcons.Healer, ":16:16", sizeString),
 			DAMAGER = gsub(CT.cache.blizzardRoleIcons.DPS, ":16:16", sizeString),
 		}
-
-		_G.INLINE_TANK_ICON = CT.cache.blizzardRoleIcons.Tank
-		_G.INLINE_HEALER_ICON = CT.cache.blizzardRoleIcons.Healer
-		_G.INLINE_DAMAGER_ICON = CT.cache.blizzardRoleIcons.DPS
 	else
 		roleIcons = {
 			TANK = E:TextureString(W.Media.RoleIcons[pack].TANK, sizeString),
 			HEALER = E:TextureString(W.Media.RoleIcons[pack].HEALER, sizeString),
 			DAMAGER = E:TextureString(W.Media.RoleIcons[pack].DAMAGER, sizeString),
 		}
-
-		_G.INLINE_TANK_ICON = roleIcons.TANK
-		_G.INLINE_HEALER_ICON = roleIcons.HEALER
-		_G.INLINE_DAMAGER_ICON = roleIcons.DAMAGER
 	end
 
 	CH.RoleIcons = self.db.enable and roleIcons or CT.cache.RoleIcons
@@ -235,29 +138,10 @@ function CT.ShortChannel(channelLink)
 		local name = select(2, GetChannelName(gsub(channelLink, "channel:", "")))
 
 		if name then
-			local communityID = strmatch(name, "Community:(%d+):")
-			if communityID then
-				local communityInfo = C_Club_GetClubInfo(communityID)
-
-				if communityInfo.clubType == 0 then
-					if communityInfo.name and CT.db and CT.db.customAbbreviation then
-						abbr = CT.db.customAbbreviation[communityInfo.name]
-					end
-					abbr = abbr or strupper(utf8sub(communityInfo.name, 1, 2))
-					abbr = E:TextGradient(abbr, 0.000, 0.592, 0.902, 0.000, 0.659, 1.000)
-				elseif communityInfo.clubType == 1 then
-					if CT.db and CT.db.customAbbreviation then
-						abbr = CT.db.customAbbreviation[communityInfo.name]
-					end
-					abbr = abbr or communityInfo.shortName or strupper(utf8sub(communityInfo.name, 1, 2))
-					abbr = C.StringWithRGB(abbr, 0.902, 0.494, 0.133)
-				end
-			else
-				if CT.db and CT.db.customAbbreviation then
-					abbr = CT.db.customAbbreviation[name]
-				end
-				abbr = abbr or utf8sub(name, 1, 1)
+			if CT.db and CT.db.customAbbreviation then
+				abbr = CT.db.customAbbreviation[name]
 			end
+			abbr = abbr or utf8sub(name, 1, 1)
 		end
 	end
 
@@ -276,15 +160,6 @@ function CT:HandleShortChannels(msg, hide)
 	msg = gsub(msg, "<" .. _G.DND .. ">", format("[%s]", C.StringByTemplate(L["DND"], "yellow-400")))
 
 	local raidWarningString = ""
-	if CT.db and CT.db.abbreviation == "SHORT" and W.ChineseLocale then
-		-- Use full-width colon in Chinese client
-		msg = gsub(msg, utf8sub(_G.CHAT_WHISPER_GET, 3), L["[ABBR] Whisper"] .. "：")
-		msg = gsub(msg, utf8sub(_G.CHAT_WHISPER_INFORM_GET, 1, 3), L["[ABBR] Whisper"])
-		msg = gsub(msg, utf8sub(_G.CHAT_SAY_GET, 3), L["[ABBR] Say"] .. "：")
-		msg = gsub(msg, utf8sub(_G.CHAT_YELL_GET, 3), L["[ABBR] Yell"] .. "：")
-		msg = gsub(msg, "： ", "：")
-	end
-
 	if CT.db and CT.db.removeBrackets then
 		if CT.db.abbreviation == "SHORT" then
 			raidWarningString = abbrStrings["RAID_WARNING"]
@@ -303,7 +178,7 @@ function CT:CheckLFGRoles()
 end
 
 function CT:HandleName(nameString)
-	if E:IsSecretValue(nameString) or not nameString or nameString == "" then
+	if not nameString or nameString == "" then
 		return nameString
 	end
 
@@ -329,7 +204,6 @@ function CT:MayHaveBrackets(...)
 	return unpack(names)
 end
 
--- [SIRUS] Keep ElvUI's native filters, channel routing and history arguments intact.
 function CT:MessageFormatter(frame, info, chatType, chatGroup, chatTarget, channelLength, coloredName, historySavedName, ...)
 	local body = CT.cache.MessageFormatter(CH, frame, info, chatType, chatGroup, chatTarget, channelLength, CT:HandleName(coloredName), historySavedName, ...)
 	local sender = select(2, ...)
@@ -337,7 +211,6 @@ function CT:MessageFormatter(frame, info, chatType, chatGroup, chatTarget, chann
 		return body
 	end
 
-	-- Only the sender label changes; the hyperlink and message contents stay intact.
 	body = gsub(body, "(|Hplayer:[^|]+|h)(.-)(|h)", function(link, label, close)
 		if strmatch(link, "^|Hplayer:([^:|]+)") ~= sender then return link .. label .. close end
 		if strsub(label, 1, 1) == "[" and strsub(label, -1) == "]" then
@@ -346,36 +219,6 @@ function CT:MessageFormatter(frame, info, chatType, chatGroup, chatTarget, chann
 		return link .. label .. close
 	end, 1)
 	return body
-end
-
-function CT:EditBoxHeader_SetText(header, text, skip)
-	if not self.db.enable or not self.db.trimEditBoxHeader or not text or skip then
-		return
-	end
-
-	local after = strtrim(text)
-	if text ~= after then
-		header:SetText(after, true)
-	end
-end
-
-function CT:EditBoxHeader_SetFormattedText(header, fmt, ...)
-	if not self.db.enable or not self.db.trimEditBoxHeader or not fmt then
-		return
-	end
-
-	local args = { ... }
-	local last = args[#args]
-
-	if type(last) == "boolean" and last == true then
-		return
-	end
-
-	local after = strtrim(fmt)
-	if fmt ~= after then
-		args[#args + 1] = true
-		header:SetFormattedText(after, unpack(args))
-	end
 end
 
 function CT:ToggleReplacement()
@@ -399,7 +242,6 @@ function CT:ToggleReplacement()
 		end
 	end
 
-	-- Override only presentation; ElvUI owns event filtering and chat history.
 	if self.db.enable then
 		if not initRecord.MessageFormatter then
 			CT.cache.MessageFormatter = CH.MessageFormatter
@@ -409,19 +251,6 @@ function CT:ToggleReplacement()
 	elseif initRecord.MessageFormatter then
 		CH.MessageFormatter = CT.cache.MessageFormatter
 		initRecord.MessageFormatter = false
-	end
-	if self.db.enable and self.db.trimEditBoxHeader and W.Locale == "zhCN" then
-		for i = 1, Constants_ChatFrameConstants_MaxChatWindows do
-			local editBox = _G["ChatFrame" .. i .. "EditBox"]
-			if editBox and editBox.header then
-				local header = editBox.header
-				if not self:IsHooked(header, "SetText") then
-					self:SecureHook(header, "SetText", "EditBoxHeader_SetText")
-					self:SecureHook(header, "SetFormattedText", "EditBoxHeader_SetFormattedText")
-					self:EditBoxHeader_SetText(header, header:GetText())
-				end
-			end
-		end
 	end
 end
 
@@ -450,25 +279,17 @@ function CT:SendAchievementMessage()
 					local message = nil
 
 					if #players == 1 then
-						message = gsub(
-							achievementMessageTemplate,
-							"%%player%%",
-							AddSpaceForAsianText(self:MayHaveBrackets(players[1]))
-						)
+						message = gsub(achievementMessageTemplate, "%%player%%", self:MayHaveBrackets(players[1]))
 					elseif #players > 1 then
 						message = gsub(
 							achievementMessageTemplateMultiplePlayers,
 							"%%players%%",
-							AddSpaceForAsianText(strjoin(", ", self:MayHaveBrackets(unpack(players))))
+							strjoin(", ", self:MayHaveBrackets(unpack(players)))
 						)
 					end
 
 					if message then
-						message = gsub(
-							message,
-							"%%achievement%%",
-							AddSpaceForAsianText(strjoin(", ", unpack(achievementLinks)), true)
-						)
+						message = gsub(message, "%%achievement%%", strjoin(", ", unpack(achievementLinks)))
 
 						message = select(2, W:GetModule("ChatLink"):Filter("", message))
 						frame:AddMessage(message, color.r, color.g, color.b)
@@ -565,7 +386,7 @@ function CT:ElvUIChat_AchievementMessageHandler(event, frame, achievementMessage
 end
 
 function CT:ElvUIChat_GuildMemberStatusMessageHandler(frame, msg)
-	if not frame or E:IsSecretValue(msg) or not msg then
+	if not frame or not msg then
 		return
 	end
 
@@ -587,7 +408,7 @@ function CT:ElvUIChat_GuildMemberStatusMessageHandler(frame, msg)
 		local coloredName =
 			C.StringWithClassColor(displayName, link and guildPlayerCache[link] or guildPlayerCache[name])
 
-		coloredName = AddSpaceForAsianText(self:MayHaveBrackets(coloredName))
+		coloredName = self:MayHaveBrackets(coloredName)
 		local classIcon = self.db.classIcon and F.GetClassIconStringWithStyle(class, CT.db.classIconStyle, 16, 16)
 		classIcon = classIcon and classIcon .. " " or ""
 
@@ -613,99 +434,6 @@ function CT:ElvUIChat_GuildMemberStatusMessageHandler(frame, msg)
 	end
 end
 
-local battleNetFriendsCharacters = {}
-local battleNetFriendStatusUpdateTime = {}
-
-local function getElementNumberOfTable(t)
-	if not t then
-		return 0
-	end
-
-	local count = 0
-	for _ in pairs(t) do
-		count = count + 1
-	end
-	return count
-end
-
-local function UpdateBattleNetFriendStatus(friendIndex)
-	local friendInfo = friendIndex and C_BattleNet_GetFriendAccountInfo(friendIndex)
-	if not friendInfo then
-		return
-	end
-
-	local savedCharacters = battleNetFriendsCharacters[friendInfo.bnetAccountID]
-	local numberOfSavedCharacters = getElementNumberOfTable(savedCharacters)
-	local characters = {}
-	local numberOfCharacters = 0
-
-	if battleNetFriendStatusUpdateTime[friendInfo.bnetAccountID] then
-		local timeSinceLastUpdate = time() - battleNetFriendStatusUpdateTime[friendInfo.bnetAccountID]
-		if timeSinceLastUpdate < 2 then
-			return
-		end
-	end
-
-	local numGameAccounts = C_BattleNet_GetFriendNumGameAccounts(friendIndex)
-	if numGameAccounts and numGameAccounts > 0 then
-		for accountIndex = 1, numGameAccounts do
-			local gameAccountInfo = C_BattleNet_GetFriendGameAccountInfo(friendIndex, accountIndex)
-			if gameAccountInfo.wowProjectID == WOW_PROJECT_MAINLINE and gameAccountInfo.characterName then
-				numberOfCharacters = numberOfCharacters + 1
-				characters[gameAccountInfo.characterName] = {
-					faction = gameAccountInfo.factionName,
-					realm = gameAccountInfo.realmName,
-					class = E:UnlocalizedClassName(gameAccountInfo.className),
-				}
-			end
-		end
-	end
-
-	local changed, changedCharacters
-
-	if numberOfSavedCharacters == 0 then
-		if numberOfCharacters > 0 then
-			changed = true
-			changedCharacters = {}
-
-			for character, data in pairs(characters) do
-				changedCharacters[character] = {
-					type = "online",
-					data = data,
-				}
-			end
-		end
-	else
-		if numberOfCharacters ~= numberOfSavedCharacters then
-			changed = true
-			changedCharacters = {}
-
-			for character, data in pairs(characters) do
-				changedCharacters[character] = {
-					type = "online",
-					data = data,
-				}
-			end
-
-			for character, data in pairs(savedCharacters) do
-				if not changedCharacters[character] then
-					changedCharacters[character] = {
-						type = "offline",
-						data = data,
-					}
-				else
-					changedCharacters[character] = nil
-				end
-			end
-		end
-	end
-
-	battleNetFriendsCharacters[friendInfo.bnetAccountID] = characters
-	battleNetFriendStatusUpdateTime[friendInfo.bnetAccountID] = time()
-	return changed, friendInfo.accountName, friendInfo.bnetAccountID, changedCharacters
-end
-
--- [SIRUS] Guild roster data is native; communities are not the guild API here.
 function CT:GUILD_ROSTER_UPDATE()
 	wipe(guildPlayerCache)
 	for index = 1, GetNumGuildMembers() do
@@ -715,99 +443,9 @@ function CT:GUILD_ROSTER_UPDATE()
 		end
 	end
 end
-function CT:BN_FRIEND_INFO_CHANGED(_, friendIndex, appTexture, noRetry)
-	if not appTexture and not noRetry then
-		GetTitleIconTexture("App", TitleIconVersion_Small, function(success, texture)
-			if success then
-				self:BN_FRIEND_INFO_CHANGED(_, friendIndex, texture, true)
-			end
-		end)
-
-		return
-	end
-
-	if not self.bnetFriendDataCached or not (self.db.bnetFriendOnline or self.db.bnetFriendOffline) then
-		return
-	end
-
-	local changed, accountName, accountID, characters = UpdateBattleNetFriendStatus(friendIndex)
-	if not changed then
-		return
-	end
-
-	local appTextureString = appTexture and GetClientTexture(appTexture, 16, 16, 12) .. " " or ""
-	local displayAccountName = appTextureString .. format("|cff82c5ff%s|r", accountName)
-	local bnetLink = GetBNPlayerLink(accountName, displayAccountName, accountID, 0, 0, 0)
-
-	local onlineCharacters = {}
-	local offlineCharacters = {}
-
-	---@diagnostic disable-next-line: param-type-mismatch
-	for character, characterData in pairs(characters) do
-		local fullName = characterData.data.realm and format("%s-%s", character, characterData.data.realm) or character
-
-		-- to avoid duplicate message
-		if not guildPlayerCache[Ambiguate(fullName, "none")] then
-			local classIcon = self.db.classIcon
-				and F.GetClassIconStringWithStyle(characterData.data.class, CT.db.classIconStyle, 16, 16)
-			classIcon = classIcon and classIcon .. " " or ""
-			local coloredName = C.StringWithClassColor(character, characterData.data.class)
-
-			local playerName = coloredName
-				and format("|Hplayer:%s|h%s%s|h", fullName, classIcon, self:MayHaveBrackets(coloredName))
-
-			if self.db.factionIcon then
-				local factionIcon =
-					F.GetIconString(factionTextures[characterData.data.faction] or factionTextures["Neutral"], 18)
-				playerName = playerName and factionIcon and format("%s %s", factionIcon, playerName) or playerName
-			end
-
-			if playerName then
-				tinsert(
-					characterData.type == "online" and onlineCharacters or offlineCharacters,
-					AddSpaceForAsianText(playerName)
-				)
-			end
-		end
-	end
-
-	local function sendMessage(template, players, ...)
-		local message = gsub(template, "%%players%%", players)
-		message = gsub(message, "%%bnet%%", bnetLink)
-
-		for i = 1, Constants_ChatFrameConstants_MaxChatWindows do
-			local chatFrame = _G["ChatFrame" .. i]
-			if chatFrame and chatFrame:IsEventRegistered("CHAT_MSG_BN_INLINE_TOAST_ALERT") then
-				chatFrame:AddMessage(message, ...)
-			end
-		end
-	end
-
-	if #onlineCharacters > 0 and self.db.bnetFriendOnline then
-		sendMessage(
-			bnetFriendOnlineMessageTemplate,
-			strjoin(", ", unpack(onlineCharacters)),
-			C.ExtractRGBFromTemplate("green-400")
-		)
-	end
-
-	if #offlineCharacters > 0 and self.db.bnetFriendOffline then
-		sendMessage(
-			bnetFriendOfflineMessageTemplate,
-			strjoin(", ", unpack(offlineCharacters)),
-			C.ExtractRGBFromTemplate("rose-500")
-		)
-	end
-end
 
 function CT:PLAYER_ENTERING_WORLD(event)
-	if C_BattleNet_GetFriendAccountInfo and C_BattleNet_GetFriendNumGameAccounts and C_BattleNet_GetFriendGameAccountInfo then
-		for friendIndex = 1, BNGetNumFriends() do
-			UpdateBattleNetFriendStatus(friendIndex)
-		end
-	end
 	self:GUILD_ROSTER_UPDATE()
-	self.bnetFriendDataCached = true
 	self:UnregisterEvent(event)
 end
 
@@ -817,6 +455,7 @@ local function NativeStatusFilter(frame, event, message, ...)
 	end
 	return CT:ElvUIChat_AchievementMessageHandler(event, frame, message, select(11, ...)) or false
 end
+
 function CT:Initialize()
 	self.db = E.db.WT.social.chatText
 	if not self.db or not self.db.enable or not E.private.chat.enable then
@@ -834,9 +473,6 @@ function CT:Initialize()
 	end
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterEvent("GUILD_ROSTER_UPDATE")
-	if C_BattleNet_GetFriendAccountInfo and C_BattleNet_GetFriendNumGameAccounts and C_BattleNet_GetFriendGameAccountInfo and GetTitleIconTexture then
-		self:RegisterEvent("BN_FRIEND_INFO_CHANGED")
-	end
 	self.initialized = true
 end
 

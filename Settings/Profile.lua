@@ -6,7 +6,6 @@ W, F, E, L, V, P, G = unpack((select(2, ...)))
 local C = W.Utilities.Color
 
 local format = format
-local tinsert = tinsert
 
 ---@class ProfileDB.announcement
 P.announcement = {
@@ -19,7 +18,6 @@ P.announcement = {
 		delay = 3,
 		channel = {
 			party = "PARTY",
-			instance = "INSTANCE_CHAT",
 			raid = "RAID",
 		},
 	},
@@ -31,7 +29,6 @@ P.announcement = {
 		hideLevelIfSameAsPlayer = true,
 		channel = {
 			party = "PARTY",
-			instance = "INSTANCE_CHAT",
 			raid = "RAID",
 		},
 		template = "{{level}}{{link}} {{progress}}",
@@ -41,7 +38,6 @@ P.announcement = {
 		difficultyChange = true,
 		channel = {
 			party = "PARTY",
-			instance = "INSTANCE_CHAT",
 			raid = "RAID",
 		},
 	},
@@ -50,7 +46,6 @@ P.announcement = {
 		channel = {
 			solo = "NONE",
 			party = "PARTY",
-			instance = "INSTANCE_CHAT",
 			raid = "RAID",
 		},
 		general = {
@@ -82,19 +77,16 @@ P.announcement = {
 		},
 		custom = {
 			["698"] = {
-				-- 召唤仪式
 				enable = true,
 				raidWarning = true,
 				text = L["I am casting %spell%, please assist!"],
 			},
 			["29893"] = {
-				-- 制造灵魂之井
 				enable = true,
 				raidWarning = false,
 				text = L["Healthstones here! Get them before we pull!"],
 			},
-			["190336"] = {
-				-- 造餐术
+			["43987"] = {
 				enable = true,
 				raidWarning = false,
 				text = L["Table is up! Grab your food and water!"],
@@ -122,11 +114,11 @@ P.combat = {
 		enterText = L["Enter Combat"],
 		leaveText = L["Leave Combat"],
 		enterColor = {
-			left = W.AsianLocale and C.GetRGBFromTemplate("rose-500") or C.GetRGBFromTemplate("rose-300"),
+			left = C.GetRGBFromTemplate("rose-300"),
 			right = C.GetRGBFromTemplate("rose-500"),
 		},
 		leaveColor = {
-			left = W.AsianLocale and C.GetRGBFromTemplate("emerald-500") or C.GetRGBFromTemplate("emerald-300"),
+			left = C.GetRGBFromTemplate("emerald-300"),
 			right = C.GetRGBFromTemplate("emerald-500"),
 		},
 		font = {
@@ -197,20 +189,8 @@ P.item = {
 	},
 	extraItemsBar = {
 		enable = true,
-		noQuantumItems = false,
 		customList = {},
-		blackList = {
-			[183040] = true, -- 恆冬符咒
-			[193757] = true, -- 晶紅幼龍之殼
-			[200563] = true, -- 洪荒儀式龜殼
-			[219381] = true, -- 命運編織者
-			[237494] = true, -- 神聖典籍
-			[237495] = true, -- 怨毒摘錄
-			[242664] = true, -- 耐用的情報收集器
-			[245964] = true, -- 耐用的情報收集器
-			[245965] = true, -- 耐用的情報收集器
-			[245966] = true, -- 耐用的情報收集器
-		},
+		blackList = {},
 		bar1 = {
 			enable = true,
 			mouseOver = false,
@@ -228,11 +208,6 @@ P.item = {
 			anchor = "TOPLEFT",
 			spacing = 3,
 			tooltip = true,
-			qualityTier = {
-				size = 16,
-				xOffset = 0,
-				yOffset = 0,
-			},
 			countFont = {
 				name = F.GetCompatibleFont("Montserrat"),
 				size = 12,
@@ -257,7 +232,7 @@ P.item = {
 					b = 1,
 				},
 			},
-			include = "QUEST,BANNER,EQUIP,PROFMN,HOLIDAY,OPENABLE,DELVE",
+			include = "QUEST,BANNER,EQUIP,HOLIDAY,OPENABLE",
 		},
 		bar2 = {
 			enable = true,
@@ -276,11 +251,6 @@ P.item = {
 			anchor = "TOPLEFT",
 			spacing = 3,
 			tooltip = true,
-			qualityTier = {
-				size = 16,
-				xOffset = 0,
-				yOffset = 0,
-			},
 			countFont = {
 				name = F.GetCompatibleFont("Montserrat"),
 				size = 12,
@@ -305,7 +275,7 @@ P.item = {
 					b = 1,
 				},
 			},
-			include = "POTIONGN,POTIONMN,FLASKMN,VANTUSMN,POTIONTWW,FLASKTWW,VANTUSTWW,UTILITY",
+			include = "POTION,FLASK,UTILITY",
 		},
 		bar3 = {
 			enable = true,
@@ -324,11 +294,6 @@ P.item = {
 			anchor = "TOPLEFT",
 			spacing = 3,
 			tooltip = true,
-			qualityTier = {
-				size = 16,
-				xOffset = 0,
-				yOffset = 0,
-			},
 			countFont = {
 				name = F.GetCompatibleFont("Montserrat"),
 				size = 12,
@@ -353,7 +318,7 @@ P.item = {
 					b = 1,
 				},
 			},
-			include = "MAGEFOOD,FOODVENDOR,FOODMN,FOODTWW,RUNEMN,RUNETWW,CUSTOM",
+			include = "MAGEFOOD,FOOD,FOODVENDOR,CUSTOM",
 		},
 		bar4 = {
 			enable = false,
@@ -372,11 +337,6 @@ P.item = {
 			anchor = "TOPLEFT",
 			spacing = 3,
 			tooltip = true,
-			qualityTier = {
-				size = 16,
-				xOffset = 0,
-				yOffset = 0,
-			},
 			countFont = {
 				name = F.GetCompatibleFont("Montserrat"),
 				size = 12,
@@ -420,11 +380,6 @@ P.item = {
 			anchor = "TOPLEFT",
 			spacing = 3,
 			tooltip = true,
-			qualityTier = {
-				size = 16,
-				xOffset = 0,
-				yOffset = 0,
-			},
 			countFont = {
 				name = F.GetCompatibleFont("Montserrat"),
 				size = 12,
@@ -468,28 +423,10 @@ P.item = {
 			enable = true,
 			size = 17,
 			showAddableSockets = true,
-			craftingTier = {
-				minTierToShow = 1,
-				maxTierToShow = 5,
-				name = F.GetCompatibleFont("Chivo Mono"),
-				size = 11,
-				style = "OUTLINE",
-				xOffset = 5,
-				yOffset = 1,
-			},
 		},
 		enchantIcon = {
 			enable = true,
 			size = 17,
-			craftingTier = {
-				minTierToShow = 1,
-				maxTierToShow = 5,
-				name = F.GetCompatibleFont("Chivo Mono"),
-				size = 11,
-				style = "OUTLINE",
-				xOffset = 5,
-				yOffset = 1,
-			},
 		},
 		slotText = {
 			name = E.db.general.font,
@@ -621,12 +558,6 @@ P.social = {
 				color = { r = 0.67, g = 0.67, b = 1, a = 1 },
 				abbr = L["[ABBR] Party"],
 			},
-			["INSTANCE"] = {
-				enable = true,
-				cmd = "i",
-				color = { r = 1, g = 0.73, b = 0.2, a = 1 },
-				abbr = L["[ABBR] Instance"],
-			},
 			["RAID"] = {
 				enable = true,
 				cmd = "raid",
@@ -657,12 +588,6 @@ P.social = {
 				color = { r = 0.2, g = 0.6, b = 0.86, a = 1 },
 				abbr = L["[ABBR] World"],
 			},
-			community = {
-				enable = false,
-				name = "",
-				color = { r = 0.72, g = 0.27, b = 0.86, a = 1 },
-				abbr = L["[ABBR] Community"],
-			},
 			emote = {
 				enable = true,
 				icon = true,
@@ -679,7 +604,6 @@ P.social = {
 	},
 	chatLink = {
 		enable = true,
-		numericalQualityTier = false,
 		translateItem = true,
 		level = true,
 		icon = true,
@@ -693,7 +617,6 @@ P.social = {
 		enable = true,
 		abbreviation = "SHORT",
 		removeBrackets = true,
-		trimEditBoxHeader = false,
 		roleIconSize = 16,
 		roleIconStyle = "SUNUI",
 		removeRealm = true,
@@ -703,9 +626,6 @@ P.social = {
 		guildMemberStatus = true,
 		guildMemberStatusInviteLink = true,
 		mergeAchievement = true,
-		bnetFriendOnline = true,
-		bnetFriendOffline = false,
-		factionIcon = true,
 	},
 	emote = {
 		enable = true,
@@ -717,13 +637,11 @@ P.social = {
 		enable = true,
 		level = true,
 		hideMaxLevel = true,
-		useClientColor = true,
 		useClassColor = true,
 		useNoteAsName = false,
 		hideRealm = false,
 		textures = {
 			status = "square",
-			gameIcon = "PATCH",
 		},
 		areaColor = {
 			r = 1,
@@ -741,15 +659,6 @@ P.social = {
 			style = "OUTLINE",
 		},
 	},
-	contextMenu = {
-		enable = true,
-		sectionTitle = true,
-		armory = true,
-		armoryOverride = {},
-		guildInvite = true,
-		who = true,
-		reportStats = false,
-	},
 	smartTab = {
 		enable = true,
 		whisperCycle = false,
@@ -761,44 +670,6 @@ P.social = {
 		historyLimit = 10,
 	},
 }
-
-if W.ChineseLocale then
-	P.social.chatText.customAbbreviation[L["BigfootWorldChannel"]] = "世"
-	P.social.chatText.customAbbreviation["尋求組隊"] = "世"
-	P.social.chatText.customAbbreviation["組隊頻道"] = "世"
-
-	tinsert(P.social.chatBar.channels.world.config, {
-		region = "TW",
-		faction = "Alliance",
-		realmID = "ALL",
-		name = "組隊頻道",
-		autoJoin = true,
-	})
-
-	tinsert(P.social.chatBar.channels.world.config, {
-		region = "TW",
-		faction = "Horde",
-		realmID = "ALL",
-		name = "尋求組隊",
-		autoJoin = true,
-	})
-
-	tinsert(P.social.chatBar.channels.world.config, {
-		region = "TW",
-		faction = "ALL",
-		realmID = "ALL",
-		name = L["BigfootWorldChannel"],
-		autoJoin = true,
-	})
-
-	tinsert(P.social.chatBar.channels.world.config, {
-		region = "CN",
-		faction = "ALL",
-		realmID = "ALL",
-		name = L["BigfootWorldChannel"],
-		autoJoin = true,
-	})
-end
 
 ---@class ProfileDB.quest
 P.quest = {
@@ -813,18 +684,13 @@ P.quest = {
 		arena = "collapse",
 		dungeon = "none",
 		raid = "none",
-		scenario = "expand",
-		neighborhood = "expand",
-		interior = "expand",
 		default = "expand",
 	},
 	---@class ProfileDB.quest.progress
 	progress = {
 		enable = true,
-		scenario = false,
 		disableIfRequiredOver = 75,
-		disableInMythicPlus = true,
-		displayTemplate = "{{level}} {{suggestedGroup}} {{tag}} {{daily}}{{weekly}} {{title}} - {{progress}} {{icon}}",
+		displayTemplate = "{{level}} {{suggestedGroup}} {{tag}} {{daily}} {{title}} - {{progress}} {{icon}}",
 		soundEffects = {
 			enable = false,
 			accept = {
@@ -871,13 +737,6 @@ P.quest = {
 			color = {
 				left = C.GetRGBFromTemplate("cyan-400"),
 				right = C.GetRGBFromTemplate("cyan-200"),
-			},
-		},
-		weekly = {
-			template = format("[%s]", L["Weekly"]),
-			color = {
-				left = C.GetRGBFromTemplate("teal-400"),
-				right = C.GetRGBFromTemplate("teal-200"),
 			},
 		},
 		title = {
@@ -929,22 +788,17 @@ P.quest = {
 		enable = false,
 		mode = "ALL",
 		enableCondition = {
-			accountCompleted = true,
 			repeatable = true,
 			other = false,
 		},
-		smartChat = true,
 		selectReward = true,
 		getBestReward = false,
-		darkmoon = true,
-		followerAssignees = true,
 		pauseModifier = "SHIFT",
 		customIgnoreNPCs = {},
 	},
 	achievementScreenshot = {
 		enable = false,
 		hideCombatAlert = true,
-		ignoreEarnedBefore = false,
 		forceShowUI = true,
 		chatMessage = true,
 	},
@@ -985,14 +839,6 @@ P.tooltips = {
 			enable = true,
 			width = 16,
 			height = 14,
-		},
-		betterMythicPlusInfo = {
-			enable = true,
-			icon = {
-				enable = true,
-				width = 16,
-				height = 14,
-			},
 		},
 	},
 	keystone = {
@@ -1056,7 +902,6 @@ P.unitFrames = {
 			blizzardStyle = false,
 			custom = E.db.unitframe.statusbar,
 		},
-		blizzardOverAbsorbGlow = true,
 		blizzardAbsorbOverlay = true,
 	},
 }
@@ -1064,7 +909,6 @@ P.unitFrames = {
 ---@class ProfileDB.misc
 P.misc = {
 	hideCrafter = false,
-	noLootPanel = false,
 	---@class ProfileDB.misc.spellActivationAlert
 	spellActivationAlert = {
 		enable = false,
@@ -1090,16 +934,8 @@ P.misc = {
 		},
 		customNormalColor = { r = 1, g = 1, b = 1 },
 		customHoverColor = { r = 0, g = 0.659, b = 1 },
-		notification = true,
 		visibility = "show",
 		tooltipsAnchor = "ANCHOR_BOTTOM",
-		groupFinder = {
-			preferNetEaseMeetingStone = false,
-		},
-		friends = {
-			showAllFriends = false,
-			countSubAccounts = true,
-		},
 		time = {
 			localTime = true,
 			twentyFour = true,

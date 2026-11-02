@@ -9,13 +9,9 @@ local floor = floor
 local format = format
 local pairs = pairs
 local select = select
-local tinsert = tinsert
-local tremove = tremove
 
 local InCombatLockdown = InCombatLockdown
 local Minimap = _G.Minimap
-
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 
 function RM:SetHereBeDragonsPinShown(pin, isShown)
 	local forceShown = not self.db or not self.db.enable or not self.db.fixHereBeDragons
@@ -132,17 +128,6 @@ function RM:ChangeShape()
 		Minimap.location:Point("TOP", Minimap, 0, -4 - halfDiff * mmScale)
 	end
 
-	-- HybridMinimap support
-	if _G.HybridMinimap then
-		local mapCanvas = _G.HybridMinimap.MapCanvas
-		local rectangleMask = _G.HybridMinimap:CreateMaskTexture()
-		rectangleMask:SetTexture(texturePath)
-		rectangleMask:SetAllPoints(_G.HybridMinimap)
-		_G.HybridMinimap.RectangleMask = rectangleMask
-		mapCanvas:SetMaskTexture(rectangleMask)
-		mapCanvas:SetUseMaskTexture(true)
-	end
-
 	self:HereBeDragonsPinsFix()
 end
 
@@ -171,51 +156,13 @@ function RM:SetUpdateHook()
 	self:ChangeShape()
 end
 
-function RM:Blizzard_Minimap_Loaded()
-	self:SetUpdateHook()
-end
-
-function RM:Blizzard_HybridMinimap_Loaded()
-	self:SetUpdateHook()
-end
-
 function RM:Initialize()
 	self.db = E.db.WT.maps.rectangleMinimap
 	if not self.db or not self.db.enable or not M.Initialized then
 		return
 	end
 
-	self.addonLoadedCallbacks = {}
-	if not C_AddOns_IsAddOnLoaded("Blizzard_Minimap") then
-		tinsert(self.addonLoadedCallbacks, { "Blizzard_Minimap", self.Blizzard_Minimap_Loaded })
-	end
-
-	if not C_AddOns_IsAddOnLoaded("Blizzard_HybridMinimap") then
-		tinsert(self.addonLoadedCallbacks, { "Blizzard_HybridMinimap", self.Blizzard_HybridMinimap_Loaded })
-	end
-
-	if #self.addonLoadedCallbacks > 0 then
-		self:RegisterEvent("ADDON_LOADED")
-	end
-
-	_G.MinimapBackdrop.StaticOverlayTexture:SetAlpha(0)
-
 	F.TaskManager:AfterLogin(self.SetUpdateHook, self)
-end
-
-function RM:ADDON_LOADED(_, addon)
-	for i = 1, #self.addonLoadedCallbacks do
-		local callback = self.addonLoadedCallbacks[i]
-		if callback[1] == addon then
-			callback[2](self)
-			tremove(self.addonLoadedCallbacks, i)
-			break
-		end
-	end
-
-	if #self.addonLoadedCallbacks == 0 then
-		self:UnregisterEvent("ADDON_LOADED")
-	end
 end
 
 function RM:ProfileUpdate()

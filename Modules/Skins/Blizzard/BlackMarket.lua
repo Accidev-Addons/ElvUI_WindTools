@@ -4,11 +4,11 @@ local S = W.Modules.Skins ---@type Skins
 local _G = _G
 
 function S:Blizzard_BlackMarketUI()
-	if not self:CheckDB("bmah", "blackMarket") then
+	if not self:CheckDB(nil, "blackMarket") then
 		return
 	end
 
 	self:CreateShadow(_G.BlackMarketFrame)
 end
 
-S:AddCallbackForAddon("Blizzard_BlackMarketUI")
+S:AddCallback("Blizzard_BlackMarketUI")

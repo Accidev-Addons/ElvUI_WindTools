@@ -8,7 +8,7 @@ function S:Blizzard_BindingUI()
 		return
 	end
 
-	self:CreateBackdropShadow(_G.QuickKeybindFrame)
+	self:CreateBackdropShadow(_G.KeyBindingFrame)
 end
 
 S:AddCallbackForAddon("Blizzard_BindingUI")

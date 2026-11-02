@@ -1,10 +1,8 @@
 local W, F, E = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI
 local LSM = E.Libs.LSM
-local ET = E:GetModule("Tooltip")
 local S = W.Modules.Skins ---@class Skins
 local ES = E.Skins
 local C = W.Utilities.Color
-local T = W.Modules.Tooltips
 
 local _G = _G
 local assert = assert
@@ -27,12 +25,8 @@ local CreateFrame = CreateFrame
 local GenerateClosure = GenerateClosure
 local RunNextFrame = RunNextFrame
 
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
+local IsAddOnLoaded = IsAddOnLoaded
 
----@type table<string, any> Table to store setting frames by name
-S.settingFrames = {}
----@type table<string, function> Table to store waiting setting frame callbacks
-S.waitSettingFrames = {}
 ---@type table<string, function[]> Table to store addon loading callbacks
 S.addonsToLoad = {}
 ---@type function[] Table to store non-addon loading callbacks
@@ -41,6 +35,7 @@ S.nonAddonsToLoad = {}
 S.libraryHandlers = {}
 ---@type table<string, number> Table to store handled library minor versions
 S.libraryHandledMinors = {}
+S.pendingLibraries = {}
 ---@type function[] Table to store profile update callbacks
 S.updateProfile = {}
 ---@type table<string, {checker: function, handler: function, constructor: function?}> Table to store AceGUI widget callbacks
@@ -49,38 +44,6 @@ S.aceWidgetConfigs = {}
 S.aceWidgetWaitingList = {}
 ---@type function[] Table to store enter world callbacks
 S.enteredLoad = {}
----@type Texture Texture object for path fetching
-S.texturePathFetcher = E.UIParent:CreateTexture(nil, "ARTWORK")
-S.texturePathFetcher:Hide()
-
--- [SIRUS] Addon options use InterfaceOptions categories, including already registered panels.
-local function TrackSettingFrame(frame)
-	if not frame or not frame.name then return end
-	S.settingFrames[frame.name] = frame
-	if S.waitSettingFrames[frame.name] then
-		S.waitSettingFrames[frame.name](frame)
-		S.waitSettingFrames[frame.name] = nil
-	end
-end
-
-hooksecurefunc("InterfaceOptions_AddCategory", TrackSettingFrame)
-for _, frame in ipairs(_G.INTERFACEOPTIONS_ADDONCATEGORIES or {}) do
-	TrackSettingFrame(frame)
-end
-
----Check if the texture path is equal to the given path
----@param texture TextureBase The texture object to check
----@param path string The texture path to compare against
----@return boolean result True if the texture paths are equal, false otherwise
-function S:IsTexturePathEqual(texture, path)
-	local got = texture and texture.GetTextureFilePath and texture:GetTextureFilePath()
-	if not got then
-		return false
-	end
-
-	self.texturePathFetcher:SetTexture(path)
-	return got == self.texturePathFetcher:GetTextureFilePath()
-end
 
 ---Check the skin config of both ElvUI and WindTools DB
 ---@param elvuiKey string? The ElvUI database key to check (optional)
@@ -216,7 +179,7 @@ do
 	---@param g number? Green color component
 	---@param b number? Blue color component
 	local function colorCallback(shadow, r, g, b)
-		if E:IsSecretValue(r) or E:IsSecretValue(g) or E:IsSecretValue(b) or not r or not g or not b then
+		if not r or not g or not b then
 			return
 		end
 
@@ -327,58 +290,37 @@ end
 ---@param constructor function The widget constructor
 function S:HandleAceGUIWidget(lib, name, constructor)
 	local config = self.aceWidgetConfigs[name]
-	if not config then
+	if not config or constructor == config.wrapper or lib.WidgetRegistry[name] ~= constructor then
+		return
+	end
+
+	if self.db and not (self.db.enable and config.checker(self.db)) then
 		return
 	end
 
 	config.constructor = constructor
-
-	if self.db then
-		if self.db.enable and config.checker(self.db) then
-			config.constructor = constructor
-			lib.WidgetRegistry[name] = function()
-				local widget = config.constructor()
-				config.handler(widget)
-				return widget
-			end
-		end
-		return
-	end
-
-	if not self.aceWidgetWaitingList[name] then
-		self.aceWidgetWaitingList[name] = {}
-		lib.WidgetRegistry[name] = function()
+	config.wrapper = config.wrapper
+		or function()
 			local widget = config.constructor()
-			if self.db then
-				if self.db.enable and config.checker(self.db) then
-					config.handler(widget)
-				end
-			else
+			if not self.db then
+				self.aceWidgetWaitingList[name] = self.aceWidgetWaitingList[name] or {}
 				tinsert(self.aceWidgetWaitingList[name], widget)
+			elseif self.db.enable and config.checker(self.db) then
+				config.handler(widget)
 			end
 			return widget
 		end
-	end
+
+	lib.WidgetRegistry[name] = config.wrapper
 end
 
 function S:ProcessWaitingAceGUIWidgets()
-	local lib = _G.LibStub:GetLibrary("AceGUI-3.0", true)
-	assert(lib, "ProcessWaitingAceWidgets: AceGUI-3.0 not found")
-
 	for name, widgets in pairs(self.aceWidgetWaitingList) do
 		local config = self.aceWidgetConfigs[name]
 		if self.db.enable and config.checker(self.db) then
-			lib.WidgetRegistry[name] = function()
-				local widget = config.constructor()
-				config.handler(widget)
-				return widget
-			end
-
 			for _, widget in ipairs(widgets) do
 				config.handler(widget)
 			end
-		else
-			lib.WidgetRegistry[name] = config.constructor
 		end
 	end
 
@@ -496,6 +438,8 @@ end
 ---@param _ any Unused parameter
 ---@param addonName string The name of the loaded addon
 function S:ADDON_LOADED(_, addonName)
+	self:RunPendingLibraryHandlers()
+
 	if not E.initialized or not E.private.WT.skins.enable then
 		return
 	end
@@ -522,19 +466,27 @@ function S:LibStub_NewLibrary(_, major, minor)
 	end
 
 	self.libraryHandledMinors[major] = minor
+	self.pendingLibraries[major] = minor
 
 	RunNextFrame(function()
-		---Run library skinning on next frame to ensure library is fully loaded
+		self:RunPendingLibraryHandlers()
+	end)
+end
+
+function S:RunPendingLibraryHandlers()
+	local major, minor = next(self.pendingLibraries)
+	while major do
+		self.pendingLibraries[major] = nil
 		local lib, latestMinor = _G.LibStub(major, true)
-		if not lib or not latestMinor or latestMinor ~= minor then
-			return
-		end
-		for _, func in next, self.libraryHandlers[major] do
-			if not xpcall(function() return func(self, lib) end, F.Developer.ThrowError) then
-				self:Log("debug", format("Failed to skin library %s", major, minor))
+		if lib and latestMinor == minor then
+			for _, func in next, self.libraryHandlers[major] do
+				if not xpcall(function() return func(self, lib) end, F.Developer.ThrowError) then
+					self:Log("debug", format("Failed to skin library %s", major, minor))
+				end
 			end
 		end
-	end)
+		major, minor = next(self.pendingLibraries)
+	end
 end
 
 ---Disable AddOnSkins for a specific key
@@ -563,7 +515,7 @@ do
 	---@return boolean loaded True if MerathilisUI is loaded
 	local function IsMerathilisUILoaded()
 		if isLoaded == nil then
-			isLoaded = C_AddOns_IsAddOnLoaded("ElvUI_MerathilisUI")
+			isLoaded = IsAddOnLoaded("ElvUI_MerathilisUI")
 		end
 		return isLoaded
 	end
@@ -671,27 +623,6 @@ function S:TryPostHook(frame, method, hookFunc)
 	end
 end
 
----Reskin settings frame with a callback function
----@param name string The settings frame name
----@param func function|string The callback function or method name
-function S:ReskinSettingFrame(name, func)
-	if type(func) == "string" and S[func] then
-		func = GenerateClosure(S[func], S) --[[@as function]]
-	end
-
-	if not func or type(func) ~= "function" then
-		F.Developer.ThrowError("Failed to register ReskinSettingFrame: func is nil or not a function, name:", name)
-		return
-	end
-
-	local frame = self.settingFrames[name]
-	if frame then
-		func(frame)
-	else
-		self.waitSettingFrames[name] = func
-	end
-end
-
 ---Reskin icon button with hover effects
 ---@param button Button The button to reskin
 ---@param icon string The icon texture path
@@ -731,7 +662,7 @@ function S:TryCropTexture(tex)
 
 	local textureID = tex:GetTexture()
 
-	if E:IsSecretValue(textureID) or type(textureID) == "number" and textureID <= 0 then
+	if type(textureID) == "number" and textureID <= 0 then
 		return
 	end
 
@@ -777,33 +708,6 @@ function S:HandleResizeButton(button)
 	button.__windSkin = true
 end
 
-function S:ReskinCustomGameTooltips(...)
-	local tooltips = { ... }
-
-	for _, tt in pairs(tooltips) do
-		if type(tt) == "string" then
-			tt = _G[tt]
-		end
-
-		if tt and not tt.__windSkin then
-			if tt.CompareHeader and not tt.CompareHeader.template then
-				tt.CompareHeader:StripTextures()
-			end
-
-			ET:SetStyle(tt)
-			T:AddIconTooltip(tt:GetName())
-
-			local ItemTooltip = tt.ItemTooltip
-			if ItemTooltip then
-				self:Proxy("HandleIcon", ItemTooltip.Icon, true)
-				self:Proxy("HandleIconBorder", ItemTooltip.IconBorder, ItemTooltip.Icon.backdrop)
-			end
-
-			tt.__windSkin = true
-		end
-	end
-end
-
 function S:Initialize()
 	self.db = E.private.WT.skins
 	self:ProcessWaitingAceGUIWidgets()
@@ -822,7 +726,7 @@ function S:Initialize()
 
 	-- Run addon skins, including some lazy-loading Blizzard skins
 	for addonName, object in pairs(self.addonsToLoad) do
-		local isLoaded = C_AddOns_IsAddOnLoaded(addonName)
+		local isLoaded = IsAddOnLoaded(addonName)
 		if isLoaded then
 			self:CallLoadedAddon(addonName, object)
 		end

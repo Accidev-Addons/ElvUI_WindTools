@@ -3,13 +3,9 @@ local DT = E:GetModule("DataTexts")
 
 local _G = _G
 
-local format = format
-
-local CreateFrame = CreateFrame
 local InCombatLockdown = InCombatLockdown
 local IsInGuild = IsInGuild
 local ToggleFrame = ToggleFrame
-local UIErrorsFrame = UIErrorsFrame
 
 local MenuUtil_CreateContextMenu = MenuUtil.CreateContextMenu
 
@@ -27,7 +23,7 @@ local function GenerateDayContextMenu(owner, rootDescription)
 		_G.ToggleTalentFrame()
 	end)
 	rootDescription:CreateButton(_G.QUESTLOG_BUTTON, function()
-		_G.ToggleQuestLog()
+		ToggleFrame(_G.QuestLogFrame)
 	end)
 	rootDescription:CreateButton(_G.ACHIEVEMENT_BUTTON, function()
 		_G.ToggleAchievementFrame()
@@ -47,24 +43,17 @@ local function GenerateDayContextMenu(owner, rootDescription)
 	rootDescription:CreateButton(_G.SOCIAL_BUTTON, function()
 		_G.ToggleFriendsFrame(1)
 	end)
-	rootDescription:CreateButton(_G.ACHIEVEMENTS_GUILD_TAB, function()
-		if IsInGuild() then
-			_G.ToggleGuildFrame()
-		else
-			_G.ToggleGuildFinder()
-		end
+	rootDescription:CreateButton(IsInGuild() and _G.GUILD or _G.LOOKINGFORGUILD, function()
+		_G.ToggleGuildFrame()
 	end)
-	rootDescription:CreateButton(
-		_G.COMPACT_UNIT_FRAME_PROFILE_AUTOACTIVATEPVE .. " / " .. _G.COMPACT_UNIT_FRAME_PROFILE_AUTOACTIVATEPVP,
-		function()
-			_G.PVEFrame_ToggleFrame()
-		end
-	)
+	rootDescription:CreateButton(_G.LFG_TITLE, function()
+		_G.ToggleLFDParentFrame()
+	end)
 	rootDescription:CreateButton(_G.RAID, function()
-		_G.ToggleFriendsFrame(3)
+		_G.ToggleFriendsFrame(_G.FRIEND_TAB_RAID)
 	end)
-	rootDescription:CreateButton(_G.ENCOUNTER_JOURNAL, function()
-		_G.ToggleEncounterJournal()
+	rootDescription:CreateButton(_G.ADVENTURE, function()
+		_G.ToggleEncounterJournalFrame()
 	end)
 	rootDescription:CreateButton(_G.HELP_BUTTON, function()
 		_G.ToggleHelpFrame()
