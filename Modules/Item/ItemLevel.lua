@@ -12,7 +12,6 @@ local EquipmentManager_UnpackLocation = EquipmentManager_UnpackLocation
 local async = W.Utilities.Async
 local ItemLocation = ItemLocation
 
-
 local EQUIPMENTFLYOUT_FIRST_SPECIAL_LOCATION = EQUIPMENTFLYOUT_FIRST_SPECIAL_LOCATION
 
 ---@param text FontString
@@ -95,10 +94,8 @@ function IL:FlyoutButton()
 			local player, bank, bags, slot, bag = EquipmentManager_UnpackLocation(button.location)
 			if bags then
 				itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
-			elseif player then
+			elseif player or bank then
 				itemLocation = ItemLocation:CreateFromEquipmentSlot(slot)
-			elseif bank then
-				itemLocation = ItemLocation:CreateFromBagAndSlot(BANK_CONTAINER, slot)
 			end
 		end
 
@@ -116,8 +113,6 @@ function IL:ProfileUpdate()
 
 	if self.db.enable and not self.initialized then
 		self:SecureHook("EquipmentFlyout_UpdateItems", "FlyoutButton")
-
-
 		self.initialized = true
 	end
 end

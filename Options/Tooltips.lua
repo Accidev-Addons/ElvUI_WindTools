@@ -409,36 +409,6 @@ options.groupInfo = {
 				cache.groupInfo.template = value
 			end,
 		},
-		resourcePage = {
-			order = 9,
-			type = "execute",
-			name = F.GetWindStyleText(L["Reference"]),
-			desc = format(
-				"|cff00d1b2%s|r (%s)\n%s\n%s\n%s",
-				L["Tips"],
-				L["Editbox"],
-				L["CTRL+A: Select All"],
-				L["CTRL+C: Copy"],
-				L["CTRL+V: Paste"]
-			),
-			func = function()
-				if E.global.general.locale == "zhCN" or E.global.general.locale == "zhTW" then
-					E:StaticPopup_Show(
-						"WINDTOOLS_EDITBOX",
-						nil,
-						nil,
-						"https://github.com/wind-addons/ElvUI_WindTools/wiki/预组建队伍玩家信息"
-					)
-				else
-					E:StaticPopup_Show(
-						"WINDTOOLS_EDITBOX",
-						nil,
-						nil,
-						"https://github.com/wind-addons/ElvUI_WindTools/wiki/LFG-Player-Info"
-					)
-				end
-			end,
-		},
 		useDefaultTemplate = {
 			order = 10,
 			type = "execute",

@@ -72,29 +72,6 @@ options.general = {
 			name = L["Enable"],
 			width = 0.7,
 		},
-		resourcePage = {
-			order = 2,
-			type = "execute",
-			name = F.GetWindStyleText(L["More Resources"]),
-			desc = format(
-				"%s\n%s\n\n|cff00d1b2%s|r (%s)\n%s\n%s\n%s",
-				L["Open the project page and download more resources."],
-				L["e.g. chat bubble texture with shadow (also in instance)"],
-				L["Tips"],
-				L["Editbox"],
-				L["CTRL+A: Select All"],
-				L["CTRL+C: Copy"],
-				L["CTRL+V: Paste"]
-			),
-			func = function()
-				if E.global.general.locale == "zhCN" then
-					E:StaticPopup_Show("WINDTOOLS_EDITBOX", nil, nil, "https://bbs.nga.cn/read.php?tid=31851882")
-				else
-					E:StaticPopup_Show("WINDTOOLS_EDITBOX", nil, nil, "https://wind-addons.github.io/ElvUI_WindTools")
-				end
-			end,
-			width = 1.2,
-		},
 		merathilisUISkin = {
 			order = 3,
 			type = "toggle",

@@ -22,11 +22,11 @@ local GetGuildBankItemLink = GetGuildBankItemLink
 local GetMerchantItemLink = GetMerchantItemLink
 local GetMerchantNumItems = GetMerchantNumItems
 local GetNumBuybackItems = GetNumBuybackItems
+local IsAddOnLoaded = IsAddOnLoaded
 local PlayerHasToy = PlayerHasToy
 local SetItemButtonDesaturated = SetItemButtonDesaturated
 local SetItemButtonTextureVertexColor = SetItemButtonTextureVertexColor
 
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local C_Item_GetItemInfoInstant = C_Item.GetItemInfoInstant
 local C_Item_GetItemInventoryTypeByID = C_Item.GetItemInventoryTypeByID
 local C_Item_GetItemLearnTransmogSet = C_Item.GetItemLearnTransmogSet
@@ -363,7 +363,7 @@ do
 end
 
 function AK:Initialize()
-	if C_AddOns_IsAddOnLoaded("AlreadyKnown") then
+	if IsAddOnLoaded("AlreadyKnown") then
 		self.StopRunning = "AlreadyKnown"
 		return
 	end
@@ -385,7 +385,7 @@ function AK:Initialize()
 end
 
 function AK:ToggleSetting()
-	if C_AddOns_IsAddOnLoaded("AlreadyKnown") then
+	if IsAddOnLoaded("AlreadyKnown") then
 		self.StopRunning = "AlreadyKnown"
 		return
 	end

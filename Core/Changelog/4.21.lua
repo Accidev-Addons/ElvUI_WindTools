@@ -1,37 +1,45 @@
 local W = unpack((select(2, ...))) ---@type WindTools
 
 W.Changelog[421] = {
-	RELEASE_DATE = "2026/08/24",
+	RELEASE_DATE = "2026/11/02",
 	IMPORTANT = {
 		["enUS"] = {
-			"Minimum supported ElvUI version raised to 15.26.",
-			"Profile import/export now uses Blizzard's built-in encoding. Strings exported from older WindTools versions can no longer be imported; please re-export after updating.",
+			"This build is adapted for Sirus (WotLK 3.3.5a, DF UI) and works only with ElvUI for Sirus 9.09.13 or newer.",
+			"Modules and skins that exist only on retail were removed.",
+			"Libraries now come from ElvUI (LibDeflate, LibRangeCheck). Profile import and export work again.",
 		},
 		["ruRU"] = {
-			"Минимальная поддерживаемая версия ElvUI повышена до 15.26.",
-			"Импорт/экспорт профилей теперь использует встроенное кодирование Blizzard. Строки, экспортированные из старых версий WindTools, больше нельзя импортировать — экспортируйте заново после обновления.",
+			"Эта сборка адаптирована для Sirus (WotLK 3.3.5a, DF UI) и работает только с ElvUI для Sirus 9.09.13 или новее.",
+			"Модули и скины, которые существуют только на ретейле, удалены.",
+			"Библиотеки берутся из ElvUI (LibDeflate, LibRangeCheck). Импорт и экспорт профилей снова работают.",
 		},
 	},
 	NEW = {
-		["enUS"] = {},
-		["ruRU"] = {},
+		["enUS"] = {
+			"[Renegades] The third faction is recognized in chat bar channels, the friend list, contacts and tooltip faction icons.",
+			"[Instance Difficulty] Shows Sirus dungeon and raid difficulties and the active Mythic+ keystone.",
+			"[Chat Text] GM flags, plugin icons and the Renegade language header from ElvUI are kept.",
+		},
+		["ruRU"] = {
+			"[Ренегаты] Третья фракция учитывается в каналах панели чата, списке друзей, контактах и иконках фракций в подсказках.",
+			"[Сложность подземелья] Показывает сложности подземелий и рейдов Sirus и активный ключ Mythic+.",
+			"[Текст чата] Метки ГМ, иконки плагинов и заголовок языка ренегатов из ElvUI сохраняются.",
+		},
 	},
 	IMPROVEMENT = {
 		["enUS"] = {
-			"[Skins] Update the Blizzard Damage Meter skin for the new window layout.",
-			"[Damage Meter Layout] Let the game manage session windows so the combat timer and entries update correctly.",
-			"[Skins] Fix Damage Meter session window mouseover interfering with the default UI.",
-			"[Exit Phase Diving] Fix an error when checking Phase Diving status in combat.",
-			"[Inspect] Fix inspect specialization errors when the target's identity is hidden in combat.",
-			"[Skins] ElvUI aura shadows now show on player auras, unit frames, and nameplates.",
+			"[Game Bar] Character, Spellbook, Talents, Professions and Shop open through the Sirus micro buttons, so spells and talents are not blocked afterwards.",
+			"[Quest] Turn In, Quest Progress and Achievement Tracker rebuilt on the 3.3.5a API.",
+			"[Item] Extra Item Bar, Inspect, Contacts and Fast Loot rebuilt on the 3.3.5a API; the Extra Item Bar and announcements use WotLK items and spells.",
+			"[Skins] Only Blizzard and addon frames that exist on Sirus are skinned; AceGUI widget skins apply once the ElvUI options load.",
+			"[Information] Our Discord contact; upstream links and credits removed.",
 		},
 		["ruRU"] = {
-			"[Скины] Обновлён скин Blizzard Damage Meter под новое расположение окна.",
-			"[Макет индикатора урона] Окна сессии снова управляются игрой, поэтому таймер боя и строки обновляются правильно.",
-			"[Скины] Исправлено наведение на окно сессии Damage Meter, мешавшее стандартному интерфейсу.",
-			"[Выход из фазового погружения] Исправлена ошибка при проверке фазового погружения в бою.",
-			"[Осмотр] Исправлена ошибка осмотра специализации, когда личность цели скрыта в бою.",
-			"[Скины] Тени аур ElvUI снова отображаются на аурах игрока, рамках юнитов и индикаторах.",
+			"[Игровая панель] Персонаж, книга заклинаний, таланты, профессии и магазин открываются через микрокнопки Sirus, поэтому заклинания и таланты после этого не блокируются.",
+			"[Задания] Сдача заданий, прогресс заданий и трекер достижений переписаны под API 3.3.5a.",
+			"[Предметы] Панель предметов, осмотр, контакты и быстрый лут переписаны под API 3.3.5a; панель предметов и объявления используют предметы и заклинания WotLK.",
+			"[Скины] Оформляются только окна Blizzard и аддонов, которые есть на Sirus; скины виджетов AceGUI применяются после загрузки настроек ElvUI.",
+			"[Информация] Наш Discord; ссылки и благодарности оригинального аддона удалены.",
 		},
 	},
 }

@@ -6,7 +6,6 @@ function S:SettingsPanel()
 		return
 	end
 
-	-- [SIRUS] ElvUI 9.07 skins the legacy options frames directly, without retail ScrollBox widgets.
 	self:CreateShadow(_G.InterfaceOptionsFrame)
 	self:CreateShadow(_G.VideoOptionsFrame)
 	self:CreateShadow(_G.AudioOptionsFrame)

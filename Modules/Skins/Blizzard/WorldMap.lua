@@ -9,7 +9,6 @@ function S:WorldMapFrame()
 		return
 	end
 
-	-- [SIRUS] Quest details and rewards are native map scroll frames.
 	for _, frame in pairs({
 		_G.WorldMapFrame, _G.WorldMapDetailFrame, _G.WorldMapQuestScrollFrame,
 		_G.WorldMapQuestDetailScrollFrame, _G.WorldMapQuestRewardScrollFrame,

@@ -8,7 +8,6 @@ function S:DressUpFrame()
 		return
 	end
 
-	-- [SIRUS] The model is separate from DressUpFrame; there is no set-selection panel.
 	self:CreateShadow(_G.DressUpFrame)
 	self:CreateBackdropShadow(_G.DressUpModel)
 	self:CreateBackdropShadow(_G.DressUpFrameCancelButton)

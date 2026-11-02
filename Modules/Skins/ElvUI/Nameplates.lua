@@ -6,7 +6,6 @@ function S:NP_OnCreated(_, frame)
 	local plate = frame and frame.ElvUIFrame
 	if not plate then return end
 
-	-- [SIRUS] ElvUI 9.07 creates Health and CastBar on the nested unit frame.
 	self:CreateShadow(plate.Health)
 	self:CreateShadow(plate.CastBar)
 	if plate.CastBar then

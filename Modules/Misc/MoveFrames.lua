@@ -8,173 +8,87 @@ local strsplit = strsplit
 local tDeleteItem = tDeleteItem
 local type = type
 
-local GenerateFlatClosure = GenerateFlatClosure
 local GetScreenHeight = GetScreenHeight
 local GetScreenWidth = GetScreenWidth
 local InCombatLockdown = InCombatLockdown
+local IsAddOnLoaded = IsAddOnLoaded
 local RunNextFrame = RunNextFrame
 
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-
 local BlizzardFrames = {
-	"AddonList",
+	"AlliedRacesFrame",
+	"AuctionHouseFrame",
 	"BankFrame",
-	"BonusRollFrame",
-	"CatalogShopFrame",
+	"BlackMarketFrame",
+	"ChallengesKeystoneFrame",
 	"ChatConfigFrame",
 	"CinematicFrame",
+	"ClassTrainerFrame",
+	"CollectionsJournal",
 	"ContainerFrame1",
 	"ContainerFrameCombinedBags",
-	"DestinyFrame",
+	"DeathRecapFrame",
+	"DressUpFrame",
+	"FriendsFrame",
 	"GameMenuFrame",
 	"GossipFrame",
 	"GroupLootContainer",
 	"GuildInviteFrame",
 	"GuildRegistrarFrame",
 	"HelpFrame",
+	"InspectFrame",
+	"InspectRecipeFrame",
+	"ItemSocketingFrame",
 	"ItemTextFrame",
+	"ItemUpgradeFrame",
+	"LFDDungeonReadyDialog",
+	"LFDDungeonReadyStatus",
 	"LFDRoleCheckPopup",
-	"LFGDungeonReadyDialog",
-	"LFGDungeonReadyStatus",
 	"LootFrame",
+	"MacroFrame",
 	"MerchantFrame",
-	"ModelPreviewFrame",
-	"PingSystemTutorial",
-	"PVEFrame",
-	"PVPReadyDialog",
 	"PetitionFrame",
+	"PlayerTalentFrame",
 	"QuestFrame",
-	"QuestLogPopupDetailFrame",
 	"QuickKeybindFrame",
-	"RaidBrowserFrame",
-	"RaidParentFrame",
 	"ReadyCheckFrame",
-	"RecruitAFriendRecruitmentFrame",
-	"RecruitAFriendRewardsFrame",
-	"ReportCheatingDialog",
-	"ReportFrame",
-	"SettingsPanel",
-	"SplashFrame",
 	"TabardFrame",
 	"TaxiFrame",
+	"TimeManagerFrame",
 	"TradeFrame",
 	"TutorialFrame",
-	["FriendsFrame"] = {
-		"FriendsFrame.IgnoreListWindow",
+	"WorldMapFrame",
+	["CalendarFrame"] = {
+		"CalendarCreateEventFrame",
+		"CalendarCreateEventInviteListScrollFrame",
+		"CalendarViewEventFrame",
+		"CalendarViewEventInviteListScrollFrame",
+		"CalendarViewHolidayFrame",
 	},
-	["DressUpFrame"] = {
-		"DressUpFrame.CustomSetDetailsPanel",
-		"DressUpFrame.SetSelectionPanel",
+	["CharacterFrame"] = {
+		"PaperDollFrame",
+		"ReputationFrame",
+		"TokenFrame",
+		"TokenFramePopup",
+	},
+	["EncounterJournal"] = {
+		"EncounterJournal.encounter.info.overviewScroll",
+		"EncounterJournal.encounter.info.detailsScroll",
 	},
 	["MailFrame"] = {
 		"SendMailFrame",
 		"MailFrameInset",
-		["OpenMailFrame"] = {
-			"OpenMailFrame.OpenMailSender",
-			"OpenMailFrame.OpenMailFrameInset",
-		},
-	},
-	["WorldMapFrame"] = {
-		"QuestMapFrame",
+		"OpenMailFrame",
 	},
 }
 
 local BlizzardFramesOnDemand = {
-	["Blizzard_AccountStore"] = {
-		"AccountStoreFrame",
-	},
 	["Blizzard_AchievementUI"] = {
 		["AchievementFrame"] = {
-			"AchievementFrame.Header",
-			"AchievementFrame.SearchResults",
+			"AchievementFrameHeader",
 		},
-	},
-	["Blizzard_AlliedRacesUI"] = {
-		"AlliedRacesFrame",
-	},
-	["Blizzard_ArchaeologyUI"] = {
-		"ArchaeologyFrame",
-	},
-	["Blizzard_AuctionHouseUI"] = {
-		"AuctionHouseFrame",
-	},
-	["Blizzard_BehavioralMessaging"] = {
-		"BehavioralMessagingDetails",
 	},
 	["Blizzard_BindingUI"] = {
 		"KeyBindingFrame",
-	},
-	["Blizzard_BlackMarketUI"] = {
-		"BlackMarketFrame",
-	},
-	["Blizzard_Calendar"] = {
-		["CalendarFrame"] = {
-			"CalendarCreateEventFrame",
-			"CalendarCreateEventInviteListScrollFrame",
-			"CalendarViewEventFrame",
-			"CalendarViewEventFrame.HeaderFrame",
-			"CalendarViewEventInviteListScrollFrame",
-			"CalendarViewHolidayFrame",
-		},
-	},
-	["Blizzard_ChallengesUI"] = {
-		"ChallengesKeystoneFrame",
-	},
-	["Blizzard_Channels"] = {
-		"ChannelFrame",
-		"CreateChannelPopup",
-	},
-	["Blizzard_ClickBindingUI"] = {
-		["ClickBindingFrame"] = {
-			"ClickBindingFrame.ScrollBox",
-		},
-		"ClickBindingFrame.TutorialFrame",
-	},
-	["Blizzard_ChromieTimeUI"] = {
-		"ChromieTimeFrame",
-	},
-	["Blizzard_Collections"] = {
-		"CollectionsJournal",
-	},
-	["Blizzard_Communities"] = {
-		"ClubFinderGuildFinderFrame.RequestToJoinFrame",
-		"ClubFinderCommunityAndGuildFinderFrame.RequestToJoinFrame",
-		["CommunitiesFrame"] = {
-			"CommunitiesFrame.GuildMemberDetailFrame",
-			"CommunitiesFrame.NotificationSettingsDialog",
-		},
-		"CommunitiesFrame.RecruitmentDialog",
-		"CommunitiesSettingsDialog",
-		"CommunitiesGuildLogFrame",
-		"CommunitiesGuildNewsFiltersFrame",
-		"CommunitiesGuildTextEditFrame",
-	},
-	["Blizzard_CooldownViewer"] = {
-		"CooldownViewerSettings",
-	},
-	["Blizzard_Contribution"] = {
-		"ContributionCollectionFrame",
-	},
-	["Blizzard_DeathRecap"] = {
-		"DeathRecapFrame",
-	},
-	["Blizzard_EncounterJournal"] = {
-		["EncounterJournal"] = {
-			"EncounterJournal.instanceSelect.ScrollBox",
-			"EncounterJournal.encounter.info.overviewScroll",
-			"EncounterJournal.encounter.info.detailsScroll",
-		},
-	},
-	["Blizzard_ExpansionLandingPage"] = {
-		"ExpansionLandingPage",
-	},
-	["Blizzard_FlightMap"] = {
-		"FlightMapFrame",
-	},
-	["Blizzard_GenericTraitUI"] = {
-		["GenericTraitFrame"] = {
-			"GenericTraitFrame.ButtonsParent",
-		},
 	},
 	["Blizzard_GMChatUI"] = {
 		"GMChatStatusFrame",
@@ -182,132 +96,10 @@ local BlizzardFramesOnDemand = {
 	["Blizzard_GuildBankUI"] = {
 		"GuildBankFrame",
 	},
-	["Blizzard_GuildControlUI"] = {
-		"GuildControlUI",
-	},
-	["Blizzard_GuildRename"] = {
-		"GuildRenameFrame",
-	},
-	["Blizzard_InspectUI"] = {
-		"InspectFrame",
-	},
-	["Blizzard_IslandsPartyPoseUI"] = {
-		"IslandsPartyPoseFrame",
-	},
-	["Blizzard_IslandsQueueUI"] = {
-		"IslandsQueueFrame",
-	},
-	["Blizzard_ItemInteractionUI"] = {
-		"ItemInteractionFrame",
-	},
-	["Blizzard_ItemSocketingUI"] = {
-		"ItemSocketingFrame",
-	},
-	["Blizzard_ItemUpgradeUI"] = {
-		"ItemUpgradeFrame",
-	},
-	["Blizzard_Kiosk"] = {
-		"GameKioskSessionStartedDialog",
-	},
-	["Blizzard_MacroUI"] = {
-		"MacroFrame",
-	},
-	["Blizzard_MajorFactions"] = {
-		"MajorFactionRenownFrame",
-	},
-	["Blizzard_ObliterumUI"] = {
-		"ObliterumForgeFrame",
-	},
-	["Blizzard_MatchCelebrationPartyPoseUI"] = {
-		"MatchCelebrationPartyPoseFrame",
-	},
-	["Blizzard_PlayerSpells"] = {
-		"HeroTalentsSelectionDialog",
-		["PlayerSpellsFrame"] = {
-			"PlayerSpellsFrame.TalentsFrame.ButtonsParent",
-		},
-	},
-	["Blizzard_PlayerChoice"] = {
-		"PlayerChoiceFrame",
-	},
-	["Blizzard_Professions"] = {
-		"InspectRecipeFrame",
-		"ProfessionsFrame.CraftingPage.SchematicForm.QualityDialog",
-		"ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.QualityDialog",
-		["ProfessionsFrame"] = {
-			"ProfessionsFrame.CraftingPage.CraftingOutputLog",
-			"ProfessionsFrame.CraftingPage.CraftingOutputLog.ScrollBox",
-		},
-	},
-	["Blizzard_ProfessionsBook"] = {
-		"ProfessionsBookFrame",
-	},
-	["Blizzard_ProfessionsCustomerOrders"] = {
-		["ProfessionsCustomerOrdersFrame"] = {
-			"ProfessionsCustomerOrdersFrame.Form",
-			"ProfessionsCustomerOrdersFrame.Form.CurrentListings",
-		},
-	},
-	["Blizzard_PVPMatch"] = {
-		"PVPMatchResults",
-	},
-	["Blizzard_PVPUI"] = {
-		"PVPMatchScoreboard",
-	},
-	["Blizzard_RemixArtifactUI"] = {
-		["RemixArtifactFrame"] = {
-			"RemixArtifactFrame.Header",
-			"RemixArtifactFrame.ButtonsParent",
-		},
-	},
-	["Blizzard_ScrappingMachineUI"] = {
-		"ScrappingMachineFrame",
-	},
-	["Blizzard_StableUI"] = {
-		"StableFrame",
-	},
-	["Blizzard_SubscriptionInterstitialUI"] = {
-		"SubscriptionInterstitialFrame",
-	},
-	["Blizzard_TalentUI"] = {
-		"PlayerTalentFrame",
-	},
-	["Blizzard_TimeManager"] = {
-		"TimeManagerFrame",
-	},
-	["Blizzard_TokenUI"] = {
-		"CurrencyTransferMenu",
-	},
-	["Blizzard_TrainerUI"] = {
-		"ClassTrainerFrame",
-	},
-	["Blizzard_Transmog"] = {
-		"TransmogFrame",
-	},
-	["Blizzard_UIPanels_Game"] = {
-		["CharacterFrame"] = {
-			"CurrencyTransferLog",
-			"PaperDollFrame",
-			"ReputationFrame",
-			"TokenFrame",
-			"TokenFramePopup",
-		},
-	},
-	["Blizzard_VoidStorageUI"] = {
-		"VoidStorageFrame",
-	},
-	["Blizzard_WarfrontsPartyPoseUI"] = {
-		"WarfrontsPartyPoseFrame",
-	},
-	["Blizzard_WeeklyRewards"] = {
-		"WeeklyRewardsFrame",
-	},
 }
 
 local ignorePositionRememberingFrames = {
 	["GameMenuFrame"] = true,
-	["BonusRollFrame"] = true,
-	["PlayerChoiceFrame"] = true,
 }
 
 local disabled = {}
@@ -405,10 +197,6 @@ function MF:EnsureWindowInTheScreen(frame)
 	local screenWidth = GetScreenWidth()
 	local screenHeight = GetScreenHeight()
 
-	if E:IsSecretValue(left) or E:IsSecretValue(right) or E:IsSecretValue(top) or E:IsSecretValue(bottom) then
-		return
-	end
-
 	if left and right and (right < 3 or left > screenWidth - 3) then
 		isOffScreen = true
 	end
@@ -423,22 +211,22 @@ function MF:EnsureWindowInTheScreen(frame)
 end
 
 function MF:Frame_StartMoving(this, button)
-	if InCombatLockdown() and this:IsProtected() then
+	local moveTarget = moveTargets[this]
+	if InCombatLockdown() and (this:IsProtected() or moveTarget and moveTarget:IsProtected()) then
 		return
 	end
 
-	local moveTarget = moveTargets[this]
 	if button == "LeftButton" and moveTarget and moveTarget:IsMovable() and not disabled[moveTarget] then
 		moveTarget:StartMoving()
 	end
 end
 
 function MF:Frame_StopMoving(this, button)
-	if InCombatLockdown() and this:IsProtected() then
+	local moveTarget = moveTargets[this]
+	if InCombatLockdown() and (this:IsProtected() or moveTarget and moveTarget:IsProtected()) then
 		return
 	end
 
-	local moveTarget = moveTargets[this]
 	if button == "LeftButton" and moveTarget then
 		moveTarget:StopMovingOrSizing()
 		MF:Remember(moveTarget)
@@ -506,55 +294,6 @@ function MF:HandleAddon(_, addon)
 	end
 
 	self:HandleFramesWithTable(frameTable)
-
-	-- fix from BlizzMove
-	F.TaskManager:OutOfCombat(function()
-		if addon == "Blizzard_EncounterJournal" then
-			local replacement = function(rewardFrame)
-				if rewardFrame.data then
-					_G.EncounterJournalTooltip:ClearAllPoints()
-				end
-				self.hooks.AdventureJournal_Reward_OnEnter(rewardFrame)
-			end
-			self:RawHook("AdventureJournal_Reward_OnEnter", replacement, true)
-			self:RawHookScript(_G.EncounterJournal.suggestFrame.Suggestion1.reward, "OnEnter", replacement)
-			self:RawHookScript(_G.EncounterJournal.suggestFrame.Suggestion2.reward, "OnEnter", replacement)
-			self:RawHookScript(_G.EncounterJournal.suggestFrame.Suggestion3.reward, "OnEnter", replacement)
-		elseif addon == "Blizzard_Communities" then
-			local dialog = _G.CommunitiesFrame.NotificationSettingsDialog
-			if dialog then
-				dialog:ClearAllPoints()
-				dialog:SetAllPoints()
-			end
-		elseif addon == "Blizzard_PlayerChoice" and _G.PlayerChoiceFrame then
-			_G.PlayerChoiceFrame:HookScript("OnHide", function()
-				if not InCombatLockdown() or not _G.PlayerChoiceFrame:IsProtected() then
-					_G.PlayerChoiceFrame:ClearAllPoints()
-				end
-			end)
-		elseif addon == "Blizzard_PlayerSpells" and _G.HeroTalentsSelectionDialog and _G.PlayerSpellsFrame then
-			local function startStopMoving(frame)
-				if InCombatLockdown() and frame:IsProtected() then
-					return
-				end
-				local backup = frame:IsMovable()
-				frame:SetMovable(true)
-				frame:StartMoving()
-				frame:StopMovingOrSizing()
-				frame:SetMovable(backup)
-			end
-
-			startStopMoving(_G.HeroTalentsSelectionDialog)
-			_G.PlayerSpellsFrame:HookScript("OnShow", function(frame)
-				startStopMoving(frame)
-				RunNextFrame(GenerateFlatClosure(startStopMoving, frame))
-			end)
-			_G.HeroTalentsSelectionDialog:HookScript("OnShow", function(frame)
-				startStopMoving(frame)
-				RunNextFrame(GenerateFlatClosure(startStopMoving, frame))
-			end)
-		end
-	end)
 end
 
 function MF:HandleElvUIBag(frameName)
@@ -628,12 +367,12 @@ function MF:SetMovable(frame, movable)
 end
 
 function MF:Initialize()
-	if C_AddOns_IsAddOnLoaded("BlizzMove") then
+	if IsAddOnLoaded("BlizzMove") then
 		self.StopRunning = "BlizzMove"
 		return
 	end
 
-	if C_AddOns_IsAddOnLoaded("MoveAnything") then
+	if IsAddOnLoaded("MoveAnything") then
 		self.StopRunning = "MoveAnything"
 		return
 	end
@@ -644,29 +383,17 @@ function MF:Initialize()
 	end
 
 	-- Trade Skill Master Speical Handling
-	if C_AddOns_IsAddOnLoaded("TradeSkillMaster") and self.db.tradeSkillMasterCompatible then
+	if IsAddOnLoaded("TradeSkillMaster") and self.db.tradeSkillMasterCompatible then
 		tDeleteItem(BlizzardFrames, "MerchantFrame")
-	end
-
-	-- ElvUI Mail Frame Speical Handling
-	if _G.MailFrameInset then
-		_G.OpenMailFrameInset:SetParent(_G.OpenMailFrame)
-		_G.MailFrameInset:SetParent(_G.MailFrame)
 	end
 
 	-- Setup Blizzard Frames that are always loaded
 	self:HandleFramesWithTable(BlizzardFrames)
 
-	if _G.BattlefieldFrame and _G.PVPParentFrame then
-		_G.BattlefieldFrame:SetParent(_G.PVPParentFrame)
-		_G.BattlefieldFrame:ClearAllPoints()
-		_G.BattlefieldFrame:SetAllPoints()
-	end
-
 	-- Setup Blizzard Frames that are loaded on demand
 	self:RegisterEvent("ADDON_LOADED", "HandleAddon")
 	for addon in pairs(BlizzardFramesOnDemand) do
-		if C_AddOns_IsAddOnLoaded(addon) then
+		if IsAddOnLoaded(addon) then
 			self:HandleAddon(nil, addon)
 		end
 	end

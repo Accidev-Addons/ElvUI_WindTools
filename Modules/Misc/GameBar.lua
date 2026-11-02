@@ -50,7 +50,6 @@ local Screenshot = Screenshot
 local SetCVar = SetCVar
 local ShowUIPanel = ShowUIPanel
 local ToggleCalendar = ToggleCalendar
-local ToggleCharacter = ToggleCharacter
 local ToggleTimeManager = ToggleTimeManager
 local UnregisterStateDriver = UnregisterStateDriver
 
@@ -419,10 +418,8 @@ local ButtonTypes = {
 	BLIZZARD_SHOP = {
 		name = L["Blizzard Shop"],
 		icon = W.Media.Icons.barBlizzardShop,
-		click = {
-			LeftButton = function()
-				_G.StoreMicroButton:Click()
-			end,
+		macro = {
+			LeftButton = "/click StoreMicroButton",
 		},
 		tooltips = {
 			L["Blizzard Shop"],
@@ -431,14 +428,8 @@ local ButtonTypes = {
 	CHARACTER = {
 		name = L["Character"],
 		icon = W.Media.Icons.barCharacter,
-		click = {
-			LeftButton = function()
-				if not InCombatLockdown() then
-					ToggleCharacter("PaperDollFrame")
-				else
-					_G.UIErrorsFrame:AddMessage(_G.ERR_NOT_IN_COMBAT, RED_FONT_COLOR:GetRGBA())
-				end
-			end,
+		macro = {
+			LeftButton = "/click CharacterMicroButton",
 		},
 		tooltips = {
 			L["Character"],
@@ -603,14 +594,8 @@ local ButtonTypes = {
 	PROFESSION = {
 		name = L["Profession"],
 		icon = W.Media.Icons.barProfession,
-		click = {
-			LeftButton = function()
-				if not InCombatLockdown() then
-					_G.ToggleSpellBook("professions")
-				else
-					_G.UIErrorsFrame:AddMessage(_G.ERR_NOT_IN_COMBAT, RED_FONT_COLOR:GetRGBA())
-				end
-			end,
+		macro = {
+			LeftButton = "/run ToggleSpellBook(BOOKTYPE_PROFESSION)",
 		},
 		tooltips = {
 			L["Profession"],
@@ -640,14 +625,8 @@ local ButtonTypes = {
 	SPELLBOOK = {
 		name = L["Spell Book"],
 		icon = W.Media.Icons.barSpellBook,
-		click = {
-			LeftButton = function()
-				if not InCombatLockdown() then
-					_G.ToggleSpellBook(_G.BOOKTYPE_SPELL)
-				else
-					_G.UIErrorsFrame:AddMessage(_G.ERR_NOT_IN_COMBAT, RED_FONT_COLOR:GetRGBA())
-				end
-			end,
+		macro = {
+			LeftButton = "/click SpellbookMicroButton",
 		},
 		tooltips = {
 			L["Spell Book"],
@@ -656,14 +635,8 @@ local ButtonTypes = {
 	TALENTS = {
 		name = L["Talents"],
 		icon = W.Media.Icons.barTalents,
-		click = {
-			LeftButton = function()
-				if not InCombatLockdown() then
-					_G.ToggleTalentFrame()
-				else
-					_G.UIErrorsFrame:AddMessage(_G.ERR_NOT_IN_COMBAT, RED_FONT_COLOR:GetRGBA())
-				end
-			end,
+		macro = {
+			LeftButton = "/click TalentMicroButton",
 		},
 		tooltips = {
 			L["Talents"],

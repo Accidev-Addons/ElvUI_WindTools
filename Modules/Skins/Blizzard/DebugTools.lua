@@ -8,7 +8,6 @@ function S:Blizzard_DebugTools()
 		return
 	end
 
-	-- [SIRUS] DebugTools has script errors/event trace windows and tooltips, no table inspector.
 	self:CreateShadow(_G.ScriptErrorsFrame)
 	self:CreateBackdropShadow(_G.ScriptErrorsFrameScrollFrame)
 	self:CreateShadow(_G.EventTraceFrame)

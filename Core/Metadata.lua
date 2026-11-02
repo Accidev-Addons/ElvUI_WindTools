@@ -6,7 +6,6 @@ local tinsert = tinsert
 local tostring = tostring
 
 local GetCVar = GetCVar
-local GetLocale = GetLocale
 local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
 
 local C_ChallengeMode_GetMapUIInfo = C_ChallengeMode.GetMapUIInfo
@@ -18,9 +17,6 @@ E.myClassColor = E.myClassColor or E:ClassColor(E.myclass, true)
 W.Title = L["WindTools"]
 
 -- Environment
-W.Locale = GetLocale()
-W.ChineseLocale = strsub(W.Locale, 0, 2) == "zh"
-W.AsianLocale = W.ChineseLocale or W.Locale == "koKR"
 W.SupportElvUIVersion = 9.07
 W.UseKeyDown = GetCVar("ActionButtonUseKeyDown") == "1"
 

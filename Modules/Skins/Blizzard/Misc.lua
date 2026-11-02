@@ -10,7 +10,6 @@ function S:BlizzardMiscFrames()
 		return
 	end
 
-	-- [SIRUS] These windows are styled directly by ElvUI 9.07.
 	for _, frame in pairs({
 		_G.AutoCompleteBox, _G.GhostFrame, _G.StackSplitFrame,
 		_G.ChatConfigFrame, _G.ColorPickerFrame, _G.OpacityFrame,

@@ -30,8 +30,7 @@ function S:FriendsFrame()
 		self:ReskinTab(_G["FriendsFrameTab" .. i])
 	end
 
-	-- [SIRUS] The native dynamic scroll frame updates rows through SetButton.
-	self:SecureHook("FriendsFrame_SetButton", ReskinFriendButton)
+	self:SecureHook(_G.FriendsFrameFriendsScrollFrame, "buttonFunc", ReskinFriendButton)
 	local scroll = _G.FriendsFrameFriendsScrollFrame
 	if scroll and scroll.buttons then
 		for _, button in pairs(scroll.buttons) do

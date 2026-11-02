@@ -42,7 +42,6 @@ local cachedNumQuests = 0
 ---@field level number Quest level
 ---@field suggestedGroup number Suggested group size
 ---@field isComplete boolean Quest completion status
----@field isDaily boolean Daily quest
 ---@field tag? string Quest tag name
 ---@field objectives QuestObjectiveData[] List of quest objectives
 
@@ -54,10 +53,6 @@ local cachedNumQuests = 0
 
 ---@alias QuestProgressContext table<string, string?>
 
----@param text string
----@return string? item
----@return number? numFulfilled
----@return number? numRequired
 local function ParseObjective(text)
 	local item, numFulfilled, numRequired = strmatch(text, "^(.*):%s*(%d+)%s*/%s*(%d+)")
 	if not item then
@@ -68,8 +63,6 @@ end
 
 ---Get all current quest progress data
 ---@return table<number, QuestProgressData> quests
----@return number numQuests
----@return boolean isPartial
 local function FetchAllQuestProgressData()
 	local quests = {} ---@type table<number, QuestProgressData>
 	local numEntries, numQuests = GetNumQuestLogEntries()
@@ -174,7 +167,6 @@ function QP:RenderTemplate(template, context)
 	return result
 end
 
----@param data QuestProgressData
 ---@return QuestProgressContext plainContext
 ---@return QuestProgressContext coloredContext
 function QP:BuildContext(data)
@@ -318,7 +310,6 @@ end
 
 ---Handle quest progress update event
 ---@param status QuestStatusType
----@param questData QuestProgressData
 ---@param objectiveData? QuestObjectiveData
 function QP:HandleQuestProgress(status, questData, objectiveData)
 	if not self.fiveSecondsAfterLogin then

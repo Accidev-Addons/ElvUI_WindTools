@@ -31,7 +31,3 @@ G.item = {
 		updateAlts = true,
 	},
 }
-
-G.misc = {
-	lfgList = {},
-}

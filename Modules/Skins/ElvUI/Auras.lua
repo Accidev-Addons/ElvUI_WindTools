@@ -23,7 +23,6 @@ end
 
 local function SkinAuraContainer(container, setting)
 	if not container then return end
-	-- [SIRUS] Top auras have an indexed buttons list; oUF/nameplates store icons on the container.
 	for _, button in ipairs(container.buttons or container) do
 		SkinAuraButton(button, setting)
 	end
@@ -44,7 +43,6 @@ function S:ElvUI_Auras_SkinExistingButtons()
 		end
 	end
 
-	-- [SIRUS] UF.units contains unit names, not frames.
 	for unit in pairs(UF.units) do
 		SkinUnitFrame(UF[unit], "unitFrames")
 	end
@@ -76,7 +74,6 @@ function S:ElvUI_Auras()
 		return
 	end
 
-	-- [SIRUS] ElvUI 9.07 has separate constructors instead of E.Auras_UpdateButton.
 	if not self:IsHooked(A, "CreateIcon") then
 		self:SecureHook(A, "CreateIcon", function(_, button)
 			SkinAuraButton(button, "auras")

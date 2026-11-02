@@ -1,9 +1,13 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local WM = W:NewModule("WorldMap", "AceHook-3.0")
 
--- [SIRUS] The world map uses native window modes, not retail map-art pins.
 function WM:Scale()
 	if not self.db.scale.enable then
+		return
+	end
+
+	if InCombatLockdown() then
+		F.TaskManager:AfterCombat(self.Scale, self)
 		return
 	end
 

@@ -17,8 +17,6 @@ local DELETE_ITEM_CONFIRM_STRING = DELETE_ITEM_CONFIRM_STRING
 local dialogs = {
 	["DELETE_ITEM"] = true,
 	["DELETE_GOOD_ITEM"] = true,
-	["DELETE_QUEST_ITEM"] = true,
-	["DELETE_GOOD_QUEST_ITEM"] = true,
 }
 
 local function ClearKeySupport(frame)
@@ -124,35 +122,11 @@ function DI.HideFillInButton(dialog)
 	end
 end
 
-function DI:ResizeQuestItemPopup(dialog)
-	local isQuestItem = dialog.which == "DELETE_QUEST_ITEM" or dialog.which == "DELETE_GOOD_QUEST_ITEM"
-
-	if isQuestItem then
-		dialog:Size(400, 180)
-
-		local button1 = dialog.button1
-		local button2 = dialog.button2
-
-		if button1 then
-			button1:ClearAllPoints()
-			button1:Point("BOTTOMRIGHT", dialog, "BOTTOM", -10, 20)
-		end
-
-		if button2 then
-			button2:ClearAllPoints()
-			button2:Point("BOTTOMLEFT", dialog, "BOTTOM", 10, 20)
-		end
-	end
-end
-
 function DI:DELETE_ITEM_CONFIRM()
-	-- [SIRUS] Native popups use StaticPopup1..4 and lowercase child fields.
 	for index = 1, STATICPOPUP_NUMDIALOGS do
 		local dialog = _G["StaticPopup" .. index]
 		local info = dialog and dialogs[dialog.which] and StaticPopupDialogs[dialog.which]
 		if info and dialog:IsShown() then
-			self:ResizeQuestItemPopup(dialog)
-
 			if self.db.delKey then
 				self:AddKeySupport(dialog)
 			end

@@ -1136,7 +1136,6 @@ do
 end
 
 options.lfgList = {
-	hidden = function() return not not LL.StopRunning end,
 	order = 8,
 	type = "group",
 	name = L["LFG List"],
@@ -1446,112 +1445,6 @@ options.lfgList = {
 							min = 5,
 							max = 60,
 							step = 1,
-						},
-					},
-				},
-			},
-		},
-		rightPanel = {
-			order = 7,
-			type = "group",
-			name = L["Right Panel"],
-			disabled = function()
-				return not E.private.WT.misc.lfgList.enable
-			end,
-			get = function(info)
-				return E.private.WT.misc.lfgList.rightPanel[info[#info]]
-			end,
-			set = function(info, value)
-				E.private.WT.misc.lfgList.rightPanel[info[#info]] = value
-				LL:UpdateRightPanel()
-			end,
-			args = {
-				enable = {
-					order = 1,
-					type = "toggle",
-					name = L["Enable"],
-					desc = L["Add an additional frame to filter the groups."],
-				},
-				autoRefresh = {
-					order = 2,
-					type = "toggle",
-					name = L["Auto Refresh"],
-					desc = L["Automatically refresh the list after you changing the filter."],
-				},
-				automations = {
-					order = 3,
-					type = "group",
-					inline = true,
-					name = L["Automation"],
-					args = {
-						autoJoin = {
-							order = 3,
-							type = "toggle",
-							name = L["Auto Join"],
-							desc = L["Automatically join the dungeon when clicking on the LFG row, without asking for role confirmation."],
-						},
-						skipConfirmation = {
-							order = 4,
-							type = "toggle",
-							name = L["Skip Confirmation"],
-							desc = L["Skip signup confirmation during automatic join on listing click"],
-						},
-					},
-				},
-				adjustFontSize = {
-					order = 4,
-					type = "range",
-					name = L["Font Size Adjustment"],
-					desc = L["Adjust the font size of the right panel."],
-					min = -10,
-					max = 20,
-					step = 1,
-					set = function(info, value)
-						E.private.WT.misc.lfgList.rightPanel[info[#info]] = value
-						E:StaticPopup_Show("PRIVATE_RL")
-					end,
-				},
-				filterButtonTooltip = {
-					order = 5,
-					type = "toggle",
-					name = L["Filter Button Tooltip"],
-					desc = L["Show the dungeon full name when hovering over the filter button."],
-				},
-				filtersBehaviour = {
-					order = 6,
-					type = "group",
-					inline = true,
-					name = L["Filters"],
-					args = {
-						feature = {
-							order = 1,
-							type = "description",
-							name = format(
-								"%s\n|cffff0000%s|r\n\n%s\n%s",
-								L["Automatic filters behavior"],
-								format(
-									"!! - %s: %s - !!",
-									L["WARNING"],
-									L["Change this only if you know what you are doing"]
-								),
-								format(
-									"- |cff00aaff%s|r: %s",
-									L["Unchecked"],
-									L["When selecting 'Has Tank' / 'Has Healer', the 'Role Available' filter is disabled automatically and vice-versa."]
-								),
-								format(
-									"- |cff00aaff%s|r: %s",
-									L["Checked"],
-									L["No automatic removal of filters, might cause empty results if you already have the roles in your party."]
-								)
-							),
-							fontSize = "medium",
-						},
-						disableSafeFilters = {
-							order = 2,
-							type = "toggle",
-							name = L["Disable safe filters"],
-							desc = L["Disable the default behavior that prevents inconsistent filters with flags 'Has Tank', 'Has Healer' and 'Role Available'"],
 						},
 					},
 				},

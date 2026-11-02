@@ -1098,18 +1098,6 @@ options.inspect = {
 					name = L["Always Show Mine"],
 					desc = L["Display character equipments list when you inspect someone."],
 				},
-				stats = {
-					order = 3,
-					type = "toggle",
-					name = L["Statistics"],
-					hidden = function()
-						if W.Locale == "koKR" or W.Locale == "enUS" or W.Locale == "zhCN" or W.Locale == "zhTW" then
-							return false
-						end
-						return true
-					end,
-					desc = L["Add statistics information for comparison."],
-				},
 			},
 		},
 		slotText = {

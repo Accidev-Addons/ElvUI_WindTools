@@ -519,9 +519,6 @@ function F.Move(frame, x, y)
 
 	for i = 1, frame:GetNumPoints() do
 		local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint(i)
-		if not E:NotSecretValue(xOfs) or not E:NotSecretValue(yOfs) then
-			return
-		end
 		pointsData[i] = { point, relativeTo, relativePoint, xOfs, yOfs }
 	end
 
@@ -605,7 +602,7 @@ end
 ---@param widget any
 ---@return boolean
 function F.CanAccessWidget(widget)
-	if not widget or E:IsSecretValue(widget) then
+	if not widget then
 		return false
 	end
 

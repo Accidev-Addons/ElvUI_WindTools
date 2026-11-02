@@ -9,27 +9,24 @@ local _G = _G
 local floor = floor
 local format = format
 local pairs = pairs
-local select = select
 local sort = sort
+local strmatch = strmatch
 local tinsert = tinsert
 local unpack = unpack
 
-local BNGetNumFriends = BNGetNumFriends
 local CreateFrame = CreateFrame
 local GameTooltip = _G.GameTooltip
 local GetClassColor = GetClassColor
 local GetGuildRosterInfo = GetGuildRosterInfo
 local GetNumGuildMembers = GetNumGuildMembers
+local IsAddOnLoaded = IsAddOnLoaded
 local IsInGuild = IsInGuild
 local MenuUtil_CreateContextMenu = MenuUtil.CreateContextMenu
 
-local C_AddOns_IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-local C_BattleNet_GetFriendAccountInfo = C_BattleNet.GetFriendAccountInfo
-local C_BattleNet_GetFriendGameAccountInfo = C_BattleNet.GetFriendGameAccountInfo
-local C_BattleNet_GetFriendNumGameAccounts = C_BattleNet.GetFriendNumGameAccounts
 local GetFriendInfo = GetFriendInfo
 local GetNumFriends = GetNumFriends
 
+local FACTION_RENEGADE = FACTION_RENEGADE
 local LOCALIZED_CLASS_NAMES_FEMALE = LOCALIZED_CLASS_NAMES_FEMALE
 local LOCALIZED_CLASS_NAMES_MALE = LOCALIZED_CLASS_NAMES_MALE
 
@@ -41,7 +38,6 @@ local currentPageIndex
 ---@field class string? The class of the contact (non-localized class name)
 ---@field faction string? The faction of the contact ("Horde" or "Alliance")
 ---@field dType string The type of the contact ("alt", "friend", "bnfriend", "guild", "favorite")
----@field BNName string? Battle.net account name (only for Battle.net friends)
 ---@field memberIndex number? Guild roster index (only for guild members)
 
 local data ---@type table<ContactData>
@@ -53,12 +49,9 @@ local function GetNonLocalizedClass(className)
 		end
 	end
 
-	-- For deDE and frFR
-	if W.Locale == "deDE" or W.Locale == "frFR" then
-		for class, localizedName in pairs(LOCALIZED_CLASS_NAMES_FEMALE) do
-			if className == localizedName then
-				return class
-			end
+	for class, localizedName in pairs(LOCALIZED_CLASS_NAMES_FEMALE) do
+		if className == localizedName then
+			return class
 		end
 	end
 end
@@ -166,7 +159,7 @@ function CT:ConstructFrame()
 
 	self.frame = frame
 
-	if C_AddOns_IsAddOnLoaded("Postal") then
+	if IsAddOnLoaded("Postal") then
 		self:RepositionWithPostal()
 
 		if _G.Postal_QuickAttachButton1 then
@@ -194,8 +187,6 @@ function CT:ConstructFrame()
 			end
 		end
 	end
-
-	self.contextMenuFrame = CreateFrame("Frame", "WTContactsContextMenu", E.UIParent, "UIDropDownMenuTemplate")
 end
 
 function CT:ConstructButtons()
@@ -293,9 +284,6 @@ function CT:ConstructNameButtons()
 				if _G.SendMailNameEditBox then
 					local playerName = button.name
 					if playerName then
-						if button.realm and button.realm ~= E.myrealm then
-							playerName = playerName .. "-" .. button.realm
-						end
 						_G.SendMailNameEditBox:SetText(playerName)
 					end
 				end
@@ -350,7 +338,7 @@ function CT:ConstructPageController()
 		end
 	end)
 
-	local slider = CreateFrame("Slider", "WTContactsSlider", self.frame, "BackdropTemplate")
+	local slider = CreateFrame("Slider", "WTContactsSlider", self.frame)
 	slider:Size(80, 20)
 	slider:Point("BOTTOM", self.frame, "BOTTOM", 0, 8)
 	slider:SetOrientation("HORIZONTAL")
@@ -404,10 +392,6 @@ function CT:SetButtonTooltip(button)
 	GameTooltip:AddDoubleLine(L["Name"], button.name or "", 1, 1, 1, GetClassColor(button.class))
 	GameTooltip:AddDoubleLine(L["Realm"], button.realm or "", 1, 1, 1, unpack(E.media.rgbvaluecolor))
 
-	if button.BNName then
-		GameTooltip:AddDoubleLine(L["Battle.net Tag"], button.BNName, 1, 1, 1, 1, 1, 1)
-	end
-
 	if button.faction then
 		local text, r, g, b
 		if button.faction == "Horde" then
@@ -415,6 +399,11 @@ function CT:SetButtonTooltip(button)
 			r = 0.906
 			g = 0.298
 			b = 0.235
+		elseif button.faction == "Renegade" then
+			text = FACTION_RENEGADE
+			r = 1
+			g = 0.44
+			b = 0
 		else
 			text = L["Alliance"]
 			r = 0.204
@@ -445,14 +434,12 @@ function CT:UpdatePage(pageIndex)
 					button.name = name
 					button.realm = realm
 					button.class = className
-					button.BNName = nil
 					button.faction = E.myfaction
 				else
 					button.name = temp.name
 					button.realm = temp.realm
 					button.class = temp.class
 					button.faction = temp.faction
-					button.BNName = temp.BNName
 				end
 				button:SetText(button.class and C.StringWithClassColor(button.name, button.class) or button.name)
 				button:Show()
@@ -506,6 +493,12 @@ function CT:UpdateAltsTable()
 		self.altsTable[E.myrealm] = {}
 	end
 
+	for faction, characters in pairs(self.altsTable[E.myrealm]) do
+		if faction ~= E.myfaction then
+			characters[E.myname] = nil
+		end
+	end
+
 	if not self.altsTable[E.myrealm][E.myfaction] then
 		self.altsTable[E.myrealm][E.myfaction] = {}
 	end
@@ -517,18 +510,16 @@ end
 
 function CT:BuildAltsData()
 	data = {}
-	for realm, factions in pairs(self.altsTable) do
-		for faction, characters in pairs(factions) do
-			for name, class in pairs(characters) do
-				if not (name == E.myname and realm == E.myrealm) then
-					tinsert(data, {
-						name = name,
-						realm = realm,
-						class = class,
-						faction = faction,
-						dType = "alt",
-					})
-				end
+	for faction, characters in pairs(self.altsTable[E.myrealm] or {}) do
+		for name, class in pairs(characters) do
+			if name ~= E.myname then
+				tinsert(data, {
+					name = name,
+					realm = E.myrealm,
+					class = class,
+					faction = faction,
+					dType = "alt",
+				})
 			end
 		end
 	end
@@ -537,7 +528,6 @@ end
 function CT:BuildFriendsData()
 	data = {}
 
-	local tempKey = {}
 	local numWoWFriend = GetNumFriends()
 	for i = 1, numWoWFriend do
 		local friendName, _, className, _, connected = GetFriendInfo(i)
@@ -550,57 +540,6 @@ function CT:BuildFriendsData()
 				class = GetNonLocalizedClass(className),
 				dType = "friend",
 			})
-			tempKey[name .. "-" .. realm] = true
-		end
-	end
-
-	if not BNGetNumFriends or not C_BattleNet_GetFriendAccountInfo
-		or not C_BattleNet_GetFriendGameAccountInfo or not C_BattleNet_GetFriendNumGameAccounts then
-		return
-	end
-
-	local numBNOnlineFriend = select(2, BNGetNumFriends()) or 0
-
-	for i = 1, numBNOnlineFriend do
-		local accountInfo = C_BattleNet_GetFriendAccountInfo(i)
-		if accountInfo and accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.isOnline then
-			local numGameAccounts = C_BattleNet_GetFriendNumGameAccounts(i)
-			if numGameAccounts and numGameAccounts > 0 then
-				for j = 1, numGameAccounts do
-					local gameAccountInfo = C_BattleNet_GetFriendGameAccountInfo(i, j) --[[@as BNetGameAccountInfo]]
-					if
-						gameAccountInfo
-						and gameAccountInfo.clientProgram
-						and gameAccountInfo.clientProgram == "WoW"
-						and gameAccountInfo.wowProjectID == 1
-						and gameAccountInfo.factionName
-						and gameAccountInfo.factionName == E.myfaction
-						and not tempKey[gameAccountInfo.characterName .. "-" .. gameAccountInfo.realmName]
-					then
-						tinsert(data, {
-							name = gameAccountInfo.characterName,
-							realm = gameAccountInfo.realmName,
-							class = GetNonLocalizedClass(gameAccountInfo.className),
-							BNName = accountInfo.accountName,
-							dType = "bnfriend",
-						})
-					end
-				end
-			elseif
-				accountInfo.gameAccountInfo.clientProgram == "WoW"
-				and accountInfo.gameAccountInfo.wowProjectID == 1
-				and accountInfo.gameAccountInfo.factionName
-				and accountInfo.gameAccountInfo.factionName == E.myfaction
-				and not tempKey[accountInfo.gameAccountInfo.characterName .. "-" .. accountInfo.gameAccountInfo.realmName]
-			then
-				tinsert(data, {
-					name = accountInfo.gameAccountInfo.characterName,
-					realm = accountInfo.gameAccountInfo.realmName,
-					class = GetNonLocalizedClass(accountInfo.gameAccountInfo.className),
-					BNName = accountInfo.accountName,
-					dType = "bnfriend",
-				})
-			end
 		end
 	end
 end
@@ -624,13 +563,14 @@ end
 function CT:BuildFavoriteData()
 	data = {}
 	for fullName in pairs(E.global.WT.item.contacts.favorites) do
-		local name, realm = F.Strings.Split(fullName, "-")
-		realm = realm or E.myrealm
-		tinsert(data, {
-			name = name,
-			realm = realm,
-			dType = "favorite",
-		})
+		local name, realm = strmatch(fullName, "^([^-]+)-(.+)$")
+		if name and realm == E.myrealm then
+			tinsert(data, {
+				name = name,
+				realm = realm,
+				dType = "favorite",
+			})
+		end
 	end
 
 	sort(data, function(a, b)
@@ -659,6 +599,8 @@ function CT:ChangeCategory(type)
 end
 
 function CT:SendMailFrame_OnShow()
+	self:UpdateAltsTable()
+
 	if self.db.forceHide then
 		self.frame:Hide()
 	else

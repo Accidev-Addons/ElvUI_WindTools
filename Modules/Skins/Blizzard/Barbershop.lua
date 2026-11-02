@@ -18,7 +18,6 @@ function S:Blizzard_BarbershopUI()
 		return
 	end
 
-	-- [SIRUS] Character customization is backported into CustomBarberShopFrame.
 	local frame = _G.CustomBarberShopFrame
 	self:CreateBackdropShadow(frame.ResetButton)
 	self:CreateBackdropShadow(frame.CancelButton)

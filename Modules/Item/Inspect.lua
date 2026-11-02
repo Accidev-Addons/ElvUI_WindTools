@@ -144,8 +144,6 @@ local STATS_CONFIG = {
 ---Checks if an enchantment can be applied to a specific slot based on quality and class
 ---@param slotIndex number The inventory slot index
 ---@param itemQuality Enum.ItemQuality The quality of the enchantment
----@param itemClass number The class ID of the item
----@param itemSubClass number The subclass ID of the item
 ---@return boolean
 local function CheckEnchantmentSlot(slotIndex, itemQuality, itemClass, itemSubClass)
 	if not INVSLOT_ENCHANT[slotIndex] then
@@ -453,13 +451,11 @@ local function GetItemEnchantInfo(itemInfo)
 end
 
 ---@alias InspectItemInfo {
---- classID: number,
 --- level: number,
 --- link: string,
 --- name: string,
 --- quality: Enum.ItemQuality,
 --- slotIndex: number,
---- subClassID: number,
 --- subType: string,
 --- texture: string,
 --- type: string,
@@ -621,7 +617,7 @@ function I:CreatePanel(parent)
 	S:CreateShadowModule(frame)
 	S:MerathilisUISkin(frame)
 
-	frame.CloseButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton, BackdropTemplate") --[[@as Button]]
+	frame.CloseButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton") --[[@as Button]]
 	frame.CloseButton:Point("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
 	S:Proxy("HandleCloseButton", frame.CloseButton)
 	frame.CloseButton:SetScript("OnClick", function(_)
@@ -688,7 +684,7 @@ function I:CreatePanel(parent)
 
 	for displayIndex, slotInfo in ipairs(DISPLAY_SLOTS) do
 		-- Line
-		local line = CreateFrame("Button", nil, frame, "BackdropTemplate")
+		local line = CreateFrame("Button", nil, frame)
 		line:Size(160, frame.lineHeight)
 		line.index = slotInfo.index
 		if displayIndex == 1 then
@@ -699,7 +695,7 @@ function I:CreatePanel(parent)
 		frame.Lines[displayIndex] = line
 
 		-- Label
-		line.Label = CreateFrame("Frame", nil, line, "BackdropTemplate")
+		line.Label = CreateFrame("Frame", nil, line)
 		line.Label:Size(38, 18)
 		line.Label:Point("LEFT")
 		line.Label:SetTemplate()
@@ -722,7 +718,7 @@ function I:CreatePanel(parent)
 		line.ItemLevel:SetJustifyH("CENTER")
 
 		-- Item Texture
-		line.ItemTextureFrame = CreateFrame("Frame", nil, line, "BackdropTemplate")
+		line.ItemTextureFrame = CreateFrame("Frame", nil, line)
 		line.ItemTextureFrame.Texture = line.ItemTextureFrame:CreateTexture(nil, "ARTWORK")
 		line.ItemTextureFrame:Size(self.db.itemIcon.width, self.db.itemIcon.height)
 		line.ItemTextureFrame:Point("LEFT", line.ItemLevel, "RIGHT", PANEL_COMPONENT_SPACING, 0)
@@ -964,7 +960,7 @@ function I:CreateStatsComparePanel(parent)
 
 	for groupIndex, group in ipairs(STATS_CONFIG.groups) do
 		for _, def in ipairs(group.rows) do
-			local row = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+			local row = CreateFrame("Frame", nil, frame)
 			row:Height(STAT_ROW_HEIGHT)
 
 			if not def.isHeader then
@@ -1098,9 +1094,9 @@ function I:UpdateStatsComparePanel(frame, inspectedUnit, inspectedItemLevel)
 
 				local colorTemplate = def.color or row.groupColor ---@type ColorTemplate
 				row.label:SetTextColor(C.ExtractRGBFromTemplate(colorTemplate))
-				local inspectedColorTemplate = inspectedValue == 0 and "gray-500" or "neutral-50" ---@type ColorTemplate
+				local inspectedColorTemplate = inspectedValue == 0 and "gray-500" or "neutral-50"
 				row.inspectedValue:SetTextColor(C.ExtractRGBFromTemplate(inspectedColorTemplate))
-				local playerColorTemplate = playerValue == 0 and "gray-500" or "neutral-50" ---@type ColorTemplate
+				local playerColorTemplate = playerValue == 0 and "gray-500" or "neutral-50"
 				row.playerValue:SetTextColor(C.ExtractRGBFromTemplate(playerColorTemplate))
 
 				inspectedWidth = row.inspectedValue:GetStringWidth()

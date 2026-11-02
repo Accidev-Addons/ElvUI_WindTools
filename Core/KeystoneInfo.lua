@@ -91,8 +91,12 @@ end
 ---@return KeystoneInfoData?
 function KI:UnitData(unit) end
 
-KI:RegisterEvent("CHALLENGE_MODE_COMPLETED", "CheckPlayerKeystone")
-KI:RegisterEvent("ITEM_CHANGED", "DelayedCheckPlayerKeystone")
+function KI:CHALLENGE_MODE_COMPLETED()
+	self:CheckPlayerKeystone()
+end
+
+E:RegisterEventForObject("CHALLENGE_MODE_COMPLETED", KI, KI.CHALLENGE_MODE_COMPLETED)
+KI:RegisterEvent("BAG_UPDATE", "DelayedCheckPlayerKeystone")
 KI:RegisterEvent("ITEM_PUSH", "DelayedCheckPlayerKeystone")
 
 F.TaskManager:AfterLogin(KI.CheckPlayerKeystone, KI, true)

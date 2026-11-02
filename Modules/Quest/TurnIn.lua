@@ -68,8 +68,6 @@ local cashRewards = {
 	[45724] = 1e5, -- 冠军的钱包
 }
 
----@param title string?
----@return boolean
 local function IsRepeatableQuest(title)
 	if not title then
 		return false
@@ -89,12 +87,10 @@ local function IsRepeatableQuest(title)
 	return false
 end
 
----@return boolean
 local function IsRepeatableQuestFrame()
 	return QuestIsDaily() or QuestIsWeekly() or IsRepeatableQuest(GetTitleText())
 end
 
----@param isRepeatable any
 ---@return boolean
 function TI:EnableOnQuest(isRepeatable)
 	if not self.db or not self.db.enableCondition then

@@ -54,6 +54,7 @@ do
 		["ElvUI_CPU"] = true,
 		["ElvUI_WindTools"] = true,
 		["!BugGrabber"] = true,
+		["!Bugsworth"] = true,
 		["BugSack"] = true,
 	}
 

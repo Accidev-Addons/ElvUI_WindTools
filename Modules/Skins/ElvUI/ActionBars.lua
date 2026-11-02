@@ -127,7 +127,6 @@ function S:ElvUI_ActionBars()
 		return
 	end
 
-	-- [SIRUS] Extra action buttons are exposed as a list; child count includes decorative frames.
 	local extraBar = _G.ExtraActionBarFrame
 	for _, button in ipairs(extraBar and (extraBar.Buttons or extraBar.ExtraButtons) or {}) do
 		self:CreateBackdropShadow(button, true)

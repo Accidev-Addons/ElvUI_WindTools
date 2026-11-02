@@ -110,6 +110,8 @@ function A:Initialize()
 		self:RegisterMessage(message)
 	end
 
+	E:RegisterEventForObject("CHALLENGE_MODE_COMPLETED", self, self.CHALLENGE_MODE_COMPLETED)
+
 	self.initialized = true
 end
 
@@ -127,6 +129,8 @@ function A:ProfileUpdate()
 	for _, message in pairs(self.MessageList) do
 		A:UnregisterMessage(message)
 	end
+
+	E:UnregisterEventForObject("CHALLENGE_MODE_COMPLETED", self, self.CHALLENGE_MODE_COMPLETED)
 
 	self.initialized = false
 end

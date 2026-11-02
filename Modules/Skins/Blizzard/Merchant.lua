@@ -30,7 +30,6 @@ function S:MerchantFrame()
 		self:HandleMerchantItem(i)
 	end
 
-	-- [SIRUS] MoneyFrame children use global names, not parent keys.
 	local gold = _G.MerchantMoneyFrameGoldButton
 	for _, region in pairs({ gold:GetRegions() }) do
 		if region:GetObjectType() == "Texture" then

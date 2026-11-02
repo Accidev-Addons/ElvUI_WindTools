@@ -818,12 +818,12 @@ function MB:CreateFrames()
 		return
 	end
 
-	local frame = CreateFrame("Frame", nil, E.UIParent, "BackdropTemplate")
+	local frame = CreateFrame("Frame", nil, E.UIParent)
 	frame:Point("TOPRIGHT", EM.MapHolder, "BOTTOMRIGHT", 0, -5)
 	frame:SetFrameStrata("BACKGROUND")
 	self.barAnchor = frame
 
-	frame = CreateFrame("Frame", nil, E.UIParent, "BackdropTemplate")
+	frame = CreateFrame("Frame", nil, E.UIParent)
 	frame:SetFrameStrata("LOW")
 	frame:CreateBackdrop("Transparent")
 	frame:ClearAllPoints()

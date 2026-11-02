@@ -121,7 +121,6 @@ options.quest = {
 				F.GetWindStyleText(L["Template Elements"]),
 				FormatDesc("{{level}}", L["Quest level"]),
 				FormatDesc("{{daily}}", L["Daily quest label"]),
-				FormatDesc("{{weekly}}", L["Weekly quest label"]),
 				FormatDesc("{{link}}", L["Quest link"]),
 				FormatDesc("{{tag}}", L["Quest tags (Quest series)"]),
 				FormatDesc("{{progress}}", L["Quest progress (including objectives)"]),

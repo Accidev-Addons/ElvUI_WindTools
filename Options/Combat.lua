@@ -170,8 +170,10 @@ options.raidMarkers = {
 			end,
 			set = function(info, value)
 				E.db.WT.combat.raidMarkers[info[#info]] = value
-				RM:UpdateBar()
-				RM:UpdateCountDownButton()
+				F.TaskManager:OutOfCombat(function()
+					RM:UpdateBar()
+					RM:UpdateCountDownButton()
+				end)
 			end,
 			disabled = function()
 				return not E.db.WT.combat.raidMarkers.enable

@@ -71,7 +71,6 @@ local REWARDS_ICON_OFFSET_X = 80
 ---@field category { id: number, name: string }
 ---@field criteriaData AchievementCriteriaData
 ---@field flags number
----@field reward { text: string|nil }
 ---@field isExpanded? boolean whether the element is expanded to show details
 ---@field isLastElement? boolean used to avoid cutting off the last element when expanding
 
@@ -384,7 +383,7 @@ function AT:ScrollElementInitializer(frame, data, scrollBox)
 		frame:SetTemplate()
 		frame:SetBackdropColor(C.ExtractRGBAFromTemplate("neutral-900"))
 
-		local TooltipFrame = CreateFrame("Frame", nil, self.MainFrame.ScrollFrame, "BackdropTemplate")
+		local TooltipFrame = CreateFrame("Frame", nil, self.MainFrame.ScrollFrame)
 		TooltipFrame:SetFrameStrata("TOOLTIP")
 		TooltipFrame:SetTemplate("Transparent")
 		TooltipFrame:SetBackdropColor(0, 0, 0, 0.95)
@@ -462,7 +461,7 @@ function AT:ScrollElementInitializer(frame, data, scrollBox)
 		Background:SetTexture(C.ExtractRGBFromTemplate("neutral-950"))
 		frame.ProgressBackdrop.Background = Background
 
-		local IconFrame = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+		local IconFrame = CreateFrame("Frame", nil, frame)
 		IconFrame:Size(ELEMENT_ICON_SIZE)
 		IconFrame:Point("TOPLEFT", frame, "TOPLEFT", 8, -8)
 		IconFrame:SetTemplate()
@@ -673,7 +672,7 @@ function AT:ScrollElementInitializer(frame, data, scrollBox)
 	frame.IndicatorFrame.RewardsIcon:Hide()
 	frame.IndicatorFrame.RewardsIcon.backdrop:Hide()
 	if data.reward.text then
-		frame.IndicatorFrame.RewardsIcon:SetTexture(237282)
+		frame.IndicatorFrame.RewardsIcon:SetTexture([[Interface\Icons\INV_Misc_Coin_18]])
 		frame.IndicatorFrame.RewardsIcon.backdrop:SetBackdropBorderColor(unpack(E.media.bordercolor))
 		frame.IndicatorFrame.RewardsIcon:Show()
 		frame.IndicatorFrame.RewardsIcon.backdrop:Show()
@@ -684,8 +683,7 @@ function AT:ScrollElementInitializer(frame, data, scrollBox)
 	frame.TextFrame.Name:SetText(data.name)
 	frame.TextFrame.Category:SetText(data.category.name)
 	frame.DetailFrame.Description:SetText(data.description)
-	local detailFrameHeight = 2 * ELEMENT_PADDING
-		+ frame.DetailFrame.Description:GetLineHeight() * frame.DetailFrame.Description:GetNumLines()
+	local detailFrameHeight = 2 * ELEMENT_PADDING + frame.DetailFrame.Description:GetStringHeight()
 	if data.criteriaData.total > 0 then
 		detailFrameHeight = detailFrameHeight
 			+ ELEMENT_PADDING
@@ -708,7 +706,7 @@ function AT:Construct()
 	end
 
 	---@class WTAchievementTracker : Frame, BackdropTemplate
-	local MainFrame = CreateFrame("Frame", "WTAchievementTracker", E.UIParent, "BackdropTemplate")
+	local MainFrame = CreateFrame("Frame", "WTAchievementTracker", E.UIParent)
 	MainFrame:Size(self.db.width, self.db.height)
 	MainFrame:SetTemplate("Transparent")
 	MainFrame:Hide()
@@ -738,14 +736,14 @@ function AT:Construct()
 	S:Proxy("HandleEditBox", SearchBox)
 	MainFrame.SearchBox = SearchBox
 
-	local ControlFrame1 = CreateFrame("Frame", nil, MainFrame, "BackdropTemplate")
+	local ControlFrame1 = CreateFrame("Frame", nil, MainFrame)
 	ControlFrame1:Height(40)
 	ControlFrame1:Point("TOPLEFT", SearchBox, "BOTTOMLEFT", -4, -5)
 	ControlFrame1:Point("TOPRIGHT", SearchBox, "BOTTOMRIGHT", 4, -5)
 	ControlFrame1:SetTemplate("Transparent")
 	MainFrame.ControlFrame1 = ControlFrame1
 
-	local ThresholdSlider = CreateFrame("Slider", nil, ControlFrame1, "BackdropTemplate")
+	local ThresholdSlider = CreateFrame("Slider", nil, ControlFrame1)
 	ThresholdSlider:Size(140, 16)
 	ThresholdSlider:Point("LEFT", ControlFrame1, "LEFT", 11, -8)
 	ThresholdSlider:SetOrientation("HORIZONTAL")
@@ -818,7 +816,7 @@ function AT:Construct()
 	end)
 	ControlFrame1.RefreshButton = RefreshButton
 
-	local ControlFrame2 = CreateFrame("Frame", nil, MainFrame, "BackdropTemplate")
+	local ControlFrame2 = CreateFrame("Frame", nil, MainFrame)
 	ControlFrame2:Height(32)
 	ControlFrame2:Point("TOPLEFT", ControlFrame1, "BOTTOMLEFT", 0, -5)
 	ControlFrame2:Point("TOPRIGHT", ControlFrame1, "BOTTOMRIGHT", 0, -5)
@@ -948,7 +946,6 @@ function AT:Construct()
 	ScrollFrame:Point("TOPLEFT", ControlFrame2, "BOTTOMLEFT", 0, -8)
 	ScrollFrame:Point("TOPRIGHT", ControlFrame2, "BOTTOMRIGHT", 0, -8)
 	ScrollFrame:Point("BOTTOM", MainFrame, "BOTTOM", 0, 8)
-	ScrollFrame:SetClipsChildren(true)
 	MainFrame.ScrollFrame = ScrollFrame
 
 	local ScrollBar = CreateFrame("Frame", nil, ScrollFrame, "MinimalScrollBar")
@@ -961,7 +958,6 @@ function AT:Construct()
 	ScrollBox:Point("TOPLEFT", ScrollFrame, "TOPLEFT", 0, 0)
 	ScrollBox:Point("BOTTOMRIGHT", ScrollBar, "BOTTOMLEFT", -8, 0)
 	ScrollBox:SetTemplate("Transparent")
-	ScrollBox:SetClipsChildren(true)
 	ScrollFrame.ScrollBox = ScrollBox
 
 	local ScrollView = CreateScrollBoxListLinearView() --[[@as ScrollBoxLinearBaseViewMixin]]
@@ -970,7 +966,7 @@ function AT:Construct()
 	DataProvider:InsertTable({})
 
 	ScrollView:SetPadding(8, 8, 8, 8, 8)
-	ScrollView:SetElementInitializer("BackdropTemplate", function(frame, data)
+	ScrollView:SetElementInitializer("Frame", function(frame, data)
 		self:ScrollElementInitializer(frame, data, ScrollBox)
 	end)
 	ScrollView:SetElementExtentCalculator(function(_, elementData)
@@ -1056,7 +1052,7 @@ function AT:Construct()
 	end)
 
 	MainFrame.ProgressFrame:Hide()
-	MainFrame.CriteriaLinePool = CreateFramePool("Frame", nil, "BackdropTemplate")
+	MainFrame.CriteriaLinePool = CreateFramePool("Frame", nil)
 end
 
 ---Handle ACHIEVEMENT_EARNED event

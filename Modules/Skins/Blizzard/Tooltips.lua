@@ -45,7 +45,6 @@ function S:StyleIconsInTooltip(tt)
 end
 
 function S:ReskinTooltip(tt)
-	-- [SIRUS] Native tooltips have no NineSlice or IsForbidden requirement.
 	if not F.CanAccessWidget(tt) or tt == E.ScanTooltip or tt.IsEmbedded then
 		return
 	end

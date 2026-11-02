@@ -4,7 +4,6 @@ local A = W:GetModule("Announcement") ---@class Announcement
 local RunNextFrame = RunNextFrame
 
 A.EventList = {
-	"CHALLENGE_MODE_COMPLETED",
 	"CHAT_MSG_GUILD",
 	"CHAT_MSG_PARTY",
 	"CHAT_MSG_PARTY_LEADER",

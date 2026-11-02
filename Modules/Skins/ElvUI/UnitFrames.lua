@@ -108,7 +108,6 @@ local function ApplyExistingUnitFrameSkins(frame)
 end
 
 function S:ElvUI_UnitFrames_ApplyExistingFrames()
-	-- [SIRUS] UF.units maps unit names to names; the actual frames are stored on UF.
 	for unit in pairs(UF.units) do
 		ApplyExistingUnitFrameSkins(UF[unit])
 	end

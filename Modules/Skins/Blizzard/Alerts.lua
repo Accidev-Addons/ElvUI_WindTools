@@ -14,7 +14,6 @@ local function SkinAlert(frame)
 end
 
 local function SkinAchievementAlerts()
-	-- [SIRUS] Alerts are named frames, created on demand by GetAlertFrame.
 	for i = 1, _G.MAX_ACHIEVEMENT_ALERTS do
 		local frame = _G["AchievementAlertFrame" .. i]
 		if frame and not frame.__windSkin then

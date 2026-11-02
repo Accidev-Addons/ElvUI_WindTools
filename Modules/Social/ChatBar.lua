@@ -200,7 +200,7 @@ function CB:UpdateButton(name, func, anchorPoint, x, y, color, tex, tooltip, tip
 	local ElvUIValueColor = E.db.general.valuecolor
 
 	if not self.bar[name] then
-		local button = CreateFrame("Button", nil, self.bar, "SecureActionButtonTemplate, BackdropTemplate") --[[@as Button]]
+		local button = CreateFrame("Button", nil, self.bar, "SecureActionButtonTemplate") --[[@as Button]]
 		button:StripTextures()
 		button:SetBackdropBorderColor(0, 0, 0)
 		button:RegisterForClicks("AnyDown")

@@ -5,7 +5,6 @@ local _G = _G
 local pairs = pairs
 
 local function SkinQuestRewards()
-	-- [SIRUS] Fixed named reward buttons replace retail reward pools.
 	for i = 1, _G.MAX_NUM_ITEMS do
 		local button = _G["QuestInfoItem" .. i]
 		if button and not button.__windSkin then
