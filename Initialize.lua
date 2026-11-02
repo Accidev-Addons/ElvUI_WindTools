@@ -91,8 +91,6 @@ W:NewModule("QuestProgress", "AceEvent-3.0")
 W.Utilities = {}
 
 -- Pre-register libs into ElvUI
-E:AddLib("Deflate", "LibDeflate")
-E:AddLib("RangeCheck", "LibRangeCheck-2.0", true)
 E:AddLib("WTItemEnchant", "LibItemEnchant-WT")
 
 function W:Initialize()
