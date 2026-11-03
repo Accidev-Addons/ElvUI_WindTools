@@ -109,6 +109,9 @@ options.minimapButtons = {
 			end,
 			set = function(info, value)
 				E.private.WT.maps.minimapButtons[info[#info]] = value
+				if value then
+					E.private.general.minimapButtonGrabber.enable = false
+				end
 				E:StaticPopup_Show("PRIVATE_RL")
 			end,
 		},

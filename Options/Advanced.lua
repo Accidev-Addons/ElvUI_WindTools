@@ -599,16 +599,6 @@ options.reset = {
 						end)
 					end,
 				},
-				keystone = {
-					order = 4,
-					type = "execute",
-					name = L["Keystone"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Keystone"], nil, function()
-							E.db.WT.tooltips.keystone = P.tooltips.keystone
-						end)
-					end,
-				},
 				groupInfo = {
 					order = 5,
 					type = "execute",

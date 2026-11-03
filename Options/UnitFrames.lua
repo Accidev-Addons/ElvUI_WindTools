@@ -708,27 +708,11 @@ do
 		},
 	}
 
-	---@type table<ClassFile, string>
-	local classNames = {
-		WARRIOR = L["Warrior"],
-		PALADIN = L["Paladin"],
-		HUNTER = L["Hunter"],
-		ROGUE = L["Rogue"],
-		PRIEST = L["Priest"],
-		DEATHKNIGHT = L["Deathknight"],
-		SHAMAN = L["Shaman"],
-		MAGE = L["Mage"],
-		WARLOCK = L["Warlock"],
-		DRUID = L["Druid"],
-		DEMONHUNTER = L["Demonhunter"],
-	}
-
-	for i = 1, GetNumClasses() do
-		local classFile = select(2, GetClassInfo(i))
+	for i, classFile in ipairs(_G.CLASS_SORT_ORDER) do
 		examples.color[classFile] = {
 			order = i,
 			tag = format("[classcolor:%s]", strlower(classFile)),
-			text = format(L["The color of %s"], C.StringWithClassColor(classNames[classFile], classFile)),
+			text = format(L["The color of %s"], C.StringWithClassColor(_G.LOCALIZED_CLASS_NAMES_MALE[classFile], classFile)),
 		}
 	end
 
@@ -752,8 +736,7 @@ do
 			},
 		}
 
-		for i = 1, GetNumClasses() do
-			local classFile = select(2, GetClassInfo(i))
+		for i, classFile in ipairs(_G.CLASS_SORT_ORDER) do
 			examples["classIcon_" .. style][classFile .. "_ALIGN"] = {
 				order = 3 * i,
 				type = "description",
@@ -768,7 +751,7 @@ do
 			}
 			examples["classIcon_" .. style][classFile .. "_TAG"] = {
 				order = 3 * i + 2,
-				text = C.StringWithClassColor(classNames[classFile], classFile),
+				text = C.StringWithClassColor(_G.LOCALIZED_CLASS_NAMES_MALE[classFile], classFile),
 				tag = "[classicon-" .. style .. ":" .. strlower(classFile) .. "]",
 				width = 1.5,
 			}

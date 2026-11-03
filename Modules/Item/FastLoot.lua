@@ -19,8 +19,9 @@ function FL:GetFreeSlots()
 	return numFreeSlots
 end
 
+local tDelay = 0
+
 function FL:LOOT_OPENED()
-	local tDelay = 0
 	if GetTime() - tDelay >= self.db.limit then
 		tDelay = GetTime()
 		if not GetCVarBool("autoLootDefault") ~= not IsModifiedClick("AUTOLOOTTOGGLE") and not IsFishingLoot() then

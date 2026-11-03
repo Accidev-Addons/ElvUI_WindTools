@@ -4,7 +4,6 @@ local C = W.Utilities.Color
 local S = W.Modules.Skins ---@type Skins
 local MF = W.Modules.MoveFrames ---@type MoveFrames
 local async = W.Utilities.Async
-local EnchantLib = E.Libs.WTItemEnchant ---@type LibItemEnchantWT
 
 -- Core logic, utility functions are modified from TinyInspect.
 -- Credits & Copyright: loudsoul, Witnesscm
@@ -54,9 +53,6 @@ local GetSpecializationInfoByID = E.GetSpecializationInfoByID
 
 local EMPTY = EMPTY
 local Enum_ItemQuality = Enum.ItemQuality
-local INVSLOT_MAINHAND = INVSLOT_MAINHAND
-local INVSLOT_NECK = INVSLOT_NECK
-local INVSLOT_OFFHAND = INVSLOT_OFFHAND
 
 local MISSING_ICON = "Interface\\Cursor\\Quest"
 local CIRCLE_MASK = "Interface\\FriendsFrame\\Battlenet-Portrait"
@@ -85,23 +81,6 @@ for index, localizedName in ipairs(W.EquipmentSlots) do
 		tinsert(DISPLAY_SLOTS, { index = index, name = gsub(localizedName, "%d", "") })
 	end
 end
-
-local INVSLOT_ENCHANT = {
-	[INVSLOT_HEAD] = true,
-	[INVSLOT_SHOULDER] = true,
-	[INVSLOT_BACK] = true,
-	[INVSLOT_CHEST] = true,
-	[INVSLOT_WRIST] = true,
-	[INVSLOT_HAND] = true,
-	[INVSLOT_LEGS] = true,
-	[INVSLOT_FEET] = true,
-	[INVSLOT_MAINHAND] = true,
-	[INVSLOT_OFFHAND] = true,
-}
-
-local ITEM_CLASS_WEAPON = 2
-local ITEM_CLASS_ARMOR = 4
-local ITEM_SUBCLASS_SHIELD = 6
 
 local STATS_CONFIG = {
 	groups = {
@@ -141,33 +120,6 @@ local STATS_CONFIG = {
 	},
 }
 
----Checks if an enchantment can be applied to a specific slot based on quality and class
----@param slotIndex number The inventory slot index
----@param itemQuality Enum.ItemQuality The quality of the enchantment
----@return boolean
-local function CheckEnchantmentSlot(slotIndex, itemQuality, itemClass, itemSubClass)
-	if not INVSLOT_ENCHANT[slotIndex] then
-		return false
-	end
-
-	if
-		itemQuality == Enum_ItemQuality.Artifact
-		and tContains({ INVSLOT_NECK, INVSLOT_MAINHAND, INVSLOT_OFFHAND }, slotIndex)
-	then
-		return false
-	end
-
-	if
-		slotIndex == INVSLOT_OFFHAND
-		and itemClass ~= ITEM_CLASS_WEAPON
-		and not (itemClass == ITEM_CLASS_ARMOR and itemSubClass == ITEM_SUBCLASS_SHIELD)
-	then
-		return false
-	end
-
-	return true
-end
-
 ---@type { released: InspectCircleIcon[] }
 local circleIconPool = {
 	nextID = 1,
@@ -204,7 +156,6 @@ function circleIconPrototype:Reset()
 	self.name = nil
 	self.itemLink = nil
 	self.itemID = nil
-	self.spellID = nil
 	self.Texture:SetTexture(nil)
 	self.Border:SetVertexColor(1, 1, 1, 1)
 	self:Hide()
@@ -241,47 +192,6 @@ function circleIconPrototype:AsGemSocket(data)
 
 		self:UpdateStyle(tex, quality or Enum_ItemQuality.Common)
 	end)
-end
-
----Sets the data for the circle icon
----@param data EnchantInfo The enchantment information to display
-function circleIconPrototype:AsEnchant(data)
-	self.name, self.itemID, self.spellID = data.name, data.itemID, data.spellID
-
-	if not data.enchantID then
-		self:UpdateStyle(MISSING_ICON, nil, "indigo-400")
-		return
-	end
-
-	if data.itemID then
-		async.WithItemID(data.itemID, function(item)
-			if not item or item:IsItemEmpty() then
-				return self:Reset()
-			end
-
-			local tex, quality = item:GetItemIcon(), item:GetItemQuality()
-			if not tex then
-				return self:Reset()
-			end
-
-			self:UpdateStyle(tex, quality or Enum_ItemQuality.Common)
-		end)
-	elseif data.spellID then
-		async.WithSpellID(data.spellID, function(spell)
-			if not spell or spell:IsSpellEmpty() then
-				return self:Reset()
-			end
-
-			local tex = spell:GetSpellTexture()
-			if not tex then
-				return self:Reset()
-			end
-
-			self:UpdateStyle(tex, Enum_ItemQuality.Common)
-		end)
-	else
-		self:Reset()
-	end
 end
 
 ---Applies the texture and border color to the circle icon
@@ -427,27 +337,6 @@ local function GetDisplayedItemLevelFromHyperlink(link)
 			end
 		end
 	end
-end
-
----@alias EnchantInfo { enchantID: string?, itemID: number?, spellID: number? }
-
----Gets enchantment information from an item link
----@param itemInfo InspectItemInfo The item information to analyze
----@return EnchantInfo? enchantInfo The enchantment information, or nil if not found
-local function GetItemEnchantInfo(itemInfo)
-	local enchantID = tonumber(strmatch(itemInfo.link, "item:%d+:(%d+):"))
-
-	if not enchantID or enchantID == 0 then
-		local isMissing =
-			CheckEnchantmentSlot(itemInfo.slotIndex, itemInfo.quality, itemInfo.classID, itemInfo.subClassID)
-		return isMissing and { name = L["Enchant Missing"] } or nil
-	end
-
-	return {
-		enchantID = enchantID,
-		itemID = EnchantLib:GetEnchantItemID(enchantID),
-		spellID = EnchantLib:GetEnchantSpellID(enchantID),
-	}
 end
 
 ---@alias InspectItemInfo {
@@ -879,18 +768,6 @@ function I:ShowPanel(unit, parent, ilevel)
 			else
 				icon:Point("LEFT", line.circleIcons[#line.circleIcons], "RIGHT", 3, 0)
 				circleIconsWidth = circleIconsWidth + self.db.gemIcon.size + 3
-			end
-		end
-
-		if self.db.enchantIcon.enable then
-			local enchantInfo = itemInfo and GetItemEnchantInfo(itemInfo)
-			if enchantInfo and (enchantInfo.enchantID or enchantInfo.name) then
-				local icon = circleIconPool:Acquire()
-				icon:SetParent(line)
-				icon:AsEnchant(enchantInfo)
-				icon:UpdateSize(self.db.enchantIcon.size)
-				UpdateCircleIconPosition(icon)
-				tinsert(line.circleIcons, icon)
 			end
 		end
 

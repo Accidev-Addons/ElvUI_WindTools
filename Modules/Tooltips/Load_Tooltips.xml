@@ -6,5 +6,4 @@
 	<Script file='GroupInfo.lua'/>
 	<Script file='HealthBar.lua'/>
 	<Script file='Icons.lua'/>
-	<Script file='Keystone.lua'/>
 </Ui>

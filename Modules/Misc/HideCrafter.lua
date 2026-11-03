@@ -28,6 +28,8 @@ local function removeCraftInformation(tooltip)
 		local text = line and line:GetText()
 		if text and strmatch(text, crafterPattern) then
 			line:SetText("")
+			line:Hide()
+			tooltip:Show()
 		end
 	end
 end

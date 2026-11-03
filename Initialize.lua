@@ -90,9 +90,6 @@ W:NewModule("QuestProgress", "AceEvent-3.0")
 -- Utilities namespace
 W.Utilities = {}
 
--- Pre-register libs into ElvUI
-E:AddLib("WTItemEnchant", "LibItemEnchant-WT")
-
 function W:Initialize()
 	-- ElvUI -> WindTools -> WindTools Modules
 	if not self:CheckElvUIVersion() then

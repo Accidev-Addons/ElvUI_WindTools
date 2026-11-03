@@ -660,7 +660,7 @@ options.alreadyKnown = {
 							local errorMsg = format(L["Because of %s, this module will not be loaded."], AK.StopRunning)
 							return C.StringByTemplate(errorMsg, "rose-500")
 						else
-							return L["Puts a overlay on already known learnable items on vendors and AH."]
+							return L["Puts a overlay on already known learnable items on vendors."]
 						end
 					end,
 					fontSize = "medium",
@@ -1275,33 +1275,6 @@ options.inspect = {
 					type = "range",
 					min = 5,
 					max = 60,
-					step = 1,
-				},
-			},
-		},
-		enchantIcon = {
-			order = 8,
-			type = "group",
-			inline = true,
-			name = L["Enchant Icon"],
-			get = function(info)
-				return E.db.WT.item.inspect.enchantIcon[info[#info]]
-			end,
-			set = function(info, value)
-				E.db.WT.item.inspect.enchantIcon[info[#info]] = value
-			end,
-			args = {
-				enable = {
-					order = 1,
-					type = "toggle",
-					name = L["Show Icon"],
-				},
-				size = {
-					order = 2,
-					name = L["Size"],
-					type = "range",
-					min = 5,
-					max = 30,
 					step = 1,
 				},
 			},

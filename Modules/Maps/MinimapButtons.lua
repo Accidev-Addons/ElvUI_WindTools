@@ -30,6 +30,25 @@ local ContainsIf = ContainsIf
 local CreateFrame = CreateFrame
 local InCombatLockdown = InCombatLockdown
 local IsAddOnLoaded = IsAddOnLoaded
+local ReloadUI = ReloadUI
+
+E.PopupDialogs.WINDTOOLS_MINIMAP_BUTTON_GRABBER = {
+	text = format(L["Minimap buttons are collected by both ElvUI and %s. Which one should keep them? The interface will reload."], W.Title),
+	button1 = "ElvUI",
+	button2 = W.Title,
+	OnAccept = function()
+		E.private.WT.maps.minimapButtons.enable = false
+		ReloadUI()
+	end,
+	OnCancel = function(_, _, reason)
+		if reason == "clicked" then
+			E.private.general.minimapButtonGrabber.enable = false
+			ReloadUI()
+		end
+	end,
+	whileDead = 1,
+	hideOnEscape = false,
+}
 
 local BuildinIgnoreSettings = {
 	full = {
@@ -877,6 +896,10 @@ function MB:Initialize()
 	self.db = E.private.WT.maps.minimapButtons
 	if not self.db.enable then
 		return
+	end
+
+	if E.private.general.minimapButtonGrabber.enable then
+		E:StaticPopup_Show("WINDTOOLS_MINIMAP_BUTTON_GRABBER")
 	end
 
 	self:RefreshPredefinedPatterns()

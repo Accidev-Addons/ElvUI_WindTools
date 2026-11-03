@@ -1325,13 +1325,6 @@ options.addons = {
 			name = " ",
 			width = "full",
 		},
-		auctionator = {
-			order = 10,
-			type = "toggle",
-			name = L["Auctionator"],
-			addonName = "Auctionator",
-			addonskinsKey = "Auctionator",
-		},
 		bugSack = {
 			order = 10,
 			type = "toggle",

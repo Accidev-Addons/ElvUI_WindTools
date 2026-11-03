@@ -8,8 +8,6 @@ local tostring = tostring
 
 local GetSpellLink = GetSpellLink
 
-local utilitySpellIDs = {}
-
 local function FormatMessage(message, spellID)
 	message = gsub(message, "%%player%%", E.name)
 	message = gsub(message, "%%spell%%", GetSpellLink(spellID))
@@ -57,6 +55,16 @@ local UtilitySpells = {
 	[67826] = UtilityType.Bot,
 }
 
+local UtilitySpellAliases = {
+	[58887] = 29893,
+	[58659] = 43987,
+	[61993] = 698,
+	[35717] = 33691,
+	[57676] = 33691,
+	[316475] = 33691,
+	[300059] = 57426,
+}
+
 A.ConfigurableUtilitySpells = {}
 
 function A:GetAvailableUtilitySpells()
@@ -64,13 +72,12 @@ function A:GetAvailableUtilitySpells()
 		local id, tex, name = spell:GetSpellID(), spell:GetSpellTexture(), spell:GetSpellName()
 		local desc = format("%s %s (%s)", F.GetIconString(tex, 14, 18, true), name, id)
 		self.ConfigurableUtilitySpells[tostring(id)] = desc
-		utilitySpellIDs[name] = id
 	end)
 end
 
-function A:Utility(spellName)
-	local spellID = utilitySpellIDs[spellName]
-	if not spellID or not self.db or not self.db.utility then
+function A:Utility(castID)
+	local spellID = UtilitySpellAliases[castID] or castID
+	if not UtilitySpells[spellID] or not self.db or not self.db.utility then
 		return
 	end
 
@@ -81,5 +88,5 @@ function A:Utility(spellName)
 		return
 	end
 
-	self:SendMessage(FormatMessage(config.text, spellID), self:GetChannel(db.channel), config.raidWarning)
+	self:SendMessage(FormatMessage(config.text, castID), self:GetChannel(db.channel), config.raidWarning)
 end

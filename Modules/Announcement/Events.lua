@@ -8,17 +8,16 @@ A.EventList = {
 	"CHAT_MSG_PARTY",
 	"CHAT_MSG_PARTY_LEADER",
 	"CHAT_MSG_SYSTEM",
+	"COMBAT_LOG_EVENT_UNFILTERED",
 	"LFG_COMPLETION_REWARD",
 	"PARTY_LEADER_CHANGED",
 	"PLAYER_ENTERING_WORLD",
-	"UNIT_SPELLCAST_SUCCEEDED",
 }
 
 A.MessageList = {
 	"WINDTOOLS_PLAYER_KEYSTONE_CHANGED",
 }
 
--- CHAT_MSG_SYSTEM: text, playerName, languageName, channelName, playerName2, specialFlags, zoneChannelID, channelIndex, channelBaseName, unused, lineID, guid, bnSenderID, isMobile, isSubtitle, hideSenderInLetterbox, supressRaidIcons
 function A:CHAT_MSG_SYSTEM(event, text)
 	self:ResetInstanceUpdateIgnoreState(event, text)
 	RunNextFrame(function()
@@ -46,9 +45,9 @@ function A:CHALLENGE_MODE_COMPLETED()
 	self:DelayedGoodbye()
 end
 
-function A:UNIT_SPELLCAST_SUCCEEDED(_, unit, spellName)
-	if unit == "player" and spellName then
-		self:Utility(spellName)
+function A:COMBAT_LOG_EVENT_UNFILTERED(_, _, subEvent, sourceGUID, _, _, _, _, _, spellID)
+	if subEvent == "SPELL_CAST_SUCCESS" and sourceGUID == E.myguid then
+		self:Utility(spellID)
 	end
 end
 

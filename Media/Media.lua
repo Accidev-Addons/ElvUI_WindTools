@@ -369,7 +369,7 @@ function F.GetClassIconWithStyle(class, style)
 	end
 
 	local classFile = strupper(class)
-	if classFile ~= "DEMONHUNTER" and not tContains(_G.CLASS_SORT_ORDER, classFile) then
+	if not tContains(_G.CLASS_SORT_ORDER, classFile) then
 		return
 	end
 

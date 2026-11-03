@@ -5,13 +5,12 @@ local C = W.Utilities.Color
 
 local floor = floor
 local format = format
+local ipairs = ipairs
 local pairs = pairs
 local select = select
 local strlower = strlower
 
 local GetClassColor = GetClassColor
-local GetClassInfo = GetClassInfo
-local GetNumClasses = GetNumClasses
 local UnitClass = UnitClass
 local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs
 local UnitGetTotalHealAbsorbs = UnitGetTotalHealAbsorbs
@@ -113,26 +112,10 @@ function Tags:AddTagInfo()
 		},
 	}
 
-	---@type table<ClassFile, string>
-	local classNames = {
-		WARRIOR = L["Warrior"],
-		PALADIN = L["Paladin"],
-		HUNTER = L["Hunter"],
-		ROGUE = L["Rogue"],
-		PRIEST = L["Priest"],
-		DEATHKNIGHT = L["Deathknight"],
-		SHAMAN = L["Shaman"],
-		MAGE = L["Mage"],
-		WARLOCK = L["Warlock"],
-		DRUID = L["Druid"],
-		DEMONHUNTER = L["Demonhunter"],
-	}
-
-	for i = 1, GetNumClasses() do
-		local classFile = select(2, GetClassInfo(i))
+	for i, classFile in ipairs(_G.CLASS_SORT_ORDER) do
 		info["classcolor:" .. strlower(classFile)] = {
 			category = F.GetWindStyleText(L["Color"]),
-			description = format(L["The color of %s"], C.StringWithClassColor(classNames[classFile], classFile)),
+			description = format(L["The color of %s"], C.StringWithClassColor(_G.LOCALIZED_CLASS_NAMES_MALE[classFile], classFile)),
 			order = i,
 		}
 	end
@@ -143,13 +126,12 @@ function Tags:AddTagInfo()
 			description = L["The class icon of the player's class"],
 		}
 
-		for i = 1, GetNumClasses() do
-			local classFile = select(2, GetClassInfo(i))
+		for _, classFile in ipairs(_G.CLASS_SORT_ORDER) do
 			info["classicon-" .. style .. ":" .. strlower(classFile)] = {
 				category = F.GetWindStyleText(L["Class Icon"]) .. " - " .. style,
 				description = format(
 					L["The class icon of %s"],
-					C.StringWithClassColor(classNames[classFile], classFile)
+					C.StringWithClassColor(_G.LOCALIZED_CLASS_NAMES_MALE[classFile], classFile)
 				),
 			}
 		end
@@ -224,8 +206,7 @@ function Tags:Initialize()
 		return GetClassColorString(E.myclass)
 	end)
 
-	for i = 1, GetNumClasses() do
-		local upperText = select(2, GetClassInfo(i))
+	for _, upperText in ipairs(_G.CLASS_SORT_ORDER) do
 		local tag = "classcolor:" .. strlower(upperText)
 		E:AddTag(tag, 1e10, function()
 			return GetClassColorString(upperText)
@@ -243,13 +224,10 @@ function Tags:Initialize()
 			return F.GetClassIconStringWithStyle(englishClass, style) or ""
 		end)
 
-		for i = 1, GetNumClasses() do
-			local englishClass = select(2, GetClassInfo(i))
-			if englishClass then
-				E:AddTag("classicon-" .. style .. ":" .. strlower(englishClass), "UNIT_NAME_UPDATE", function()
-					return F.GetClassIconStringWithStyle(englishClass, style) or ""
-				end)
-			end
+		for _, englishClass in ipairs(_G.CLASS_SORT_ORDER) do
+			E:AddTag("classicon-" .. style .. ":" .. strlower(englishClass), "UNIT_NAME_UPDATE", function()
+				return F.GetClassIconStringWithStyle(englishClass, style) or ""
+			end)
 		end
 	end
 

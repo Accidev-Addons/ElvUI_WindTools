@@ -121,20 +121,6 @@ V.misc = {
 			offsetY = -1,
 			alpha = 1,
 		},
-		additionalText = {
-			enable = true,
-			target = "DESC",
-			shortenDescription = true,
-			template = "{{score}} {{text}}",
-		},
-		partyKeystone = {
-			enable = true,
-			font = {
-				name = E.db.general.font,
-				size = 12,
-				style = "OUTLINE",
-			},
-		},
 	},
 }
 
@@ -400,7 +386,6 @@ V.skins = {
 		},
 	},
 	addons = {
-		auctionator = true,
 		bugSack = true,
 		immersion = true,
 		omniCD = true,

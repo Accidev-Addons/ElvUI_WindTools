@@ -47,7 +47,7 @@ local ignoreCondition = {
 
 ---@type Cache
 local resetMessageCache = cache.New({
-	defaultTTL = 10, -- 1 second
+	defaultTTL = 10,
 	maxLength = nil,
 	autoCleanup = true,
 	cleanupInterval = 60,

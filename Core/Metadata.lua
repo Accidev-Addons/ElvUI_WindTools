@@ -3,12 +3,10 @@ local F, E, L ---@type Functions, ElvUI, LocaleTable
 W, F, E, L = unpack((select(2, ...)))
 
 local tinsert = tinsert
-local tostring = tostring
 
 local GetCVar = GetCVar
 local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
 
-local C_ChallengeMode_GetMapUIInfo = C_ChallengeMode.GetMapUIInfo
 local C_Service = C_Service
 
 E.myClassColor = E.myClassColor or E:ClassColor(E.myclass, true)
@@ -17,27 +15,11 @@ E.myClassColor = E.myClassColor or E:ClassColor(E.myclass, true)
 W.Title = L["WindTools"]
 
 -- Environment
-W.SupportElvUIVersion = 9.07
+W.SupportElvUIVersion = 9.0914
 W.UseKeyDown = GetCVar("ActionButtonUseKeyDown") == "1"
 
 -- Game
 W.MaxLevelForPlayerExpansion = MAX_PLAYER_LEVEL
-
-W.MythicPlusMapData = {}
-
-function W:GetMythicPlusMapData()
-	for _, id in ipairs(C_ChallengeMode.GetMapTable()) do
-		local name, _, timeLimit, secondTimer, thirdTimer, texture = C_ChallengeMode_GetMapUIInfo(id)
-		if name then
-			local data = W.MythicPlusMapData[id] or {}
-			data.name, data.abbr, data.tex = name, name, texture
-			data.idString, data.timeLimit = tostring(id), timeLimit
-			data.timers = { thirdTimer, secondTimer, timeLimit }
-			W.MythicPlusMapData[id] = data
-		end
-	end
-	return W.MythicPlusMapData
-end
 
 W.SpecializationInfo = {}
 
@@ -67,7 +49,6 @@ W.EquipmentSlots = {
 }
 
 function W:InitializeMetadata()
-	self:GetMythicPlusMapData()
 	for classID = 1, GetNumClasses() do
 		local class = {}
 		for specIndex = 1, 4 do

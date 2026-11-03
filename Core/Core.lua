@@ -34,7 +34,7 @@ E.PopupDialogs.WINDTOOLS_ELVUI_OUTDATED = {
 	text = format(
 		"%s %s",
 		format(L["%s not been loaded since you are using an outdated version of ElvUI."], W.Title),
-		format(L["Please upgrade your ElvUI to %2.2f or newer version!"], W.SupportElvUIVersion)
+		format(L["Please upgrade your ElvUI to %s or newer version!"], E:FormatVersion(W.SupportElvUIVersion))
 	),
 	button1 = ACCEPT,
 	hideOnEscape = 1,

@@ -424,10 +424,6 @@ P.item = {
 			size = 17,
 			showAddableSockets = true,
 		},
-		enchantIcon = {
-			enable = true,
-			size = 17,
-		},
 		slotText = {
 			name = E.db.general.font,
 			size = W.CompatibleFont and 12 or 10,
@@ -822,15 +818,6 @@ P.tooltips = {
 			height = 16,
 		},
 		specIcon = {
-			enable = true,
-			width = 16,
-			height = 14,
-		},
-	},
-	keystone = {
-		enable = true,
-		useAbbreviation = true,
-		icon = {
 			enable = true,
 			width = 16,
 			height = 14,

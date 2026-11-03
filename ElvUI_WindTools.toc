@@ -7,7 +7,6 @@
 ## Notes-ruRU: Добавляет множество улучшенных функций в ElvUI и даёт возможность их гибко настраивать.
 ## RequiredDeps: ElvUI
 
-Libraries\Load_Libraries.xml
 Initialize.lua
 Locales\Load_Locales.xml
 Media\Load_Media.xml

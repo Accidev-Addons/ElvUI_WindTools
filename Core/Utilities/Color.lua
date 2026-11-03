@@ -519,23 +519,6 @@ local function clamp(value)
 	return math.max(0, math.min(1, value))
 end
 
----Get hex color for keystone level
----@param level number The keystone level
----@return string hex The hex color code
-local function keyStoneLevelHex(level)
-	if level < 4 then
-		return "ffffff"
-	elseif level < 7 then
-		return "1eff00"
-	elseif level < 10 then
-		return "0070dd"
-	elseif level < 12 then
-		return "a335ee"
-	else
-		return "ff8000"
-	end
-end
-
 local colorTableCache = {}
 
 ---Create a ColorMixin object from a color table
@@ -724,14 +707,6 @@ function W.Utilities.Color.StringWithRGB(text, r, g, b)
 	r, g, b = clamp(r), clamp(g), clamp(b)
 
 	return W.Utilities.Color.StringWithHex(text, W.Utilities.Color.RGBToHex(r, g, b))
-end
-
----Create colored string based on keystone level
----@param text string The text to colorize
----@param level number The keystone level
----@return string coloredText The colored string with level-appropriate color
-function W.Utilities.Color.StringWithKeystoneLevel(text, level)
-	return W.Utilities.Color.StringWithHex(text, keyStoneLevelHex(level))
 end
 
 ---Create gradient text by RGB values

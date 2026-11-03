@@ -18,11 +18,6 @@ local C_MythicPlus_GetOwnedKeystoneLevel = C_MythicPlus.GetOwnedKeystoneLevel
 
 local NUM_BAG_SLOTS = NUM_BAG_SLOTS
 
----@class KeystoneInfoData
----@field level number
----@field challengeMapID number
----@field rating number
-
 ---@class KeystoneInfo.PlayerKeystone
 ---@field level number?
 ---@field mapID number?
@@ -86,10 +81,6 @@ end
 function KI:DelayedCheckPlayerKeystone()
 	E:Delay(0.5, KI.CheckPlayerKeystone, KI)
 end
-
----@param unit UnitToken
----@return KeystoneInfoData?
-function KI:UnitData(unit) end
 
 function KI:CHALLENGE_MODE_COMPLETED()
 	self:CheckPlayerKeystone()

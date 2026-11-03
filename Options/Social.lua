@@ -418,7 +418,7 @@ options.chatBar = {
 										end
 
 										local realmID = onlyThisRealm and W.CurrentRealmID or "ALL"
-										local realmName = onlyThisRealm and W.RealmName or nil
+										local realmName = onlyThisRealm and E.myrealm or nil
 
 										local index
 										for i, channel in pairs(E.db.WT.social.chatBar.channels.world.config) do
@@ -474,7 +474,7 @@ options.chatBar = {
 												realmID = "ALL"
 											end
 
-											local realmName = realmID == "ALL" and L["All Realms"] or channel.realmName
+											local realmName = realmID == "ALL" and L["All Realms"] or channel.realmName or tostring(realmID)
 											local factionName = faction == "ALL" and L["All Factions"] or faction
 
 											if faction == "Alliance" then

@@ -595,7 +595,7 @@ local ButtonTypes = {
 		name = L["Profession"],
 		icon = W.Media.Icons.barProfession,
 		macro = {
-			LeftButton = "/run ToggleSpellBook(BOOKTYPE_PROFESSION)",
+			LeftButton = "/click SpellBookFrameCloseButton\n/click SpellbookMicroButton\n/click SpellBookFrameTab2",
 		},
 		tooltips = {
 			L["Profession"],
