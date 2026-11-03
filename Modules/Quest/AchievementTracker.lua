@@ -27,7 +27,11 @@ local tremove = tremove
 local unpack = unpack
 
 local AddTrackedAchievement = AddTrackedAchievement
-local CreateDataProvider = CreateDataProvider
+local function CreateDataProvider()
+	local dataProvider = _G.CreateDataProvider()
+	dataProvider.IsVirtual = dataProvider.IsVirtual or E.noop
+	return dataProvider
+end
 local CreateFrame = CreateFrame
 local CreateFramePool = CreateFramePool
 local CreateScrollBoxListLinearView = CreateScrollBoxListLinearView
@@ -514,12 +518,13 @@ function AT:ScrollElementInitializer(frame, data, scrollBox)
 		RewardsIcon:Point("RIGHT", -REWARDS_ICON_OFFSET_X, 0)
 		RewardsIcon:CreateBackdrop()
 		RewardsIcon:SetTexCoords()
-		RewardsIcon:SetScript("OnEnter", function(icon)
+		RewardsIcon.backdrop:EnableMouse(true)
+		RewardsIcon.backdrop:SetScript("OnEnter", function(icon)
 			GameTooltip:SetOwner(icon, "ANCHOR_RIGHT")
 			GameTooltip:AddLine(frame.data.reward.text, nil, nil, nil, true)
 			GameTooltip:Show()
 		end)
-		RewardsIcon:SetScript("OnLeave", function()
+		RewardsIcon.backdrop:SetScript("OnLeave", function()
 			GameTooltip:Hide()
 		end)
 		frame.IndicatorFrame.RewardsIcon = RewardsIcon
@@ -554,7 +559,7 @@ function AT:ScrollElementInitializer(frame, data, scrollBox)
 		local Description = DetailFrame:CreateFontString(nil, "OVERLAY")
 		F.SetFont(Description, E.db.general.font, 13, "NONE")
 		Description:Point("TOP", DetailFrame, "TOP", 0, -ELEMENT_PADDING)
-		Description:Width(frame:GetWidth() - 4 * ELEMENT_PADDING)
+		Description:Width(scrollBox:GetScrollTarget():GetWidth() - 4 * ELEMENT_PADDING)
 		Description:SetJustifyH("CENTER")
 		Description:SetJustifyV("MIDDLE")
 		Description:SetTextColor(C.ExtractRGBAFromTemplate("neutral-200"))
@@ -564,7 +569,7 @@ function AT:ScrollElementInitializer(frame, data, scrollBox)
 		frame:EnableMouse(true)
 
 		frame.UpdateHeight = function(f)
-			f.data.height = 2 + f.ProgressBackdrop:GetHeight()
+			f.data.height = ELEMENT_ICON_SIZE + 2 * ELEMENT_PADDING
 
 			if f.data.isExpanded then
 				f.data.height = f.data.height + f.DetailFrame:GetHeight()
@@ -976,6 +981,9 @@ function AT:Construct()
 		self:ScrollElementResetter(frame)
 	end)
 	ScrollUtil.InitScrollBoxListWithScrollBar(ScrollBox, ScrollBar, ScrollView)
+	ScrollUtil.AddAcquiredFrameCallback(ScrollBox, function(_, frame, elementData)
+		frame:Height(ScrollView:CalculateFrameExtent(frame:GetOrderIndex(), elementData))
+	end, self)
 	ScrollBox--[[@as ScrollBoxListMixin]]:SetDataProvider(DataProvider)
 	ScrollFrame.ScrollView = ScrollView
 

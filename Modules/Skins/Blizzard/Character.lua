@@ -10,7 +10,7 @@ function S:Blizzard_UIPanels_Game()
 
 	-- Character
 	self:CreateShadow(_G.CharacterFrame)
-	self:CreateShadow(_G.GearManagerDialogPopup)
+	self:CreateBackdropShadow(_G.GearManagerDialogPopup)
 	self:CreateShadow(_G.EquipmentFlyoutFrameButtons)
 	for i = 1, 4 do
 		self:ReskinTab(_G["CharacterFrameTab" .. i])

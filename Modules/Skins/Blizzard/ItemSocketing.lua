@@ -8,7 +8,7 @@ function S:Blizzard_ItemSocketingUI()
 		return
 	end
 
-	self:CreateShadow(_G.ItemSocketingFrame)
+	self:CreateBackdropShadow(_G.ItemSocketingFrame)
 end
 
 S:AddCallbackForAddon("Blizzard_ItemSocketingUI")

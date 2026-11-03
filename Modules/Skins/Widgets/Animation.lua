@@ -90,7 +90,8 @@ function animationGroups.fade:OnFinished()
 end
 
 function animationParent.fade.SafeIsEnabled(frame)
-	return frame.IsEnabled and frame:IsEnabled()
+	local enabled = frame.IsEnabled and frame:IsEnabled()
+	return enabled == true or enabled == 1
 end
 
 function animationParent.fade.OnStatusChange(frame)

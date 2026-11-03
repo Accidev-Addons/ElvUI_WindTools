@@ -8,7 +8,7 @@ function S:TaxiFrame()
 		return
 	end
 
-	self:CreateShadow(_G.TaxiFrame)
+	self:CreateBackdropShadow(_G.TaxiFrame)
 end
 
 S:AddCallback("TaxiFrame")

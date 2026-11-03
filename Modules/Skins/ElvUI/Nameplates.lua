@@ -2,14 +2,23 @@ local W, F, E = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI
 local S = W.Modules.Skins ---@type Skins
 local NP = E:GetModule("NamePlates")
 
+local function CreatePlateShadow(frame)
+	S:CreateShadow(frame)
+	local shadow = frame and frame.__windShadow and frame.shadow
+	if shadow then
+		local edge = shadow:GetBackdrop().edgeSize
+		shadow:SetOutside(frame, edge, edge, nil, true)
+	end
+end
+
 function S:NP_OnCreated(_, frame)
 	local plate = frame and frame.ElvUIFrame
 	if not plate then return end
 
-	self:CreateShadow(plate.Health)
-	self:CreateShadow(plate.CastBar)
+	CreatePlateShadow(plate.Health)
+	CreatePlateShadow(plate.CastBar)
 	if plate.CastBar then
-		self:CreateShadow(plate.CastBar.Icon)
+		CreatePlateShadow(plate.CastBar.Icon)
 	end
 end
 

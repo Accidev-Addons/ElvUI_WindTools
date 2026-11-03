@@ -37,7 +37,7 @@ function WS:HandleButton(_, button)
 		local parentFrame = button.backdrop or button
 
 		-- Create background
-		local bg = parentFrame:CreateTexture()
+		local bg = parentFrame:CreateTexture(nil, "BORDER")
 		bg:SetInside(parentFrame, 1, 1)
 		bg:SetAlpha(0)
 		bg:SetTexture(LSM:Fetch("statusbar", db.backdrop.texture) or E.media.normTex)
@@ -75,7 +75,11 @@ function WS:HandleButton(_, button)
 		end)
 
 		if db.backdrop.removeBorderEffect then
+			local setBorderColor = parentFrame.SetBackdropBorderColor
 			parentFrame.SetBackdropBorderColor = E.noop
+			self:SecureHook(parentFrame, "SetBackdrop", function(frame)
+				setBorderColor(frame, unpack(E.media.bordercolor))
+			end)
 		end
 	end
 
@@ -97,7 +101,7 @@ function WS:ElvUI_Config_SetButtonColor(_, btn)
 
 	local db = E.private.WT.skins.widgets.button
 
-	if btn:IsEnabled() then
+	if btn:IsEnabled() == 1 then
 		local r1, g1, b1 = unpack(E.media.backdropcolor)
 		btn:SetBackdropColor(r1, g1, b1, 1)
 

@@ -8,7 +8,7 @@ function S:Blizzard_GuildBankUI()
 		return
 	end
 
-	self:CreateShadow(_G.GuildBankFrame)
+	self:CreateBackdropShadow(_G.GuildBankFrame)
 
 	for i = 1, 4 do
 		self:ReskinTab(_G["GuildBankFrameTab" .. i])

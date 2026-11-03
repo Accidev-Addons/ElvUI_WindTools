@@ -41,6 +41,10 @@ W.Changelog[421] = {
 			"[Information] Our Discord contact; upstream links and credits removed.",
 			"[Tags] Class color and class icon tags list only the classes that exist on Sirus.",
 			"[Hide Crafter] The hidden crafter line no longer leaves an empty gap in the tooltip.",
+			"[Skins] Shadows of the socketing, guild bank, flight map and equipment set windows follow the ElvUI panel and no longer stick out past it.",
+			"[Skins] Nameplate health, cast bar and cast icon shadows no longer lie on the bar fill as a dark band.",
+			"[Skins] Button and tab hover no longer covers icons and text, button borders keep the ElvUI border color, and the selected tab and the selected button in the ElvUI options keep their highlight.",
+			"[Achievement Tracker] Fixed Lua errors, rows overlapping after a reload and empty descriptions in expanded rows.",
 		},
 		["ruRU"] = {
 			"[Игровая панель] Персонаж, книга заклинаний, таланты, профессии и магазин открываются через микрокнопки Sirus, поэтому заклинания и таланты после этого не блокируются.",
@@ -50,6 +54,10 @@ W.Changelog[421] = {
 			"[Информация] Наш Discord; ссылки и благодарности оригинального аддона удалены.",
 			"[Теги] Теги цвета и значка класса перечисляют только классы, которые есть на Sirus.",
 			"[Скрыть создателя] Скрытая строка о создателе больше не оставляет пустой промежуток в подсказке.",
+			"[Скины] Тени окон инкрустации, гильдбанка, карты полётов и комплекта экипировки идут по панели ElvUI и не торчат за неё.",
+			"[Скины] Тени полосы здоровья, полосы заклинаний и её иконки на индикаторах больше не ложатся тёмной полосой на заливку.",
+			"[Скины] Подсветка кнопок и вкладок при наведении больше не закрывает иконки и текст, рамки кнопок сохраняют цвет рамки ElvUI, а выбранная вкладка и выбранная кнопка в настройках ElvUI не теряют выделение.",
+			"[Трекер достижений] Исправлены ошибки Lua, наложение строк после перезагрузки и пустые описания в развёрнутых строках.",
 		},
 	},
 }

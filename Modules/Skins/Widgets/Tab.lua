@@ -45,12 +45,12 @@ function WS:HandleTab(_, tab, noBackdrop, template)
 		local parentFrame = tab.backdrop or tab
 
 		-- Create background
-		local bg = parentFrame:CreateTexture()
+		local bg = tab.backdropFill and tab:CreateTexture(nil, "BORDER") or parentFrame:CreateTexture()
 		bg:SetInside(parentFrame, 1, 1)
 		bg:SetAlpha(0)
 		bg:SetTexture(LSM:Fetch("statusbar", db.backdrop.texture) or E.media.normTex)
 
-		if parentFrame.Center then
+		if not tab.backdropFill and parentFrame.Center then
 			local layer, subLayer = parentFrame.Center:GetDrawLayer()
 			subLayer = subLayer and subLayer + 1 or 0
 			bg:SetDrawLayer(layer, subLayer)
