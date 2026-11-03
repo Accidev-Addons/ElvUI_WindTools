@@ -133,7 +133,7 @@ function EB:CreateButton(name, barDB)
 	button:EnableMouse(false)
 	button:RegisterForClicks(W.UseKeyDown and "AnyDown" or "AnyUp")
 
-	local tex = button:CreateTexture(nil, "OVERLAY", nil)
+	local tex = button:CreateTexture(nil, "ARTWORK")
 	tex:Point("TOPLEFT", button, "TOPLEFT", 1, -1)
 	tex:Point("BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
 	tex:SetTexCoords()

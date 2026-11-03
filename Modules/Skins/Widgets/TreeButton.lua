@@ -57,16 +57,12 @@ function WS:HandleTreeGroup(widget)
 				end
 
 				-- Create background
-				local bg = button:CreateTexture()
+				local bg = button:CreateTexture(nil, "BORDER")
 				bg:SetInside(button, 2, 0)
 				bg:SetAlpha(0)
 				bg:SetTexture(LSM:Fetch("statusbar", db.backdrop.texture) or E.media.normTex)
-
-				if button.Center then
-					local layer, subLayer = button.Center:GetDrawLayer()
-					subLayer = subLayer and subLayer + 1 or 0
-					bg:SetDrawLayer(layer, subLayer)
-				end
+				F.InternalizeMethod(bg, "SetTexture", true)
+				WS.RaiseText(button)
 
 				F.SetVertexColorWithDB(bg, db.backdrop.classColor and E.myClassColor or db.backdrop.color)
 

@@ -44,7 +44,7 @@ function A:Configure_HealComm(_, frame)
 
 	if self.db and self.db.enable and self.db.blizzardAbsorbOverlay then
 		if not bar.__shieldOverlay then
-			local overlay = bar:CreateTexture(nil, "ARTWORK", nil, 1)
+			local overlay = bar:CreateTexture(nil, "OVERLAY")
 			overlay:SetTexture("Interface/RaidFrame/Shield-Overlay", true, true)
 			overlay:SetHorizTile(true)
 			overlay:SetVertTile(true)

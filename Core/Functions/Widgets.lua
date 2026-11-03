@@ -96,7 +96,7 @@ local function createTextureButton(parent, texture, normalColor, hoverColor, wid
 
 	frame.normalTex:SetVertexColor(unpack(normalColor))
 
-	frame.hoverTex = frame:CreateTexture(nil, "ARTWORK")
+	frame.hoverTex = frame:CreateTexture(nil, "OVERLAY")
 	frame.hoverTex:Point("CENTER")
 	frame.hoverTex:Size(width, height)
 	frame.hoverTex:SetTexture(texture)

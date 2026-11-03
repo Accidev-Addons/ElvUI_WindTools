@@ -36,7 +36,7 @@ local function reskinCoverTab(lib, panel)
 
 		if cover and not cover.__windSkin then
 			S:Proxy("HandleTab", cover)
-			cover.backdrop.Center:SetAlpha(0)
+			cover.backdrop:SetBackdropColor(0, 0, 0, 0)
 			cover:SetPushedTextOffset(0, 0)
 			cover.__windSkin = true
 		end

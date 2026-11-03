@@ -409,7 +409,10 @@ function MB:SkinButton(button, force)
 				region:ClearAllPoints()
 				region:Point("TOPLEFT", button, "TOPLEFT", 2, -2)
 				region:Point("BOTTOMRIGHT", button, "BOTTOMRIGHT", -2, 2)
-				region:SetDrawLayer("ARTWORK")
+				local layer = region:GetDrawLayer()
+				if layer == "BACKGROUND" or layer == "BORDER" then
+					region:SetDrawLayer("ARTWORK")
+				end
 
 				if name == "PS_MinimapButton" then
 					region.SetPoint = E.noop

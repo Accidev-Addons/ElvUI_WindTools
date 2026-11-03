@@ -18,6 +18,17 @@ function WS.IsUglyYellow(...)
 	return abs(r - 1) + abs(g - 0.82) + abs(b) < 0.02
 end
 
+function WS.RaiseText(frame)
+	for _, region in pairs({ frame:GetRegions() }) do
+		if region:IsObjectType("FontString") then
+			local layer = region:GetDrawLayer()
+			if layer == "BACKGROUND" or layer == "BORDER" then
+				region:SetDrawLayer("ARTWORK")
+			end
+		end
+	end
+end
+
 function WS:Ace3_RegisterAsWidget(_, widget)
 	local widgetType = widget.type
 

@@ -37,16 +37,12 @@ function WS:HandleButton(_, button)
 		local parentFrame = button.backdrop or button
 
 		-- Create background
-		local bg = parentFrame:CreateTexture(nil, "BORDER")
+		local bg = button:CreateTexture(nil, "BORDER")
 		bg:SetInside(parentFrame, 1, 1)
 		bg:SetAlpha(0)
 		bg:SetTexture(LSM:Fetch("statusbar", db.backdrop.texture) or E.media.normTex)
-
-		if parentFrame.Center then
-			local layer, subLayer = parentFrame.Center:GetDrawLayer()
-			subLayer = subLayer and subLayer + 1 or 0
-			bg:SetDrawLayer(layer, subLayer)
-		end
+		F.InternalizeMethod(bg, "SetTexture", true)
+		WS.RaiseText(button)
 
 		F.SetVertexColorWithDB(bg, db.backdrop.classColor and E.myClassColor or db.backdrop.color)
 

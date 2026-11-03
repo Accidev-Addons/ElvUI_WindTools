@@ -150,6 +150,7 @@ function S:CreateLowerShadow(frame, size, r, g, b, force)
 		-- avoid the shadow level is reset when the frame strata/level is changed
 		hooksecurefunc(frame, "SetFrameStrata", refreshFrameLevel)
 		hooksecurefunc(frame, "SetFrameLevel", refreshFrameLevel)
+		refreshFrameLevel()
 		frame.__windLowerShadowHooked = true
 	end
 end

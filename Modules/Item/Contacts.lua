@@ -64,7 +64,7 @@ local function SetButtonTexture(button, texture, r, g, b)
 	normalTex:SetVertexColor(1, 1, 1)
 	button.normalTex = normalTex
 
-	local hoverTex = button:CreateTexture(nil, "ARTWORK")
+	local hoverTex = button:CreateTexture(nil, "OVERLAY")
 	hoverTex:Point("CENTER")
 	hoverTex:Size(button:GetSize())
 	hoverTex:SetTexture(texture)

@@ -69,7 +69,7 @@ function OT:CosmeticBar(header)
 		backdrop:SetFrameStrata("BACKGROUND")
 		backdrop:SetTemplate()
 		backdrop:SetOutside(bar, 1, 1)
-		backdrop.Center:SetAlpha(0)
+		backdrop:SetBackdropColor(0, 0, 0, 0)
 		S:CreateShadow(backdrop, 2, nil, nil, nil, true)
 		bar.backdrop = backdrop
 		header.windCosmeticBar = bar
