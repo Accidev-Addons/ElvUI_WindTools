@@ -7,6 +7,7 @@
 	<Script file='HideCrafter.lua' />
 	<Script file='KeybindAlias.lua' />
 	<Script file='KeybindTextAbove.lua' />
+	<Script file='RouletteHistory.lua' />
 	<!-- Others -->
 	<Script file='Automation.lua' />
 	<Script file='LFGList.lua' />

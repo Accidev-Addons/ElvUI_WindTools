@@ -60,6 +60,13 @@ options.general = {
 			desc = L["Only show chat bubble in instance."],
 			width = 1.5,
 		},
+		rouletteHistory = {
+			order = 14,
+			type = "toggle",
+			name = L["Roulette History"],
+			desc = L["Add a panel next to the roulette that shows how many times each reward was won and the win chance, on this character and on the whole account."],
+			width = 1.5,
+		},
 	},
 }
 

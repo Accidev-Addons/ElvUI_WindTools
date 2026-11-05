@@ -4,7 +4,6 @@ local DT = W:NewModule("DestroyTotem", "AceEvent-3.0")
 local format = format
 
 local CreateFrame = CreateFrame
-local DestroyTotem = DestroyTotem
 local SetOverrideBindingClick = SetOverrideBindingClick
 
 local MAX_TOTEMS = MAX_TOTEMS
@@ -17,13 +16,12 @@ DT.Buttons = {}
 local function CreateTotemButton(slot)
 	local name = "WTDestroyTotemButton" .. slot
 
-	local button = CreateFrame("Button", name, E.UIParent)
+	local button = CreateFrame("Button", name, E.UIParent, "SecureActionButtonTemplate")
 	button:SetSize(1, 1)
 	button:Hide()
 	button:RegisterForClicks(W.UseKeyDown and "AnyDown" or "AnyUp")
-	button:SetScript("OnClick", function()
-		DestroyTotem(slot)
-	end)
+	button:SetAttribute("type", "macro")
+	button:SetAttribute("macrotext", format("/run DestroyTotem(%d)", slot))
 
 	return button
 end
@@ -53,11 +51,13 @@ function DT:Initialize()
 		return
 	end
 
-	for slot = 1, MAX_TOTEMS do
-		DT.Buttons[slot] = CreateTotemButton(slot)
-	end
+	F.TaskManager:OutOfCombat(function()
+		for slot = 1, MAX_TOTEMS do
+			DT.Buttons[slot] = DT.Buttons[slot] or CreateTotemButton(slot)
+		end
 
-	F.TaskManager:OutOfCombat(self.SetupKeyBindings, self)
+		self:SetupKeyBindings()
+	end)
 end
 
 W:RegisterModule(DT:GetName())

@@ -1061,7 +1061,6 @@ do
 							CT:ProfileUpdate()
 						end,
 						values = {
-							NONE = L["None"],
 							SHORT = L["Short"],
 							DEFAULT = L["Default"],
 						},
@@ -1553,6 +1552,40 @@ options.smartTab = {
 					step = 1,
 				},
 			},
+		},
+	},
+}
+
+options.guildFinderHistory = {
+	order = 8,
+	type = "group",
+	name = L["Guild Finder History"],
+	args = {
+		desc = {
+			order = 1,
+			type = "group",
+			inline = true,
+			name = L["Description"],
+			args = {
+				feature = {
+					order = 1,
+					type = "description",
+					name = L["Add a history panel next to the guild finder: it collects every guild found in this session, can repeat the search many times and sends a join request with a note on click."],
+					fontSize = "medium",
+				},
+			},
+		},
+		enable = {
+			order = 2,
+			type = "toggle",
+			name = L["Enable"],
+			get = function(info)
+				return E.private.WT.social.guildFinderHistory[info[#info]]
+			end,
+			set = function(info, value)
+				E.private.WT.social.guildFinderHistory[info[#info]] = value
+				E:StaticPopup_Show("PRIVATE_RL")
+			end,
 		},
 	},
 }

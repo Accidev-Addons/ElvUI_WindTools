@@ -4,5 +4,6 @@
 	<Script file='ChatLink.lua'/>
 	<Script file='Emote.lua'/>
 	<Script file='FriendList.lua'/>
+	<Script file='GuildFinderHistory.lua'/>
 	<Script file='SmartTab.lua'/>
 </Ui>

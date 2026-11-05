@@ -95,11 +95,6 @@ function Tags:AddTagInfo()
 			description = L["Automatically select the best format of power (e.g. Rogue is 120, Mage is 100)"],
 			order = 2,
 		},
-		range = {
-			category = F.GetWindStyleText(L["Range"]),
-			description = L["Range"],
-			order = 1,
-		},
 		["range:expectation"] = {
 			category = F.GetWindStyleText(L["Range"]),
 			description = L["Range Expectation"],
@@ -170,13 +165,6 @@ function Tags:Initialize()
 	end)
 
 	-- Range
-	E:AddTag("range", 0.1, function(unit)
-		if RangeCheck and UnitIsConnected(unit) and not UnitIsUnit(unit, "player") then
-			local minRange, maxRange = RangeCheck:GetRange(unit, true)
-			return minRange and maxRange and format("%s - %s", minRange, maxRange) or ""
-		end
-	end)
-
 	E:AddTag("range:expectation", 0.1, function(unit)
 		if RangeCheck and UnitIsConnected(unit) and not UnitIsUnit(unit, "player") then
 			local minRange, maxRange = RangeCheck:GetRange(unit, true)

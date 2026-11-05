@@ -4,6 +4,7 @@ local AceConfigRegistry = E.Libs.AceConfigRegistry
 local C = W.Utilities.Color
 local CA = W:GetModule("CombatAlert")
 local DT = W:GetModule("DestroyTotem")
+local IT = W:GetModule("InterruptTracker")
 local QK = W:GetModule("QuickKeystone")
 local RM = W:GetModule("RaidMarkers")
 
@@ -755,6 +756,96 @@ options.quickKeystone = {
 			type = "toggle",
 			name = L["Enable"],
 			width = "full",
+		},
+	},
+}
+
+options.interruptTracker = {
+	order = 5,
+	type = "group",
+	name = L["Interrupt Tracker"],
+	get = function(info)
+		return E.private.WT.combat.interruptTracker[info[#info]]
+	end,
+	set = function(info, value)
+		E.private.WT.combat.interruptTracker[info[#info]] = value
+		IT:UpdateState()
+	end,
+	args = {
+		desc = {
+			order = 1,
+			type = "group",
+			inline = true,
+			name = L["Description"],
+			args = {
+				feature = {
+					order = 1,
+					type = "description",
+					name = L["Show the cooldowns of interrupts and other key abilities used by enemies."],
+					fontSize = "medium",
+				},
+			},
+		},
+		enable = {
+			order = 2,
+			type = "toggle",
+			name = L["Enable"],
+			set = function(info, value)
+				E.private.WT.combat.interruptTracker[info[#info]] = value
+				E:StaticPopup_Show("PRIVATE_RL")
+			end,
+		},
+		size = {
+			order = 3,
+			type = "range",
+			name = L["Size"],
+			min = 10,
+			max = 120,
+			step = 1,
+			get = function(info)
+				return E.db.WT.combat.interruptTracker[info[#info]]
+			end,
+			set = function(info, value)
+				E.db.WT.combat.interruptTracker[info[#info]] = value
+				IT:ProfileUpdate()
+			end,
+			disabled = function()
+				return not E.private.WT.combat.interruptTracker.enable
+			end,
+		},
+		visibility = {
+			order = 4,
+			type = "group",
+			inline = true,
+			name = L["Visibility"],
+			disabled = function()
+				return not E.private.WT.combat.interruptTracker.enable
+			end,
+			args = {
+				everywhere = {
+					order = 1,
+					type = "toggle",
+					name = L["Everywhere"],
+				},
+				arena = {
+					order = 2,
+					type = "toggle",
+					name = L["Arena"],
+					disabled = function()
+						local db = E.private.WT.combat.interruptTracker
+						return not db.enable or db.everywhere
+					end,
+				},
+				battleground = {
+					order = 3,
+					type = "toggle",
+					name = L["Battlegrounds"],
+					disabled = function()
+						local db = E.private.WT.combat.interruptTracker
+						return not db.enable or db.everywhere
+					end,
+				},
+			},
 		},
 	},
 }

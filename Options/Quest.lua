@@ -76,6 +76,16 @@ options.objectiveTracker = {
 				"rose-500"
 			),
 		},
+		showLevel = {
+			order = 2.5,
+			type = "toggle",
+			name = L["Quest level"],
+			desc = L["Show the quest level in front of quest titles in the objective tracker."],
+			set = function(info, value)
+				E.private.WT.quest.objectiveTracker[info[#info]] = value
+				OT:ToggleQuestLevel()
+			end,
+		},
 		progress = {
 			order = 3,
 			type = "group",
@@ -994,6 +1004,7 @@ local collapseStateValues = {
 	none = L["Do Nothing"],
 	collapse = L["Collapse"],
 	expand = L["Expand"],
+	hide = L["Hide Tracker"],
 }
 
 options.autoCollapse = {

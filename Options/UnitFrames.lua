@@ -332,52 +332,7 @@ options.absorb = {
 					order = 1,
 					type = "description",
 					width = "full",
-					name = format(
-						"%s\n%s",
-						format(
-							L["The absorb style %s and %s is highly recommended with %s tweaks."],
-							C.StringWithRGB(L["Overflow"], E.db.general.valuecolor),
-							C.StringWithRGB(L["Auto Height"], E.db.general.valuecolor),
-							W.Title
-						),
-						L["Here are some buttons for helping you change the setting of all absorb bars by one-click."]
-					),
-				},
-				setAllAbsorbStyleToOverflow = {
-					order = 2,
-					type = "execute",
-					name = format(
-						L["Set All Absorb Style to %s"],
-						C.StringWithRGB(L["Overflow"], E.db.general.valuecolor)
-					),
-					func = function(info)
-						for key in pairs(E.db.unitframe.units) do
-							local db = E.db.unitframe.units[key].healPrediction
-							if db and db.absorbStyle then
-								db.absorbStyle = "OVERFLOW"
-							end
-						end
-						E.UnitFrames:Update_AllFrames()
-					end,
-					width = 1.7,
-				},
-				setAllAbsorbStyleToAutoHeight = {
-					order = 3,
-					type = "execute",
-					name = format(
-						L["Set All Absorb Style to %s"],
-						C.StringWithRGB(L["Auto Height"], E.db.general.valuecolor)
-					),
-					func = function()
-						for key in pairs(E.db.unitframe.units) do
-							local db = E.db.unitframe.units[key].healPrediction
-							if db and db.height then
-								db.height = -1
-							end
-						end
-						E.UnitFrames:Update_AllFrames()
-					end,
-					width = 1.7,
+					name = L["Here are some buttons for helping you change the setting of all absorb bars by one-click."],
 				},
 				changeColor = {
 					order = 4,
@@ -688,10 +643,6 @@ do
 	examples.range = {
 		order = 12,
 		name = L["Range"],
-		normal = {
-			tag = "[range]",
-			text = L["Range"],
-		},
 		expectation = {
 			tag = "[range:expectation]",
 			text = L["Range Expectation"],

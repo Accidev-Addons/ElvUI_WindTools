@@ -31,3 +31,7 @@ G.item = {
 		updateAlts = true,
 	},
 }
+
+G.misc = {
+	rouletteHistory = {},
+}

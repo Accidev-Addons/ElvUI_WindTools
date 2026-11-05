@@ -239,19 +239,19 @@ do
 	---Texture configuration for widget tips
 	---@type table
 	local texTable = {
-		texWidth = 2048,
-		texHeight = 1024,
+		texWidth = 1024,
+		texHeight = 512,
 		tipWidth = 512,
 		tipHeight = 170,
 		languages = {
-			enUS = 340,
+			enUS = 0,
 		},
 		type = {
 			button = { 0, 0 },
 			checkBox = { 512, 0 },
-			tab = { 1024, 0 },
-			treeGroupButton = { 1536, 0 },
-			slider = { 0, 510 },
+			tab = { 0, 170 },
+			treeGroupButton = { 512, 170 },
+			slider = { 0, 340 },
 		},
 	}
 

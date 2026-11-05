@@ -216,26 +216,62 @@ options.elvUITweaks = {
 				},
 			},
 		},
-		misc = {
-			order = 5,
-			type = "group",
-			name = L["Miscellaneous"],
-			inline = true,
-			args = {
-				forceItemLevel = {
-					order = 1,
-					type = "toggle",
-					name = L["Force Item Level"],
-					desc = L["Even you are not pressing the modifier key, the item level will still be shown."]
-						.. "\n"
-						.. C.StringByTemplate(L["It may broken inspect feature sometimes."], "yellow-400"),
-					get = function(info)
-						return E.db.WT.tooltips.elvUITweaks.forceItemLevel
-					end,
-					set = function(info, value)
-						E.db.WT.tooltips.elvUITweaks.forceItemLevel = value
-					end,
-				},
+	},
+}
+
+options.progression = {
+	order = 4,
+	type = "group",
+	name = L["Raid Progression"],
+	get = function(info)
+		return E.db.WT.tooltips.progression[info[#info]]
+	end,
+	set = function(info, value)
+		E.db.WT.tooltips.progression[info[#info]] = value
+	end,
+	args = {
+		enable = {
+			order = 1,
+			type = "toggle",
+			name = L["Enable"],
+			desc = L["Display the raid progression of max level players while the general modifier key is held."],
+		},
+		checkAchievements = {
+			order = 2,
+			type = "toggle",
+			name = L["Check Achievements"],
+			desc = L["Check achievement completion instead of boss kill stats.\nSome servers log incorrect boss kill statistics, this is an alternative way to get player progress."],
+			disabled = function()
+				return not E.db.WT.tooltips.progression.enable
+			end,
+		},
+		checkPlayer = {
+			order = 3,
+			type = "toggle",
+			name = L["Check Player"],
+			desc = L["Also show your own progression on your tooltip."],
+			disabled = function()
+				return not E.db.WT.tooltips.progression.enable
+			end,
+		},
+		tiers = {
+			order = 4,
+			type = "multiselect",
+			name = L["Raids"],
+			get = function(_, key)
+				return E.db.WT.tooltips.progression.tiers[key]
+			end,
+			set = function(_, key, value)
+				E.db.WT.tooltips.progression.tiers[key] = value
+			end,
+			disabled = function()
+				return not E.db.WT.tooltips.progression.enable
+			end,
+			values = {
+				RS = L["Ruby Sanctum"],
+				ICC = L["Icecrown Citadel"],
+				ToC = L["Trial of the Crusader"],
+				Ulduar = L["Ulduar"],
 			},
 		},
 	},

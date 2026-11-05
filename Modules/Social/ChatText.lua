@@ -55,6 +55,8 @@ local elvuiAbbrStrings = {
 	OFFICER = L["O"],
 	PARTY_LEADER = L["PL"],
 	RAID_LEADER = L["RL"],
+	BATTLEGROUND = L["BG"],
+	BATTLEGROUND_LEADER = L["BGL"],
 }
 
 local abbrStrings = {
@@ -65,6 +67,8 @@ local abbrStrings = {
 	PARTY_LEADER = L["[ABBR] Party Leader"],
 	RAID_LEADER = L["[ABBR] Raid Leader"],
 	RAID_WARNING = L["[ABBR] Raid Warning"],
+	BATTLEGROUND = L["[ABBR] Battleground"],
+	BATTLEGROUND_LEADER = L["[ABBR] Battleground Leader"],
 }
 
 local roleIcons
@@ -127,8 +131,6 @@ function CT.ShortChannel(channelLink)
 
 		if CT.db.abbreviation == "SHORT" then
 			abbr = abbrStrings[strupper(channelLink)]
-		elseif CT.db.abbreviation == "NONE" then
-			return ""
 		else
 			abbr = elvuiAbbrStrings[strupper(channelLink)]
 		end

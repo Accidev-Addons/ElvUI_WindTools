@@ -1,6 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
 	<Script file='CombatAlert.lua'/>
 	<Script file='DestroyTotem.lua'/>
+	<Script file='InterruptTracker.lua'/>
 	<Script file='QuickKeystone.lua'/>
 	<Script file='RaidMarkers.lua'/>
 </Ui>

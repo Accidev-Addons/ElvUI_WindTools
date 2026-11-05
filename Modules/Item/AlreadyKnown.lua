@@ -5,8 +5,13 @@ local _G = _G
 local min = min
 local select = select
 local strfind = strfind
+local strmatch = strmatch
 
 local GetBuybackItemInfo = GetBuybackItemInfo
+local GetCurrentGuildBankTab = GetCurrentGuildBankTab
+local GetGuildBankItemInfo = GetGuildBankItemInfo
+local GetGuildBankItemLink = GetGuildBankItemLink
+local GetItemInfoInstant = GetItemInfoInstant
 local GetMerchantItemInfo = GetMerchantItemInfo
 local GetMerchantItemInfoEx = GetMerchantItemInfoEx
 local GetMerchantNumItems = GetMerchantNumItems
@@ -17,10 +22,11 @@ local SetItemButtonTextureVertexColor = SetItemButtonTextureVertexColor
 local BUYBACK_ITEMS_PER_PAGE = BUYBACK_ITEMS_PER_PAGE
 local ITEM_SPELL_KNOWN = ITEM_SPELL_KNOWN
 
-local function IsBuybackItemKnown(index)
+local knowableClassIDs = { [0] = true, [9] = true, [15] = true, [16] = true }
+local knownGuildBankItems = {}
+
+local function IsScanTooltipKnown()
 	local tt = E.ScanTooltip
-	tt:SetOwner(_G.WorldFrame, "ANCHOR_NONE")
-	tt:SetBuybackItem(index)
 	for i = 2, tt:NumLines() do
 		local text = _G["ElvUI_ScanTooltipTextLeft" .. i]:GetText()
 		if text and strfind(text, ITEM_SPELL_KNOWN, 1, true) then
@@ -29,6 +35,37 @@ local function IsBuybackItemKnown(index)
 		end
 	end
 	tt:Hide()
+end
+
+local function IsBuybackItemKnown(index)
+	local tt = E.ScanTooltip
+	tt:SetOwner(_G.WorldFrame, "ANCHOR_NONE")
+	tt:SetBuybackItem(index)
+	return IsScanTooltipKnown()
+end
+
+local function IsGuildBankItemKnown(tab, slot)
+	local link = GetGuildBankItemLink(tab, slot)
+	if not link then
+		return
+	end
+
+	local itemID = strmatch(link, "item:(%d+)")
+	if knownGuildBankItems[itemID] then
+		return true
+	end
+
+	if not knowableClassIDs[select(6, GetItemInfoInstant(link))] then
+		return
+	end
+
+	local tt = E.ScanTooltip
+	tt:SetOwner(_G.WorldFrame, "ANCHOR_NONE")
+	tt:SetGuildBankItem(tab, slot)
+	if IsScanTooltipKnown() then
+		knownGuildBankItems[itemID] = true
+		return true
+	end
 end
 
 function AK:Highlight(button, known, unavailable)
@@ -79,6 +116,40 @@ function AK:Buyback()
 	end
 end
 
+function AK:GuildBank()
+	if not self.db.enable or _G.GuildBankFrame.mode ~= "bank" then
+		return
+	end
+
+	local tab = GetCurrentGuildBankTab()
+	for column = 1, _G.NUM_GUILDBANK_COLUMNS do
+		for index = 1, _G.NUM_SLOTS_PER_GUILDBANK_GROUP do
+			local button = _G["GuildBankColumn" .. column .. "Button" .. index]
+			local slot = button:GetID()
+			local texture, _, locked = GetGuildBankItemInfo(tab, slot)
+			if texture and not locked and IsGuildBankItemKnown(tab, slot) then
+				self:Highlight(button, true)
+			end
+		end
+	end
+end
+
+function AK:HookGuildBank()
+	if self.guildBankHooked or not _G.GuildBankFrame_Update then
+		return
+	end
+
+	self.guildBankHooked = true
+	self:SecureHook("GuildBankFrame_Update", "GuildBank")
+end
+
+function AK:ADDON_LOADED(_, addon)
+	if addon == "Blizzard_GuildBankUI" then
+		self:UnregisterEvent("ADDON_LOADED")
+		self:HookGuildBank()
+	end
+end
+
 function AK:Initialize()
 	if IsAddOnLoaded("AlreadyKnown") then
 		self.StopRunning = "AlreadyKnown"
@@ -93,6 +164,12 @@ function AK:Initialize()
 	self.initialized = true
 	self:SecureHook("MerchantFrame_UpdateMerchantInfo", "Merchant")
 	self:SecureHook("MerchantFrame_UpdateBuybackInfo", "Buyback")
+
+	if _G.GuildBankFrame_Update then
+		self:HookGuildBank()
+	else
+		self:RegisterEvent("ADDON_LOADED")
+	end
 end
 
 function AK:ToggleSetting()

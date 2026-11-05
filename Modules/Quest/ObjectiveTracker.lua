@@ -15,6 +15,8 @@ local strupper = strupper
 local tonumber = tonumber
 
 local CreateFrame = CreateFrame
+local GetQuestIndexForWatch = GetQuestIndexForWatch
+local GetQuestLogTitle = GetQuestLogTitle
 
 ---@type ObjectiveTrackerModuleTemplate[]
 local trackers = {
@@ -369,9 +371,69 @@ function OT:ObjectiveTrackerModule_AddBlock(tracker, block)
 	end
 end
 
+function OT:ObjectiveTrackerBlock_SetHeader(block, text)
+	if not (self.db.showLevel and text and block.index) or block.parentModule ~= _G.QuestObjectiveTracker then
+		return
+	end
+
+	local questLogIndex = GetQuestIndexForWatch(block.index)
+	if not questLogIndex then
+		return
+	end
+
+	local _, level = GetQuestLogTitle(questLogIndex)
+	if not level then
+		return
+	end
+
+	block.height = block:SetStringText(
+		block.HeaderText,
+		format("[%d] %s", level, text),
+		nil,
+		_G.OBJECTIVE_TRACKER_COLOR["Header"],
+		block.isHighlighted
+	)
+end
+
+function OT:HookBlockHeader(block)
+	if not self:IsHooked(block, "SetHeader") then
+		self:SecureHook(block, "SetHeader", "ObjectiveTrackerBlock_SetHeader")
+	end
+end
+
+function OT:QuestObjectiveTracker_GetBlock(module, id)
+	local block = module:GetExistingBlock(id)
+	if block then
+		self:HookBlockHeader(block)
+	end
+end
+
+function OT:ToggleQuestLevel()
+	local module = _G.QuestObjectiveTracker
+	if not module or not self.db then
+		return
+	end
+
+	if self.db.showLevel then
+		if not self:IsHooked(module, "GetBlock") then
+			self:SecureHook(module, "GetBlock", "QuestObjectiveTracker_GetBlock")
+		end
+		module:EnumerateActiveBlocks(function(block)
+			self:HookBlockHeader(block)
+		end)
+	end
+
+	module:MarkDirty()
+end
+
 ---Initialize the ObjectiveTracker module with hooks and settings
 function OT:Initialize()
 	self.db = E.private.WT.quest.objectiveTracker
+
+	if self.db.showLevel then
+		self:ToggleQuestLevel()
+	end
+
 	if not self.db.enable then
 		return
 	end

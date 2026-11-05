@@ -7,12 +7,33 @@ local unpack = unpack
 
 local PADDING = 4
 
+function S:LossOfControlFrame_UpdateSize(frame)
+	local db = self.db.lossOfControl
+	local hasText = not db.abilityName.hide or not db.timeLeft.hide
+
+	local height = db.icon.iconSize
+	if hasText then
+		height = height + PADDING * 2 + 28
+	end
+
+	local width = db.icon.iconSize
+	if hasText then
+		width = max(width, 200)
+	else
+		width = width + 12
+	end
+
+	frame:Size(width, height)
+end
+
 function S:LossOfControlFrame_SetUpDisplay(frame)
 	if not frame then
 		return
 	end
 
 	local db = self.db.lossOfControl
+
+	frame.Cooldown:SetAlpha(db.icon.hideCooldown and 0 or 1)
 
 	frame.Icon:ClearAllPoints()
 	frame.Icon:Point(db.icon.anchor, frame, db.icon.anchor, db.icon.offsetX, db.icon.offsetY)
@@ -42,8 +63,6 @@ function S:LossOfControlFrame_SetUpDisplay(frame)
 		frame.Icon.backdrop.shadow:Hide()
 	end
 
-	local hasText = false
-
 	if db.abilityName.hide then
 		frame.AbilityName:Hide()
 	else
@@ -57,7 +76,6 @@ function S:LossOfControlFrame_SetUpDisplay(frame)
 			frame.AbilityName:Point("CENTER", frame, "CENTER", db.abilityName.offsetX, db.abilityName.offsetY)
 		end
 		F.SetFontWithDB(frame.AbilityName, db.abilityName.font)
-		hasText = true
 	end
 
 	if db.timeLeft.hide then
@@ -82,22 +100,11 @@ function S:LossOfControlFrame_SetUpDisplay(frame)
 		end
 		F.SetFontWithDB(frame.TimeLeft.NumberText, db.timeLeft.font)
 		F.SetFontWithDB(frame.TimeLeft.SecondsText, db.timeLeft.font)
-		hasText = true
+		local numberColor = db.timeLeft.numberColor
+		frame.TimeLeft.NumberText:SetTextColor(numberColor.r, numberColor.g, numberColor.b)
 	end
 
-	local height = db.icon.iconSize
-	if hasText then
-		height = height + PADDING * 2 + 28
-	end
-
-	local width = db.icon.iconSize
-	if hasText then
-		width = max(width, 200)
-	else
-		width = width + 12
-	end
-
-	frame:Size(width, height)
+	self:LossOfControlFrame_UpdateSize(frame)
 end
 
 function S:LossOfControlFrame()
@@ -116,6 +123,22 @@ function S:LossOfControlFrame()
 			f:Hide()
 		end
 	end)
+
+	self:LossOfControlFrame_UpdateSize(_G.LossOfControlFrame)
+
+	E:CreateMover(
+		_G.LossOfControlFrame,
+		"WTLossOfControlFrameMover",
+		W.Title .. " - " .. L["Loss Of Control"],
+		nil,
+		nil,
+		nil,
+		"ALL,WINDTOOLS",
+		function()
+			return not self:CheckDB("losscontrol", "lossOfControl")
+		end,
+		"WindTools,skins,lossOfControl"
+	)
 end
 
 S:AddCallback("LossOfControlFrame")

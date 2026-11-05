@@ -410,6 +410,7 @@ options.reset = {
 					func = function()
 						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["World Map"], nil, function()
 							E.private.WT.maps.worldMap = V.maps.worldMap
+							E.db.WT.maps.worldMap = P.maps.worldMap
 						end)
 					end,
 				},
@@ -599,6 +600,16 @@ options.reset = {
 						end)
 					end,
 				},
+				progression = {
+					order = 3,
+					type = "execute",
+					name = L["Raid Progression"],
+					func = function()
+						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Raid Progression"], nil, function()
+							E.db.WT.tooltips.progression = P.tooltips.progression
+						end)
+					end,
+				},
 				groupInfo = {
 					order = 5,
 					type = "execute",
@@ -779,6 +790,7 @@ options.reset = {
 						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["General"], nil, function()
 							E.private.WT.misc.keybindTextAbove = V.misc.keybindTextAbove
 							E.private.WT.misc.autoToggleChatBubble = V.misc.autoToggleChatBubble
+							E.private.WT.misc.rouletteHistory = V.misc.rouletteHistory
 							E.db.WT.misc.hideCrafter = P.misc.hideCrafter
 						end)
 					end,

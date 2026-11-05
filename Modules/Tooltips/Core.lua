@@ -145,16 +145,9 @@ function T:InspectInfo(tt, data, triedTimes)
 	local inCombatLockdown = InCombatLockdown()
 	local isShiftKeyDown = IsShiftKeyDown()
 	local isPlayerUnit = UnitIsPlayer(unit)
-	local isInspecting = _G.InspectPaperDollFrame and _G.InspectPaperDollFrame:IsShown()
 
 	-- Item Level
 	local itemLevelAvailable = isPlayerUnit and not inCombatLockdown and ET.db.inspectDataEnable
-
-	if self.profiledb.elvUITweaks.forceItemLevel and not isInspecting then
-		if not isShiftKeyDown and itemLevelAvailable and not tt.ItemLevelShown then
-			ET:AddItemLevelInfo(tt, unit)
-		end
-	end
 
 	-- Modifier callbacks pre-check
 	if not self:CheckModifier() or not CanInspect(unit) then
@@ -162,7 +155,7 @@ function T:InspectInfo(tt, data, triedTimes)
 	end
 
 	-- It ElvUI Item Level is enabled, we need to delay the modifier callbacks
-	if self.profiledb.elvUITweaks.forceItemLevel or isShiftKeyDown and itemLevelAvailable then
+	if isShiftKeyDown and itemLevelAvailable then
 		if not tt.ItemLevelShown and triedTimes <= 4 then
 			E:Delay(0.33, T.InspectInfo, T, tt, data, triedTimes + 1)
 			return

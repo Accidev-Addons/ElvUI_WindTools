@@ -14,20 +14,6 @@ function S:Blizzard_InspectUI()
 	end
 
 	self:CreateShadow(_G.InspectPaperDollFrame.ViewButton)
-
-	-- Remove character model background
-	local InspectModelFrame = _G.InspectModelFrame
-	if InspectModelFrame then
-		InspectModelFrame:DisableDrawLayer("BACKGROUND")
-		InspectModelFrame:DisableDrawLayer("BORDER")
-		InspectModelFrame:DisableDrawLayer("OVERLAY")
-	end
-
-	F.WaitFor(function()
-		return _G.InspectModelFrame and _G.InspectModelFrame.backdrop
-	end, function()
-		_G.InspectModelFrame.backdrop:Kill()
-	end)
 end
 
 S:AddCallbackForAddon("Blizzard_InspectUI")

@@ -660,7 +660,7 @@ options.alreadyKnown = {
 							local errorMsg = format(L["Because of %s, this module will not be loaded."], AK.StopRunning)
 							return C.StringByTemplate(errorMsg, "rose-500")
 						else
-							return L["Puts a overlay on already known learnable items on vendors."]
+							return L["Puts a overlay on already known learnable items on vendors and in the guild bank."]
 						end
 					end,
 					fontSize = "medium",

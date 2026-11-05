@@ -508,6 +508,12 @@ options.lossOfControl = {
 					type = "toggle",
 					name = L["Icon Shadow"],
 				},
+				hideCooldown = {
+					order = 3,
+					type = "toggle",
+					name = L["Hide Cooldown"],
+					desc = L["Hide the cooldown animation over the icon."],
+				},
 				anchor = {
 					order = 4,
 					type = "select",
@@ -695,8 +701,24 @@ options.lossOfControl = {
 					max = 200,
 					step = 1,
 				},
-				font = {
+				numberColor = {
 					order = 5,
+					type = "color",
+					name = L["Number Color"],
+					hasAlpha = false,
+					get = function(info)
+						local db = E.private.WT.skins.lossOfControl.timeLeft.numberColor
+						local default = V.skins.lossOfControl.timeLeft.numberColor
+						return db.r, db.g, db.b, nil, default.r, default.g, default.b, nil
+					end,
+					set = function(info, r, g, b)
+						local db = E.private.WT.skins.lossOfControl.timeLeft.numberColor
+						db.r, db.g, db.b = r, g, b
+						ApplyLossOfControlLive()
+					end,
+				},
+				font = {
+					order = 6,
 					type = "group",
 					inline = true,
 					name = L["Font"],

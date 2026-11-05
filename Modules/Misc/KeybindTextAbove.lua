@@ -8,14 +8,17 @@ local pairs = pairs
 local CreateFrame = CreateFrame
 
 local function ReplaceHotKeyParent(button)
-	if button.windHotKeyFrame or not button.cooldown then
+	if not button.cooldown or not button.HotKey then
 		return
 	end
 
-	button.windHotKeyFrame = CreateFrame("Frame", nil, button)
-	button.windHotKeyFrame:SetAllPoints(button)
-	button.windHotKeyFrame:SetFrameStrata("LOW")
-	button.windHotKeyFrame:SetFrameLevel(button.cooldown:GetFrameLevel() + 11) -- The glow is about 10
+	if not button.windHotKeyFrame then
+		button.windHotKeyFrame = CreateFrame("Frame", nil, button)
+		button.windHotKeyFrame:SetAllPoints(button)
+		button.windHotKeyFrame:SetFrameStrata("LOW")
+		button.windHotKeyFrame:SetFrameLevel(button.cooldown:GetFrameLevel() + 11) -- The glow is about 10
+	end
+
 	button.HotKey:SetParent(button.windHotKeyFrame)
 end
 
@@ -27,6 +30,12 @@ function M:KeybindTextAbove()
 	hooksecurefunc(E, "RegisterCooldown", function(_, cooldown)
 		local button = cooldown:GetParent()
 		if button and AB.handledbuttons[button] then
+			ReplaceHotKeyParent(button)
+		end
+	end)
+
+	hooksecurefunc(AB, "StyleButton", function(_, button)
+		if button and button.windHotKeyFrame then
 			ReplaceHotKeyParent(button)
 		end
 	end)

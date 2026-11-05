@@ -23,7 +23,7 @@ local function StyleIconsInLine(line)
 end
 
 function S:StyleIconsInTooltip(tt)
-	if not F.CanAccessWidget(tt) or not tt.NumLines or not E.db.general.cropIcon then
+	if not F.CanAccessWidget(tt) or not tt.NumLines or (E.db.general.cropIcon or 0) == 0 then
 		return
 	end
 	local name = tt:GetName()

@@ -160,6 +160,9 @@ P.combat = {
 	quickKeystone = {
 		enable = true,
 	},
+	interruptTracker = {
+		size = 32,
+	},
 }
 
 ---@class ProfileDB.item
@@ -481,6 +484,12 @@ P.maps = {
 		heightPercentage = 0.8,
 		fixHereBeDragons = true,
 		pinHidingTolerance = 10,
+	},
+	worldMap = {
+		reveal = {
+			enable = false,
+			color = { r = 0.5, g = 0.5, b = 0.5, a = 1 },
+		},
 	},
 }
 
@@ -807,7 +816,6 @@ P.quest = {
 P.tooltips = {
 	---@class ProfileDB.tooltips.elvUITweaks
 	elvUITweaks = {
-		forceItemLevel = false,
 		healthBar = {
 			barYOffset = 0,
 			textYOffset = 0,
@@ -831,6 +839,17 @@ P.tooltips = {
 		mode = "NORMAL",
 		classIconStyle = "flat",
 		template = "{{classIcon:18}} {{specIcon:14,18}} {{classColorStart}}{{className}} ({{specName}}){{classColorEnd}}{{amountStart}} x {{amount}}{{amountEnd}}",
+	},
+	progression = {
+		enable = false,
+		checkAchievements = false,
+		checkPlayer = false,
+		tiers = {
+			RS = true,
+			ICC = true,
+			ToC = true,
+			Ulduar = true,
+		},
 	},
 }
 

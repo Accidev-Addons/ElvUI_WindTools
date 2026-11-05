@@ -22,6 +22,12 @@ V.combat = {
 			[4] = nil,
 		},
 	},
+	interruptTracker = {
+		enable = false,
+		everywhere = false,
+		arena = true,
+		battleground = false,
+	},
 }
 
 ---@class PrivateDB.item
@@ -90,6 +96,7 @@ V.maps = {
 V.misc = {
 	keybindTextAbove = false,
 	autoToggleChatBubble = false,
+	rouletteHistory = true,
 	---@class PrivateDB.misc.moveFrames
 	moveFrames = {
 		enable = true,
@@ -129,6 +136,7 @@ V.quest = {
 	---@class PrivateDB.quest.objectiveTracker
 	objectiveTracker = {
 		enable = false,
+		showLevel = false,
 		noDash = true,
 		colorfulProgress = true,
 		percentage = false,
@@ -355,6 +363,7 @@ V.skins = {
 		icon = {
 			iconSize = 64,
 			iconShadow = true,
+			hideCooldown = false,
 			anchor = "LEFT",
 			offsetX = 0,
 			offsetY = 0,
@@ -375,6 +384,7 @@ V.skins = {
 			justifyH = "LEFT",
 			offsetX = -20,
 			offsetY = -18,
+			numberColor = { r = 1, g = 1, b = 1 },
 			font = {
 				name = E.db.general.font,
 				size = 25,
@@ -498,6 +508,9 @@ V.social = {
 	---@class PrivateDB.social.smartTab
 	smartTab = {
 		whisperTargets = {},
+	},
+	guildFinderHistory = {
+		enable = true,
 	},
 }
 
