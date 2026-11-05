@@ -5,6 +5,7 @@ local GetContainerNumFreeSlots = GetContainerNumFreeSlots
 local GetCVarBool = GetCVarBool
 local GetNumLootItems = GetNumLootItems
 local GetTime = GetTime
+local InCombatLockdown = InCombatLockdown
 local IsModifiedClick = IsModifiedClick
 local IsFishingLoot = IsFishingLoot
 local LootSlot = LootSlot
@@ -22,6 +23,10 @@ end
 local tDelay = 0
 
 function FL:LOOT_OPENED()
+	if InCombatLockdown() then
+		return
+	end
+
 	if GetTime() - tDelay >= self.db.limit then
 		tDelay = GetTime()
 		if not GetCVarBool("autoLootDefault") ~= not IsModifiedClick("AUTOLOOTTOGGLE") and not IsFishingLoot() then
