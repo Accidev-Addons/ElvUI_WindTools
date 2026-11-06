@@ -47,7 +47,7 @@ options.rectangleMinimap = {
 			type = "range",
 			name = L["Height Percentage"],
 			desc = L["Percentage of ElvUI minimap size."],
-			min = 0.01,
+			min = 0.25,
 			max = 1,
 			step = 0.01,
 		},

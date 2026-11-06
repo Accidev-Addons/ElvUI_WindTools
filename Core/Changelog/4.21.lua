@@ -81,6 +81,7 @@ W.Changelog[421] = {
 			"[Absorb] The Overflow and Auto Height buttons were removed: ElvUI for Sirus has no such absorb settings.",
 			"[Skins] Opening the Widgets options no longer closes the game.",
 			"[Fast Loot] Does nothing in combat, where Sirus blocks it; the game's auto loot picks up the items.",
+			"[Rectangle Minimap] The height starts at 25%: a lower height caused a Lua error about a missing mask and left no usable map.",
 		},
 		["ruRU"] = {
 			"[Игровая панель] Персонаж, книга заклинаний, таланты, профессии и магазин открываются через микрокнопки Sirus, поэтому заклинания и таланты после этого не блокируются.",
@@ -112,6 +113,7 @@ W.Changelog[421] = {
 			"[Поглощение] Убраны кнопки «Перелив» и «Авто высота»: в ElvUI для Sirus таких настроек поглощения нет.",
 			"[Скины] Открытие настроек виджетов больше не закрывает игру.",
 			"[Быстрая добыча] В бою не срабатывает, потому что Sirus её блокирует; предметы собирает автосбор игры.",
+			"[Прямоугольная миникарта] Высота начинается с 25%: меньшая высота вызывала ошибку Lua об отсутствующей маске, и от карты почти ничего не оставалось.",
 		},
 	},
 }

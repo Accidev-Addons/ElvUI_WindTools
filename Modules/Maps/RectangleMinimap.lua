@@ -7,6 +7,8 @@ local abs = abs
 local ceil = ceil
 local floor = floor
 local format = format
+local max = max
+local min = min
 local pairs = pairs
 local select = select
 
@@ -87,7 +89,7 @@ function RM:ChangeShape()
 	local holder = M.MapHolder
 	local panel = _G.MinimapPanel
 
-	local fileID = self.db.enable and self.db.heightPercentage and floor(self.db.heightPercentage * 128) or 128
+	local fileID = self.db.enable and self.db.heightPercentage and min(max(floor(self.db.heightPercentage * 128), 32), 128) or 128
 	local texturePath = format([[Interface\AddOns\ElvUI_WindTools\Media\Textures\MinimapMasks\%d.tga]], fileID)
 	local heightPct = fileID / 128
 	local newHeight = E.MinimapSize * heightPct
