@@ -4,6 +4,7 @@ local AC = W:NewModule("AutoCollapse", "AceHook-3.0", "AceEvent-3.0") ---@class 
 local _G = _G
 local ipairs = ipairs
 
+local CreateFrame = CreateFrame
 local InCombatLockdown = InCombatLockdown
 local IsInInstance = IsInInstance
 local IsResting = IsResting
@@ -47,22 +48,56 @@ function AC:UpdateState(event)
 	self.state = self.db.default
 end
 
-local function ApplyCollapseState(tracker, state)
-	local collapse = state ~= "expand"
-	local isCollapsed = tracker:IsCollapsed() and true or false
-	if isCollapsed ~= collapse then
-		tracker:SetCollapsed(collapse)
+local function CanChangeVisibility(frame)
+	return not (InCombatLockdown() and frame:IsProtected())
+end
+
+function AC:OnExpandButtonClick()
+	if self.db.ignoreManualToggle then
+		return
+	end
+
+	self.state = "none"
+	self:SetContentCollapsed(_G.ObjectiveTrackerFrame, false)
+end
+
+function AC:SetContentCollapsed(tracker, collapsed)
+	if not collapsed == not self.contentCollapsed or not CanChangeVisibility(tracker.ScrollFrame) then
+		return
+	end
+
+	if not self.expandButton then
+		local minimize = tracker.Header.MinimizeButton
+		local button = CreateFrame("Button", nil, tracker.Header)
+		button:SetAllPoints(minimize)
+		button:SetFrameLevel(minimize:GetFrameLevel() + 1)
+		button:SetScript("OnClick", function()
+			self:OnExpandButtonClick()
+		end)
+		self.expandButton = button
+	end
+
+	if collapsed then
+		self.nineSliceAlpha = tracker.NineSlice:GetAlpha()
+	end
+
+	self.contentCollapsed = collapsed
+	tracker.ScrollFrame:SetShown(not collapsed)
+	tracker.NineSlice:SetAlpha(collapsed and 0 or self.nineSliceAlpha or 1)
+	tracker.Header:SetCollapsed(collapsed or tracker:IsCollapsed())
+	self.expandButton:SetShown(collapsed)
+end
+
+function AC:HideTracker(tracker)
+	if tracker:GetParent() ~= E.HiddenFrame and CanChangeVisibility(tracker) then
+		self.trackerParent = tracker:GetParent()
+		tracker:SetParent(E.HiddenFrame)
 	end
 end
 
-local function CanChangeVisibility(tracker)
-	return not (InCombatLockdown() and tracker:IsProtected())
-end
-
 function AC:RestoreTracker(tracker)
-	if self.hidden and CanChangeVisibility(tracker) then
-		self.hidden = nil
-		tracker:Update()
+	if tracker:GetParent() == E.HiddenFrame and not InCombatLockdown() then
+		tracker:SetParent(self.trackerParent or _G.UIParent)
 	end
 end
 
@@ -79,40 +114,26 @@ function AC:Apply(event, arg1)
 	self:UpdateState(event)
 
 	if self.state == "hide" then
-		if CanChangeVisibility(tracker) then
-			self.hidden = true
-			tracker:Hide()
-		end
+		self:HideTracker(tracker)
 		return
 	end
 
 	self:RestoreTracker(tracker)
 
 	if self.state ~= "none" then
-		ApplyCollapseState(tracker, self.state)
-	end
-end
-
-function AC:ObjectiveTrackerFrame_Show(frame)
-	if self.db and self.db.enable and self.state == "hide" and CanChangeVisibility(frame) then
-		frame:Hide()
+		self:SetContentCollapsed(tracker, self.state == "collapse")
 	end
 end
 
 function AC:ObjectiveTrackerFrame_SetCollapsed(frame)
-	if not self.db or not self.db.enable or self.state == "none" or self.state == "hide" then
+	if not self.db or not self.db.enable or self.db.ignoreManualToggle or self.state == "hide" then
 		return
 	end
 
-	local header = frame.Header
-	local isUserAction = header and header.MinimizeButton and header.MinimizeButton:IsMouseOver()
-
-	if not self.db.ignoreManualToggle and isUserAction then
+	local minimize = frame.Header and frame.Header.MinimizeButton
+	if minimize and minimize:IsMouseOver() then
 		self.state = "none"
-		return
 	end
-
-	ApplyCollapseState(frame, self.state)
 end
 
 local events = {
@@ -134,6 +155,7 @@ function AC:ProfileUpdate()
 		self.state = "none"
 		if _G.ObjectiveTrackerFrame then
 			self:RestoreTracker(_G.ObjectiveTrackerFrame)
+			self:SetContentCollapsed(_G.ObjectiveTrackerFrame, false)
 		end
 		return
 	end
@@ -149,9 +171,6 @@ function AC:ProfileUpdate()
 	if tracker then
 		if not self:IsHooked(tracker, "SetCollapsed") then
 			self:SecureHook(tracker, "SetCollapsed", "ObjectiveTrackerFrame_SetCollapsed")
-		end
-		if not self:IsHooked(tracker, "Show") then
-			self:SecureHook(tracker, "Show", "ObjectiveTrackerFrame_Show")
 		end
 	end
 

@@ -82,6 +82,8 @@ W.Changelog[421] = {
 			"[Skins] Opening the Widgets options no longer closes the game.",
 			"[Fast Loot] Does nothing in combat, where Sirus blocks it; the game's auto loot picks up the items.",
 			"[Rectangle Minimap] The height starts at 25%: a lower height caused a Lua error about a missing mask and left no usable map.",
+			"[Auto Collapse] The Hide, Collapse and Expand states no longer change the objective tracker through its own code, so the boss and arena frame column is no longer blocked in combat. Collapse hides the tracker contents, and Expand shows them again but no longer opens a tracker you collapsed yourself.",
+			"[Rectangle Minimap] The Russian name of the height option is fixed.",
 		},
 		["ruRU"] = {
 			"[Игровая панель] Персонаж, книга заклинаний, таланты, профессии и магазин открываются через микрокнопки Sirus, поэтому заклинания и таланты после этого не блокируются.",
@@ -114,6 +116,8 @@ W.Changelog[421] = {
 			"[Скины] Открытие настроек виджетов больше не закрывает игру.",
 			"[Быстрая добыча] В бою не срабатывает, потому что Sirus её блокирует; предметы собирает автосбор игры.",
 			"[Прямоугольная миникарта] Высота начинается с 25%: меньшая высота вызывала ошибку Lua об отсутствующей маске, и от карты почти ничего не оставалось.",
+			"[Автоматическое сворачивание] Состояния «Скрыть», «Свернуть» и «Развернуть» больше не меняют трекер заданий через его собственный код, поэтому колонка рамок боссов и арены больше не блокируется в бою. «Свернуть» прячет содержимое трекера, а «Развернуть» показывает его снова, но больше не раскрывает трекер, свёрнутый вручную.",
+			"[Прямоугольная миникарта] Исправлено русское название настройки высоты.",
 		},
 	},
 }
