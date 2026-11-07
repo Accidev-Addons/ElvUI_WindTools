@@ -84,6 +84,7 @@ W.Changelog[421] = {
 			"[Rectangle Minimap] The height starts at 25%: a lower height caused a Lua error about a missing mask and left no usable map.",
 			"[Auto Collapse] The Hide, Collapse and Expand states no longer change the objective tracker through its own code, so the boss and arena frame column is no longer blocked in combat. Collapse hides the tracker contents, and Expand shows them again but no longer opens a tracker you collapsed yourself.",
 			"[Rectangle Minimap] The Russian name of the height option is fixed.",
+			"[Switch Buttons] The bar is no longer anchored to the objective tracker, so the world map and other protected frames are no longer blocked in combat after a reload. The default position is the top right corner of the default tracker position; a bar moved with the mover keeps its place.",
 		},
 		["ruRU"] = {
 			"[Игровая панель] Персонаж, книга заклинаний, таланты, профессии и магазин открываются через микрокнопки Sirus, поэтому заклинания и таланты после этого не блокируются.",
@@ -118,6 +119,7 @@ W.Changelog[421] = {
 			"[Прямоугольная миникарта] Высота начинается с 25%: меньшая высота вызывала ошибку Lua об отсутствующей маске, и от карты почти ничего не оставалось.",
 			"[Автоматическое сворачивание] Состояния «Скрыть», «Свернуть» и «Развернуть» больше не меняют трекер заданий через его собственный код, поэтому колонка рамок боссов и арены больше не блокируется в бою. «Свернуть» прячет содержимое трекера, а «Развернуть» показывает его снова, но больше не раскрывает трекер, свёрнутый вручную.",
 			"[Прямоугольная миникарта] Исправлено русское название настройки высоты.",
+			"[Кнопка переключения] Панель больше не привязана к трекеру заданий, поэтому после перезагрузки карта мира и другие защищённые окна больше не блокируются в бою. По умолчанию панель стоит у правого верхнего угла трекера в его стандартном месте; панель, перемещённая через фиксатор, остаётся на своём месте.",
 		},
 	},
 }
