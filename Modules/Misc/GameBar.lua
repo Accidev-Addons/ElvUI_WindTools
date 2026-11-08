@@ -32,7 +32,9 @@ local GenerateClosure = GenerateClosure
 local GetBindLocation = GetBindLocation
 local GetCVar = GetCVar
 local GetCVarBool = GetCVarBool
+local GetFramerate = GetFramerate
 local GetGameTime = GetGameTime
+local GetNetStats = GetNetStats
 local GetNumGuildMembers = GetNumGuildMembers
 local GetTime = GetTime
 local HideUIPanel = HideUIPanel
@@ -127,6 +129,11 @@ local function copyRGB(color, target)
 	target.r = color.r
 	target.g = color.g
 	target.b = color.b
+end
+
+local function updateSystemInfo(panel)
+	local hex = E.media.hexvaluecolor
+	panel.text:SetFormattedText("FPS: %s%d|r MS: %s%d|r", hex, GetFramerate(), hex, select(3, GetNetStats()))
 end
 
 function GB.AnimationManager:Drop()
@@ -463,7 +470,7 @@ local ButtonTypes = {
 		name = L["Friend List"],
 		icon = W.Media.Icons.barFriends,
 		macro = {
-			LeftButton = "/cleartarget\n/friends",
+			LeftButton = "/click FriendsMicroButton",
 		},
 		additionalText = function()
 			local online = 0
@@ -808,11 +815,11 @@ function GB:ConstructTimeArea()
 	end)
 
 	DT.RegisteredDataTexts["Time"].eventFunc(VirtualDT["Time"], "ELVUI_FORCE_UPDATE")
-	DT.RegisteredDataTexts["System"].onUpdate(self.bar.middlePanel, 10)
+	updateSystemInfo(self.bar.middlePanel)
 
 	if self.db.time.alwaysSystemInfo then
 		self.alwaysSystemInfoTimer = C_Timer_NewTicker(1, function()
-			DT.RegisteredDataTexts["System"].onUpdate(self.bar.middlePanel, 10)
+			updateSystemInfo(self.bar.middlePanel)
 		end)
 	end
 
@@ -825,7 +832,7 @@ function GB:ConstructTimeArea()
 		self:OnEnter()
 		self:AnimationOnEnter(panel)
 
-		DT.RegisteredDataTexts["System"].onUpdate(panel, 10)
+		updateSystemInfo(panel)
 		if not self.db.time.alwaysSystemInfo then
 			E:UIFrameFadeIn(panel.text, self.db.fadeTime, panel.text:GetAlpha(), 1)
 		end
@@ -843,7 +850,7 @@ function GB:ConstructTimeArea()
 			DT.RegisteredDataTexts["System"].onEnter()
 
 			self.tooltipTimer = C_Timer_NewTicker(1, function()
-				DT.RegisteredDataTexts["System"].onUpdate(panel, 10)
+				updateSystemInfo(panel)
 				DT.RegisteredDataTexts["System"].eventFunc()
 				DT.RegisteredDataTexts["System"].onEnter()
 			end)
@@ -853,7 +860,7 @@ function GB:ConstructTimeArea()
 			DT.RegisteredDataTexts["Time"].onLeave()
 
 			self.tooltipTimer = C_Timer_NewTicker(1, function()
-				DT.RegisteredDataTexts["System"].onUpdate(panel, 10)
+				updateSystemInfo(panel)
 			end)
 
 			DT.tooltip:AddLine("\n")
@@ -974,7 +981,7 @@ function GB:UpdateTimeArea()
 	end
 
 	if self.db.time.alwaysSystemInfo then
-		DT.RegisteredDataTexts["System"].onUpdate(panel, 10)
+		updateSystemInfo(panel)
 		panel.text:SetAlpha(1)
 		-- Cancel old timer if exists and running
 		if self.alwaysSystemInfoTimer and not self.alwaysSystemInfoTimer:IsCancelled() then
@@ -982,7 +989,7 @@ function GB:UpdateTimeArea()
 		end
 		-- Always create new timer to ensure fresh state
 		self.alwaysSystemInfoTimer = C_Timer_NewTicker(1, function()
-			DT.RegisteredDataTexts["System"].onUpdate(panel, 10)
+			updateSystemInfo(panel)
 		end)
 	else
 		panel.text:SetAlpha(0)

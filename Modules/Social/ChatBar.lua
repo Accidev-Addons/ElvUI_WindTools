@@ -129,6 +129,8 @@ local function GetInitialOffset(hasBackdrop, backdropSpacing, anchor)
 	return offsetX, offsetY
 end
 
+local SIRUS_WORLD_CHANNEL = { name = "Мир", autoJoin = true }
+
 ---Find the best matching world channel configuration
 ---@param configTable table Array of channel configurations
 ---@return table? config The best matching configuration or nil
@@ -169,7 +171,7 @@ local function GetBestWorldChannelConfig(configTable)
 		return false
 	end)
 
-	return validConfigs[1]
+	return validConfigs[1] or SIRUS_WORLD_CHANNEL
 end
 
 function CB:OnEnterBar()

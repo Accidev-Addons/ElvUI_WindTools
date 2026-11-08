@@ -574,7 +574,7 @@ P.social = {
 				abbr = L["[ABBR] Officer"],
 			},
 			world = {
-				enable = false,
+				enable = true,
 				config = {},
 				color = { r = 0.2, g = 0.6, b = 0.86, a = 1 },
 				abbr = L["[ABBR] World"],

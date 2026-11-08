@@ -1008,6 +1008,7 @@ options.gameBar = {
 			set = function(info, value)
 				E.db.WT.misc.gameBar.right[tonumber(info[#info])] = value
 				GB:UpdateButtons()
+				GB:UpdateLayout()
 			end,
 			args = {},
 		},
