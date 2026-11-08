@@ -88,14 +88,17 @@ function AM:Initialize()
 	self:RegisterEvent("RESURRECT_REQUEST")
 	self:RegisterEvent("CONFIRM_SUMMON")
 	self:RegisterEvent("CANCEL_SUMMON")
+
+	self.initialized = true
 end
 
 function AM:ProfileUpdate()
 	self.db = E.db.WT.misc.automation
 	if self.db and not self.db.enable and self.initialized then
-		self:UnregisterEvent("PLAYER_REGEN_ENABLED")
-		self:UnregisterEvent("PLAYER_REGEN_DISABLED")
-		self:UnregisterEvent("RESURRECT_REQUEST")
+		self:UnregisterAllEvents()
+		self.initialized = false
+	else
+		self:Initialize()
 	end
 end
 

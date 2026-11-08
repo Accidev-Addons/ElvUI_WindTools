@@ -99,23 +99,19 @@ local UpdateAfterCombat = {
 }
 
 do
-	local fakeButton = {
-		HotKey = {
-			text = "",
-			SetText = function(self, text)
-				self.text = text
-			end,
-			GetText = function(self)
-				return self.text
-			end,
-		},
-	}
+	local fakeButton
 
 	function EB:GetBindingKeyWithElvUI(key)
 		local keybind = GetBindingKey(key)
 
 		if not keybind or keybind == "" then
 			return ""
+		end
+
+		if not fakeButton then
+			fakeButton = CreateFrame("Frame", "WTExtraItemsBarKeybindHelper")
+			fakeButton.HotKey = fakeButton:CreateFontString("WTExtraItemsBarKeybindHelperHotKey")
+			fakeButton.HotKey:SetFontObject(_G.GameFontNormal)
 		end
 
 		fakeButton.HotKey:SetText(keybind)
@@ -762,7 +758,12 @@ function EB:Initialize()
 	UpdateEquipmentList()
 	self:UpdateBars()
 	self:UpdateBinding()
+	self:RegisterUpdateEvents()
 
+	self.initialized = true
+end
+
+function EB:RegisterUpdateEvents()
 	E:RegisterEventForObject("BAG_UPDATE_DELAYED", self, self.UpdateBars)
 	self:RegisterEvent("ITEM_LOCKED")
 	self:RegisterEvent("PLAYER_ALIVE", "UpdateBars")
@@ -774,14 +775,16 @@ function EB:Initialize()
 	self:RegisterEvent("UPDATE_BINDINGS", "UpdateBinding")
 	self:RegisterEvent("ZONE_CHANGED", "UpdateBars")
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "UpdateBars")
-
-	self.initialized = true
 end
 
 function EB:ProfileUpdate()
+	local wasInitialized = self.initialized
 	self:Initialize()
 
 	if self.db.enable then
+		if wasInitialized then
+			self:RegisterUpdateEvents()
+		end
 		UpdateQuestItemList()
 		UpdateEquipmentList()
 	elseif self.initialized then

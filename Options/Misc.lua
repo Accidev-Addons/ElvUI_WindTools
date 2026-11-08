@@ -100,9 +100,6 @@ options.automation = {
 			order = 2,
 			type = "toggle",
 			name = L["Enable"],
-			set = function(info, value)
-				E.db.WT.misc.automation[info[#info]] = value
-			end,
 			width = "full",
 		},
 		hideWorldMapAfterEnteringCombat = {

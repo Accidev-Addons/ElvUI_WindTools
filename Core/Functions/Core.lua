@@ -391,8 +391,8 @@ function F.Throttle(duration, key, func, ...)
 	state.isThrottling = true
 
 	E:Delay(duration, function()
-		func(unpack(state.lastArgs))
 		state.isThrottling = false
+		func(unpack(state.lastArgs))
 	end)
 end
 
@@ -435,8 +435,8 @@ function F.ThrottleFirst(duration, key, func, ...)
 	state.isThrottling = true
 
 	E:Delay(duration, function()
-		func(unpack(state.lastArgs))
 		state.isThrottling = false
+		func(unpack(state.lastArgs))
 	end)
 end
 

@@ -9,7 +9,7 @@ local tostring = tostring
 local GetSpellLink = GetSpellLink
 
 local function FormatMessage(message, spellID)
-	message = gsub(message, "%%player%%", E.name)
+	message = gsub(message, "%%player%%", E.myname)
 	message = gsub(message, "%%spell%%", GetSpellLink(spellID))
 	return message
 end

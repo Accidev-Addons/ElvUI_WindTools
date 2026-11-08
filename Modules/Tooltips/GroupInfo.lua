@@ -11,9 +11,22 @@ local gsub = gsub
 local ipairs = ipairs
 local strfind = strfind
 
+local CreateAtlasMarkup = CreateAtlasMarkup
 local IsAddOnLoaded = IsAddOnLoaded
 
-local ROLE_ICON_PATTERN = "^|A:groupfinder%-icon%-role%-micro"
+local ROLE_ICONS = {
+	CreateAtlasMarkup("groupfinder-icon-role-micro-tank", 16, 16, 0, 0),
+	CreateAtlasMarkup("groupfinder-icon-role-micro-heal", 16, 16, 0, 0),
+	CreateAtlasMarkup("groupfinder-icon-role-micro-dps", 16, 16, 0, 0),
+}
+
+local function IsMemberLine(raw)
+	for _, icon in ipairs(ROLE_ICONS) do
+		if strfind(raw, icon, 1, true) then
+			return true
+		end
+	end
+end
 
 local function GetIconString(role, mode)
 	local template
@@ -57,7 +70,7 @@ local function cleanupBlizzardGroupInfo(tooltip)
 			elseif raw == _G.LFG_LIST_ENTRY_DELISTED then
 				delistedFound = true
 			elseif titleFound then
-				if strfind(raw, ROLE_ICON_PATTERN) then
+				if IsMemberLine(raw) then
 					line:SetText("")
 				else
 					clearEmptyTooltipLine(line)

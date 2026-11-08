@@ -8,6 +8,8 @@ local CreateFrame = CreateFrame
 local InCombatLockdown = InCombatLockdown
 local IsInInstance = IsInInstance
 local IsResting = IsResting
+local UnitAffectingCombat = UnitAffectingCombat
+local UnitInVehicle = UnitInVehicle
 
 local instanceTypeKeyMap = {
 	none = "outOfInstance",
@@ -23,12 +25,14 @@ function AC:UpdateState(event)
 		return
 	end
 
-	if event == "PLAYER_REGEN_DISABLED" and self.db.combat ~= "none" then
+	local inCombat = event == "PLAYER_REGEN_DISABLED" or event ~= "PLAYER_REGEN_ENABLED" and UnitAffectingCombat("player")
+	if inCombat and self.db.combat ~= "none" then
 		self.state = self.db.combat
 		return
 	end
 
-	if event == "UNIT_ENTERED_VEHICLE" and self.db.vehicle ~= "none" then
+	local inVehicle = event == "UNIT_ENTERED_VEHICLE" or event ~= "UNIT_EXITED_VEHICLE" and UnitInVehicle("player")
+	if inVehicle and self.db.vehicle ~= "none" then
 		self.state = self.db.vehicle
 		return
 	end

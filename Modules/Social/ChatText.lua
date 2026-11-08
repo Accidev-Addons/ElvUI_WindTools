@@ -438,7 +438,7 @@ end
 
 function CT:GUILD_ROSTER_UPDATE()
 	wipe(guildPlayerCache)
-	for index = 1, GetNumGuildMembers() do
+	for index = 1, GetNumGuildMembers(true) do
 		local name, _, _, _, _, _, _, _, _, _, class = GetGuildRosterInfo(index)
 		if name and class then
 			guildPlayerCache[Ambiguate(name, "none")] = class

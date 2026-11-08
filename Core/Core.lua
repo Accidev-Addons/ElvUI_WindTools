@@ -115,10 +115,12 @@ function W:RegisterLinkOperation(feature, func)
 	W.LinkOperations[feature] = func
 end
 
-function W:ItemRefTooltip_SetHyperlink(_, data)
+function W:ItemRefTooltip_SetHyperlink(tooltip, data, ...)
 	if strsub(data, 1, 6) ~= "wtlink" then
-		return
+		return self.hooks[tooltip].SetHyperlink(tooltip, data, ...)
 	end
+
+	tooltip:Hide()
 
 	local feature, argsString = strmatch(data, "^wtlink:([^:]+)(.*)$")
 	if not feature then
@@ -140,7 +142,7 @@ end
 
 function W:AddCustomLinkSupport()
 	if not W:IsHooked(_G.ItemRefTooltip, "SetHyperlink") then
-		W:Hook(_G.ItemRefTooltip, "SetHyperlink", "ItemRefTooltip_SetHyperlink", true)
+		W:RawHook(_G.ItemRefTooltip, "SetHyperlink", "ItemRefTooltip_SetHyperlink", true)
 	end
 end
 

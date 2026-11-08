@@ -170,7 +170,11 @@ function RM:ToggleSettings()
 		self:UnregisterEvent("PLAYER_REGEN_ENABLED")
 	end
 
-	if self.bar and not self.db.enable then
+	if not self.bar then
+		return
+	end
+
+	if not self.db.enable then
 		UnregisterStateDriver(self.bar, "visibility")
 		self.bar:Hide()
 		return

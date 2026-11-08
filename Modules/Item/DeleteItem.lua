@@ -9,6 +9,7 @@ local strsplit = strsplit
 local ipairs = ipairs
 
 local CreateFrame = CreateFrame
+local StaticPopup_OnKeyDown = StaticPopup_OnKeyDown
 local StaticPopupDialogs = _G.StaticPopupDialogs
 local STATICPOPUP_NUMDIALOGS = _G.STATICPOPUP_NUMDIALOGS
 
@@ -68,6 +69,8 @@ function DI:AddKeySupport(dialog)
 			dialog.button1:Enable()
 		elseif previous then
 			previous(frame, key)
+		elseif frame == dialog then
+			StaticPopup_OnKeyDown(frame, key)
 		end
 	end
 	targetFrame.windDeleteItemPreviousKeyHandler = previous

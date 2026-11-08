@@ -551,7 +551,7 @@ function CT:BuildGuildData()
 		return
 	end
 
-	local totalMembers = GetNumGuildMembers()
+	local totalMembers = GetNumGuildMembers(true)
 	for i = 1, totalMembers do
 		tinsert(data, {
 			memberIndex = i,
