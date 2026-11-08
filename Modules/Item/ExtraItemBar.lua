@@ -228,7 +228,9 @@ function EB:SetUpButton(button, itemData, slotID, waitGroup)
 	elseif button.slotID then
 		OnUpdateFunction = function(_)
 			local start, duration, enable = GetInventoryItemCooldown("player", button.slotID)
-			CooldownFrame_SetTimer(button.cooldown, start, duration, enable)
+			if start then
+				CooldownFrame_SetTimer(button.cooldown, start, duration, enable)
+			end
 		end
 	end
 	button:SetScript("OnUpdate", OnUpdateFunction)
@@ -302,7 +304,7 @@ function EB:SetUpButton(button, itemData, slotID, waitGroup)
 		local macroText
 		if button.slotID then
 			macroText = "/use " .. button.slotID
-		elseif button.itemName then
+		elseif button.itemID then
 			macroText = "/use item:" .. button.itemID
 		end
 
@@ -372,7 +374,7 @@ function EB:CreateBar(id)
 		nil,
 		"ALL,WINDTOOLS",
 		function()
-			return EB.db.enable and barDB.enable
+			return EB.db.enable and EB.db["bar" .. id].enable
 		end,
 		"WindTools,item,extraItemBar"
 	)
@@ -400,6 +402,7 @@ function EB:CreateBar(id)
 	end
 
 	bar:SetScript("OnEnter", function(_)
+		local barDB = EB.db["bar" .. id]
 		if not barDB then
 			return
 		end
@@ -416,6 +419,7 @@ function EB:CreateBar(id)
 	end)
 
 	bar:SetScript("OnLeave", function(_)
+		local barDB = EB.db["bar" .. id]
 		if not barDB then
 			return
 		end
@@ -448,7 +452,7 @@ function EB:ValidateItem(itemID)
 end
 
 function EB:UpdateBar(id)
-	if not self.db or not self.db["bar" .. id] then
+	if not self.bars or not self.db or not self.db["bar" .. id] then
 		return
 	end
 
@@ -682,7 +686,11 @@ end
 
 do
 	local lastUpdateTime = 0
-	function EB:UNIT_INVENTORY_CHANGED()
+	function EB:UNIT_INVENTORY_CHANGED(_, unit)
+		if unit ~= "player" then
+			return
+		end
+
 		local now = GetTime()
 		if now - lastUpdateTime < 0.25 then
 			return

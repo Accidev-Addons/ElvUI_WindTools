@@ -535,7 +535,6 @@ local ButtonTypes = {
 		icon = W.Media.Icons.barGuild,
 		macro = {
 			LeftButton = "/click GuildMicroButton",
-			RightButton = "/script if not InCombatLockdown() then ToggleGuildFrame() end",
 		},
 		additionalText = function()
 			return IsInGuild() and GetNumGuildMembers() or ""
@@ -1207,6 +1206,11 @@ function GB:ConstructButtons()
 end
 
 function GB:UpdateButtons()
+	if InCombatLockdown() then
+		F.TaskManager:AfterCombat(self.UpdateButtons, self)
+		return
+	end
+
 	self.HearthstoneButtons = {}
 
 	for i = 1, NUM_PANEL_BUTTONS do
@@ -1216,6 +1220,11 @@ function GB:UpdateButtons()
 end
 
 function GB:UpdateLayout()
+	if InCombatLockdown() then
+		F.TaskManager:AfterCombat(self.UpdateLayout, self)
+		return
+	end
+
 	if self.db.backdrop then
 		self.bar.leftPanel.backdrop:Show()
 		self.bar.middlePanel.backdrop:Show()
@@ -1383,6 +1392,11 @@ function GB:ProfileUpdate()
 		return
 	end
 
+	if InCombatLockdown() then
+		F.TaskManager:AfterCombat(self.ProfileUpdate, self)
+		return
+	end
+
 	if self.db.enable then
 		self:UpdateMetadata()
 		if self.initialized then
@@ -1408,7 +1422,7 @@ end
 
 function GB:GetNextRandomHearthstone(currentIndex, times)
 	if not availableHearthstones or #availableHearthstones <= 1 or times and times >= 10 then
-		return 1, 6948
+		return 1, availableHearthstones and availableHearthstones[1] or 6948
 	end
 
 	local randomIndex = random(1, #availableHearthstones)

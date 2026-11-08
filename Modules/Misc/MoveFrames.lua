@@ -213,8 +213,9 @@ function MF:EnsureWindowInTheScreen(frame)
 	local isOffScreen = false
 	local left, right = frame:GetLeft(), frame:GetRight()
 	local top, bottom = frame:GetTop(), frame:GetBottom()
-	local screenWidth = GetScreenWidth()
-	local screenHeight = GetScreenHeight()
+	local scale = frame:GetEffectiveScale() / _G.UIParent:GetEffectiveScale()
+	local screenWidth = GetScreenWidth() / scale
+	local screenHeight = GetScreenHeight() / scale
 
 	if left and right and (right < 3 or left > screenWidth - 3) then
 		isOffScreen = true

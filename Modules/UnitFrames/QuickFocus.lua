@@ -107,11 +107,13 @@ function QF:Initialize()
 		return
 	end
 
-	local button = CreateFrame("Button", "WTQuickFocusButton", E.UIParent, "SecureActionButtonTemplate")
-	button:SetAttribute("type*", "macro")
-	button:SetAttribute("macrotext", self:GetMacroText())
-	button:RegisterForClicks(W.UseKeyDown and "AnyDown" or "AnyUp")
-	SetOverrideBindingClick(button, true, self.db.modifier .. "-" .. self.db.button, "WTQuickFocusButton")
+	F.TaskManager:OutOfCombat(function()
+		local button = CreateFrame("Button", "WTQuickFocusButton", E.UIParent, "SecureActionButtonTemplate")
+		button:SetAttribute("type*", "macro")
+		button:SetAttribute("macrotext", self:GetMacroText())
+		button:RegisterForClicks(W.UseKeyDown and "AnyDown" or "AnyUp")
+		SetOverrideBindingClick(button, true, self.db.modifier .. "-" .. self.db.button, "WTQuickFocusButton")
+	end)
 
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 	self:RegisterEvent("PARTY_MEMBERS_CHANGED", "SetupAllFrames")

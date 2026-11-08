@@ -160,6 +160,8 @@ function RM:UpdateButtons()
 			end
 		end
 	end
+
+	self:UpdateCountDownButton()
 end
 
 function RM:ToggleSettings()
@@ -323,45 +325,48 @@ function RM:CreateButtons()
 
 		button:RegisterForClicks(W.UseKeyDown and "AnyDown" or "AnyUp")
 
-		local tooltipText = ""
+		local function GetTooltipText()
+			local tooltipText = ""
 
-		if i < 9 then
-			if not self.db.inverse then
-				tooltipText = format(
-					"%s\n%s\n%s\n%s",
-					L["Left Click to mark the target with this mark."],
-					L["Right Click to clear the mark on the target."],
-					format(L["%s + Left Click to place this world marker."], RM.modifierString),
-					format(L["%s + Right Click to clear this world marker."], RM.modifierString)
-				)
-			else
-				tooltipText = format(
-					"%s\n%s\n%s\n%s",
-					L["Left Click to place this world marker."],
-					L["Right Click to clear this world marker."],
-					format(L["%s + Left Click to mark the target with this mark."], RM.modifierString),
-					format(L["%s + Right Click to clear the mark on the target."], RM.modifierString)
-				)
+			if i < 9 then
+				if not self.db.inverse then
+					tooltipText = format(
+						"%s\n%s\n%s\n%s",
+						L["Left Click to mark the target with this mark."],
+						L["Right Click to clear the mark on the target."],
+						format(L["%s + Left Click to place this world marker."], RM.modifierString),
+						format(L["%s + Right Click to clear this world marker."], RM.modifierString)
+					)
+				else
+					tooltipText = format(
+						"%s\n%s\n%s\n%s",
+						L["Left Click to place this world marker."],
+						L["Right Click to clear this world marker."],
+						format(L["%s + Left Click to mark the target with this mark."], RM.modifierString),
+						format(L["%s + Right Click to clear the mark on the target."], RM.modifierString)
+					)
+				end
+			elseif i == 9 then
+				if not self.db.inverse then
+					tooltipText = format(
+						"%s\n%s",
+						L["Click to clear all marks."],
+						format(L["%s + Click to remove all world markers."], RM.modifierString)
+					)
+				else
+					tooltipText = format(
+						"%s\n%s",
+						L["Click to remove all world markers."],
+						format(L["%s + Click to clear all marks."], RM.modifierString)
+					)
+				end
+			elseif i == 10 then
+				tooltipText =
+					format("%s\n%s", L["Left Click to ready check."], L["Right click to toggle advanced combat logging."])
+			elseif i == 11 then
+				tooltipText = format("%s\n%s", L["Left Click to start count down."], L["Right click to stop count down."])
 			end
-		elseif i == 9 then
-			if not self.db.inverse then
-				tooltipText = format(
-					"%s\n%s",
-					L["Click to clear all marks."],
-					format(L["%s + Click to remove all world markers."], RM.modifierString)
-				)
-			else
-				tooltipText = format(
-					"%s\n%s",
-					L["Click to remove all world markers."],
-					format(L["%s + Click to clear all marks."], RM.modifierString)
-				)
-			end
-		elseif i == 10 then
-			tooltipText =
-				format("%s\n%s", L["Left Click to ready check."], L["Right click to toggle advanced combat logging."])
-		elseif i == 11 then
-			tooltipText = format("%s\n%s", L["Left Click to start count down."], L["Right click to stop count down."])
+			return tooltipText
 		end
 
 		local tooltipTitle = i <= 9 and L["Raid Markers"] or L["Raid Utility"]
@@ -391,7 +396,7 @@ function RM:CreateButtons()
 			if RM.db.tooltip then
 				GameTooltip:SetOwner(btn, "ANCHOR_BOTTOM")
 				GameTooltip:SetText(tooltipTitle .. " " .. icon)
-				GameTooltip:AddLine(tooltipText, 1, 1, 1)
+				GameTooltip:AddLine(GetTooltipText(), 1, 1, 1)
 				GameTooltip:Show()
 			end
 		end)
@@ -432,6 +437,10 @@ function RM:ProfileUpdate()
 	self.db = E.db.WT.combat.raidMarkers
 
 	if self.db.enable and not self.bar then
+		if InCombatLockdown() then
+			F.TaskManager:AfterCombat(self.ProfileUpdate, self)
+			return
+		end
 		self:CreateBar()
 		return
 	end

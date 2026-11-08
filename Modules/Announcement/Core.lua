@@ -6,6 +6,11 @@ local _G = _G
 
 local format = format
 local pairs = pairs
+local strbyte = strbyte
+local strfind = strfind
+local strlen = strlen
+local strmatch = strmatch
+local strsub = strsub
 local time = time
 
 local IsEveryoneAssistant = IsEveryoneAssistant
@@ -15,6 +20,40 @@ local IsRaidOfficer = IsRaidOfficer
 local UnitIsGroupLeader = UnitIsGroupLeader
 
 A.history = {}
+
+local function TruncateMessage(text)
+	if strlen(text) <= 255 then
+		return text
+	end
+
+	local cut = 255
+	local nextByte = strbyte(text, cut + 1)
+	while nextByte >= 128 and nextByte < 192 do
+		cut = cut - 1
+		nextByte = strbyte(text, cut + 1)
+	end
+	text = strsub(text, 1, cut)
+
+	local colorStart
+	local position = 1
+	while true do
+		local found = strfind(text, "|c", position, true)
+		if not found then
+			break
+		end
+		colorStart, position = found, found + 2
+	end
+
+	if colorStart and not strfind(text, "|r", colorStart, true) then
+		text = strsub(text, 1, colorStart - 1)
+	end
+
+	if strlen(strmatch(text, "|*$")) % 2 == 1 then
+		text = strsub(text, 1, -2)
+	end
+
+	return text
+end
 
 function A:AddHistory(text, channel)
 	if not self.db.sameMessageInterval or self.db.sameMessageInterval == 0 then
@@ -57,7 +96,7 @@ function A:SendMessage(text, channel, raidWarning, whisperTarget)
 
 	if channel == "WHISPER" then
 		if whisperTarget then
-			ChatThrottleLib:SendChatMessage("NORMAL", "WT", text, channel, nil, whisperTarget)
+			ChatThrottleLib:SendChatMessage("NORMAL", "WT", TruncateMessage(text), channel, nil, whisperTarget)
 		end
 		return
 	end
@@ -77,7 +116,7 @@ function A:SendMessage(text, channel, raidWarning, whisperTarget)
 	end
 
 	if self:CheckBeforeSend(text, channel) then
-		ChatThrottleLib:SendChatMessage("NORMAL", "WT", text, channel)
+		ChatThrottleLib:SendChatMessage("NORMAL", "WT", TruncateMessage(text), channel)
 	end
 end
 

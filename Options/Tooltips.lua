@@ -73,6 +73,10 @@ options.general = {
 					type = "toggle",
 					name = L["Enable"],
 					desc = L["Add an icon to the title of items, spells, achievements, and more."],
+					set = function(info, value)
+						E.private.WT.tooltips.titleIcon[info[#info]] = value
+						E:StaticPopup_Show("PRIVATE_RL")
+					end,
 				},
 				width = {
 					order = 2,

@@ -10,8 +10,8 @@ local C = W.Utilities.Color
 local format = format
 local gsub = gsub
 local pairs = pairs
+local strfind = strfind
 local strjoin = strjoin
-local strmatch = strmatch
 local tonumber = tonumber
 
 local GetSpellLink = GetSpellLink
@@ -225,7 +225,7 @@ local function GetFilteredSpells(searchWord, ignore)
 			ignore == "added" and E.db.WT.announcement.utility.custom[spellID]
 			or ignore == "notAdded" and not E.db.WT.announcement.utility.custom[spellID]
 		then
-			if searchWord == "" or strmatch(value, searchWord) then
+			if searchWord == "" or strfind(value, searchWord, 1, true) then
 				result[spellID] = value
 			end
 		end

@@ -9,34 +9,27 @@ local UnitIsConnected = UnitIsConnected
 local UnitIsUnit = UnitIsUnit
 
 local displayString = ""
-local int = 1
-local curMinRange, curMaxRange
-local updateTargetRange = false
-local forceUpdate = false
 
 local function OnUpdate(self, t)
-	if not updateTargetRange then
+	if not self.updateTargetRange then
 		return
 	end
 
-	int = int - t
-	if int > 0 then
+	self.rangeElapsed = (self.rangeElapsed or 0) - t
+	if self.rangeElapsed > 0 then
 		return
 	end
 
-	int = 0.25
+	self.rangeElapsed = 0.25
 
+	local curMinRange, curMaxRange
 	if UnitIsConnected("target") and not UnitIsUnit("target", "player") then
-		local minRange, maxRange = RangeCheck:GetRange("target")
-		if not forceUpdate and (minRange == curMinRange and maxRange == curMaxRange) then
+		curMinRange, curMaxRange = RangeCheck:GetRange("target")
+		if not self.forceUpdate and (curMinRange == self.curMinRange and curMaxRange == self.curMaxRange) then
 			return
 		end
-		curMinRange = minRange
-		curMaxRange = maxRange
-	else
-		curMinRange = nil
-		curMaxRange = nil
 	end
+	self.curMinRange, self.curMaxRange = curMinRange, curMaxRange
 
 	if curMinRange and curMaxRange then
 		self.text:SetFormattedText(displayString, L["Distance"], curMinRange, curMaxRange)
@@ -44,14 +37,14 @@ local function OnUpdate(self, t)
 		self.text:SetText("")
 	end
 
-	forceUpdate = false
+	self.forceUpdate = false
 end
 
 local function OnEvent(self, event)
-	updateTargetRange = UnitName("target") ~= nil
-	int = 0
-	if updateTargetRange then
-		forceUpdate = true
+	self.updateTargetRange = UnitName("target") ~= nil
+	self.rangeElapsed = 0
+	if self.updateTargetRange then
+		self.forceUpdate = true
 	else
 		self.text:SetText("")
 	end

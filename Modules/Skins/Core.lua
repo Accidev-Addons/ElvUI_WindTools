@@ -59,7 +59,13 @@ function S:CheckDB(elvuiKey, windtoolsKey)
 			return false
 		end
 	else
-		if not (E.private.WT.skins.blizzard.enable and E.private.WT.skins.blizzard[windtoolsKey]) then
+		if
+			not (
+				E.private.skins.blizzard.enable
+				and E.private.WT.skins.blizzard.enable
+				and E.private.WT.skins.blizzard[windtoolsKey]
+			)
+		then
 			return false
 		end
 	end
@@ -713,7 +719,7 @@ function S:Initialize()
 	self.db = E.private.WT.skins
 	self:ProcessWaitingAceGUIWidgets()
 
-	if not self.db.enable or not E.private.skins.blizzard.enable then
+	if not self.db.enable then
 		return
 	end
 

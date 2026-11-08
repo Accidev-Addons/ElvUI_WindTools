@@ -78,8 +78,16 @@ function KI:CheckPlayerKeystone(skipEmit)
 	self.PlayerKeystone.mapID, self.PlayerKeystone.level = mapID, level
 end
 
+local function RunDelayedCheck()
+	KI.checkPending = nil
+	KI:CheckPlayerKeystone()
+end
+
 function KI:DelayedCheckPlayerKeystone()
-	E:Delay(0.5, KI.CheckPlayerKeystone, KI)
+	if not self.checkPending then
+		self.checkPending = true
+		E:Delay(0.5, RunDelayedCheck)
+	end
 end
 
 function KI:CHALLENGE_MODE_COMPLETED()

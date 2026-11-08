@@ -68,6 +68,9 @@ function SA:Initialize()
 	F.TaskManager:AfterLogin(self.Update, self)
 end
 
-SA.ProfileUpdate = SA.Update
+function SA:ProfileUpdate()
+	self.db = E.db.WT.misc.spellActivationAlert
+	self:Update()
+end
 
 W:RegisterModule(SA:GetName())

@@ -562,6 +562,11 @@ end
 function CB:ProfileUpdate()
 	self.db = E.db.WT.social.chatBar
 
+	if InCombatLockdown() then
+		F.TaskManager:AfterCombat(self.ProfileUpdate, self)
+		return
+	end
+
 	if not self.db.enable then
 		if self.bar then
 			self.bar:Hide()

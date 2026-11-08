@@ -49,7 +49,7 @@ local extraItemGroupTooltip = (function()
 		desc("QUEST", L["Quest Items"]),
 		desc("EQUIP", L["Equipments"]),
 		desc("CUSTOM", L["Custom Items"]),
-		desc("SLOT:1-19", L["Equipment Slots (Range)"]),
+		desc("SLOT:1-18", L["Equipment Slots (Range)"]),
 		desc("SLOT:" .. C.StringByTemplate(L["number"], "blue-200") .. "|r", L["Equipment Slots (Single)"]),
 		C.StringByTemplate(L["Slot ID List"], "blue-200") .. ":",
 		generateSlotDesc(),

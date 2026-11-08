@@ -5,7 +5,7 @@ local NC = W:GetModule("NameClip") ---@class NameClip
 
 local _G = _G
 local format = format
-local ipairs = pairs
+local ipairs = ipairs
 
 local ReloadUI = ReloadUI
 

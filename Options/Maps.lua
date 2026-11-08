@@ -322,7 +322,9 @@ options.minimapButtons = {
 					end,
 					set = function(info, value)
 						E.private.WT.maps.minimapButtons[info[#info]] = value
-						MB:SkinMinimapButtons()
+						if E.private.WT.maps.minimapButtons.enable then
+							MB:SkinMinimapButtons()
+						end
 					end,
 					min = 15,
 					max = 60,

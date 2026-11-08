@@ -181,6 +181,8 @@ function EMP:Initialize()
 
 	self:SecureHook("MerchantFrame_UpdateMerchantInfo", "MerchantFrame_UpdateMerchantInfo")
 	self:SecureHook("MerchantFrame_UpdateBuybackInfo", "MerchantFrame_UpdateBuybackInfo")
+
+	self.initialized = true
 end
 
 function EMP:ProfileUpdate()

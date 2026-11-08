@@ -9,7 +9,9 @@ local tremove = tremove
 local type = type
 local unpack = unpack
 local wipe = wipe
+local xpcall = xpcall
 
+local geterrorhandler = geterrorhandler
 local Mixin = Mixin
 local RunNextFrame = RunNextFrame
 
@@ -55,7 +57,9 @@ processBatch = function(self)
 		local task = tremove(self.tasks, 1)
 		if task then
 			if type(task.func) == "function" then
-				task.func(unpack(task.args))
+				xpcall(function()
+					task.func(unpack(task.args))
+				end, geterrorhandler())
 				self.stats.totalExecuted = self.stats.totalExecuted + 1
 			end
 		end

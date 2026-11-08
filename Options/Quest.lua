@@ -15,8 +15,6 @@ local pairs = pairs
 local tonumber = tonumber
 local tostring = tostring
 
-local C_QuestLog_SortQuestWatches = SortQuestWatches
-
 local customListSelected
 
 local function ImportantColorString(s)
@@ -36,7 +34,6 @@ options.objectiveTracker = {
 	end,
 	set = function(info, value)
 		E.private.WT.quest.objectiveTracker[info[#info]] = value
-		C_QuestLog_SortQuestWatches()
 	end,
 	args = {
 		desc = {

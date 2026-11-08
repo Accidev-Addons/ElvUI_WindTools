@@ -292,13 +292,13 @@ do
 	function F.GetProgressColor(progress)
 		local r = (color.complete.r - color.start.r) * progress + color.start.r
 		local g = (color.complete.g - color.start.g) * progress + color.start.g
-		local b = (color.complete.r - color.start.b) * progress + color.start.b
+		local b = (color.complete.b - color.start.b) * progress + color.start.b
 
 		-- algorithm to let the color brighter
 		local addition = 0.35
-		r = min(r + abs(0.5 - progress) * addition, r)
-		g = min(g + abs(0.5 - progress) * addition, g)
-		b = min(b + abs(0.5 - progress) * addition, b)
+		r = min(r + abs(0.5 - progress) * addition, 1)
+		g = min(g + abs(0.5 - progress) * addition, 1)
+		b = min(b + abs(0.5 - progress) * addition, 1)
 
 		return { r = r, g = g, b = b }
 	end

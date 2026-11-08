@@ -3,6 +3,7 @@ local FL = W:NewModule("FastLoot", "AceEvent-3.0")
 
 local GetContainerNumFreeSlots = GetContainerNumFreeSlots
 local GetCVarBool = GetCVarBool
+local GetLootMethod = GetLootMethod
 local GetNumLootItems = GetNumLootItems
 local GetTime = GetTime
 local InCombatLockdown = InCombatLockdown
@@ -24,6 +25,11 @@ local tDelay = 0
 
 function FL:LOOT_OPENED()
 	if InCombatLockdown() then
+		return
+	end
+
+	local lootMethod, lootMaster = GetLootMethod()
+	if lootMethod == "master" and lootMaster == 0 then
 		return
 	end
 

@@ -3,6 +3,7 @@ local LL = W:NewModule("LFGList", "AceHook-3.0", "AceEvent-3.0") ---@class LFGLi
 local LFGPI = W.Utilities.LFGPlayerInfo
 local LSM = E.Libs.LSM
 
+local min = min
 local tinsert = tinsert
 local tremove = tremove
 
@@ -93,7 +94,7 @@ function LL:ReskinIcon(parent, icon, role, data)
 	end
 end
 
-function LL:UpdateEnumerate(Enumerate)
+function LL:UpdateEnumerate(Enumerate, numPlayers)
 	local button = Enumerate:GetParent():GetParent()
 
 	if not button.resultID then
@@ -118,7 +119,7 @@ function LL:UpdateEnumerate(Enumerate)
 			end
 		end
 
-		for i = 5, 1, -1 do -- The index of icon starts from right
+		for i = min(numPlayers or 5, 5), 1, -1 do -- The index of icon starts from right
 			local icon = Enumerate["Icon" .. i]
 			local roleIcon = icon.RoleIcon
 			local classCircle = icon.ClassCircle

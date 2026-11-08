@@ -5,7 +5,6 @@ local AceAddon = E.Libs.AceAddon
 local L = E.Libs.ACL:GetLocale("ElvUI", E.global.general.locale)
 
 local _G = _G
-local collectgarbage = collectgarbage
 local format = format
 local hooksecurefunc = hooksecurefunc
 local next = next
@@ -156,7 +155,7 @@ do
 		end
 
 		if _G.ElvDB then
-			if isInitialLogin or not _G.ElvDB.WT then
+			if not _G.ElvDB.WT then
 				_G.ElvDB.WT = {
 					DisabledAddOns = {},
 				}
@@ -169,8 +168,6 @@ do
 
 		self:HookUIError()
 		self:GameFixing()
-
-		E:Delay(1, collectgarbage, "collect")
 	end
 end
 

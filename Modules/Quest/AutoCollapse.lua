@@ -140,6 +140,13 @@ function AC:ObjectiveTrackerFrame_SetCollapsed(frame)
 	end
 end
 
+function AC:ObjectiveTrackerFrame_SetBackgroundAlpha(frame, alpha)
+	if self.contentCollapsed then
+		self.nineSliceAlpha = alpha
+		frame.NineSlice:SetAlpha(0)
+	end
+end
+
 local events = {
 	"PLAYER_ENTERING_WORLD",
 	"PLAYER_REGEN_DISABLED",
@@ -175,6 +182,9 @@ function AC:ProfileUpdate()
 	if tracker then
 		if not self:IsHooked(tracker, "SetCollapsed") then
 			self:SecureHook(tracker, "SetCollapsed", "ObjectiveTrackerFrame_SetCollapsed")
+		end
+		if not self:IsHooked(tracker, "SetBackgroundAlpha") then
+			self:SecureHook(tracker, "SetBackgroundAlpha", "ObjectiveTrackerFrame_SetBackgroundAlpha")
 		end
 	end
 

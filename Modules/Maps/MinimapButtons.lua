@@ -19,7 +19,6 @@ local strfind = strfind
 local strlen = strlen
 local strsub = strsub
 local strtrim = strtrim
-local tContains = tContains
 local tinsert = tinsert
 local tremove = tremove
 local type = type
@@ -63,6 +62,15 @@ local BuildinIgnoreSettings = {
 		"TimeManagerClockButton",
 		"MinimapZoneTextButton",
 		"GameTimeFrame",
+		"MiniMapBattlefieldFrame",
+		"MiniMapLFGFrame",
+		"MiniMapMailFrame",
+		"MiniMapRecordingButton",
+		"MiniMapTracking",
+		"MiniMapWorldMapButton",
+		"MinimapZoomIn",
+		"MinimapZoomOut",
+		"QueueStatusMinimapButton",
 	},
 	libDBIcon = {},
 	startWith = {
@@ -116,6 +124,17 @@ local acceptedFrames = {
 local handledButtons = {} ---@type table<integer, {name: string, debugName: string, frame: Frame}>
 local hiddenButtons = {} ---@type table<integer, {name: string, debugName: string, frame: Frame}>
 local ignoredByUserButtons = {} ---@type table<integer, {name: string, debugName: string, frame: Frame}>
+
+local function HasFrame(list, frame)
+	return ContainsIf(list, function(entry)
+		return entry.frame == frame
+	end)
+end
+
+local function MatchPattern(name, pattern)
+	local success, found = pcall(strfind, name, pattern)
+	return success and found ~= nil
+end
 
 function MB:OnButtonSetShown(button, shown)
 	local name, debugName = button:GetName(), button:GetDebugName()
@@ -230,9 +249,9 @@ function MB:SkinButton(button, force)
 	end
 
 	if
-		tContains(handledButtons, button)
-		or tContains(hiddenButtons, button)
-		or tContains(ignoredByUserButtons, button)
+		HasFrame(handledButtons, button)
+		or HasFrame(hiddenButtons, button)
+		or HasFrame(ignoredByUserButtons, button)
 	then
 		return
 	end
@@ -511,7 +530,7 @@ function MB:IsHidden(name)
 	end
 
 	return ContainsIf(self.hiddenPatterns, function(pattern)
-		return strfind(name, pattern) ~= nil
+		return MatchPattern(name, pattern)
 	end)
 end
 
@@ -555,7 +574,7 @@ function MB:IsIgnored(name, frame)
 
 	if self.ignoredPatterns and #self.ignoredPatterns > 0 then
 		return ContainsIf(self.ignoredPatterns, function(pattern)
-			return strfind(name, pattern) ~= nil
+			return MatchPattern(name, pattern)
 		end) and "user" or false
 	end
 end
@@ -579,7 +598,7 @@ function MB:SortButtons()
 
 		-- Find highest priority pattern match
 		for p = 1, numPatterns do
-			if strfind(name, priorityPatterns[p]) then
+			if MatchPattern(name, priorityPatterns[p]) then
 				priority = p
 				break
 			end

@@ -168,6 +168,8 @@ end
 ---Processes all members in the group and categorizes them by role, class, and spec
 ---@param resultID number The LFG search result ID to process
 function W.Utilities.LFGPlayerInfo:Update(resultID)
+	self.Composition:Clear()
+
 	local result = C_LFGList_GetSearchResultInfo(resultID)
 
 	if not result then
@@ -179,8 +181,6 @@ function W.Utilities.LFGPlayerInfo:Update(resultID)
 		self:Log("debug", "cache not updated correctly, the number of result.numMembers is nil or 0.")
 		return
 	end
-
-	self.Composition:Clear()
 
 	for i = 1, result.numMembers do
 		local memberInfo = C_LFGList_GetSearchResultPlayerInfo(resultID, i)
@@ -325,14 +325,12 @@ function W.Utilities.LFGPlayerInfo:Conduct(template, role, class, spec, amount)
 
 	-- {{amountStart}} ... {{amountEnd}}
 	result = gsub(result, "{{amountStart}}(.-){{amountEnd}}", function(sub)
-		if amount <= 1 then -- should not show amount if the amount is only one
+		if not amount then
+			self:Log("warning", "amount not found, amount is not given.")
+			return ""
+		elseif amount <= 1 then -- should not show amount if the amount is only one
 			return ""
 		else
-			-- {{amount}}
-			if not amount then
-				self:Log("warning", "amount not found, amount is not given.")
-				return ""
-			end
 			return gsub(sub, "{{amount}}", tostring(amount))
 		end
 	end)

@@ -91,8 +91,6 @@ function T:Icons()
 		for _, name in pairs(tooltips) do
 			HookIconTooltip(_G[name])
 		end
-
-		F.InternalizeMethod(_G.ShoppingTooltip1, "SetPoint")
 	end
 
 	if E.private.WT.tooltips.factionIcon then

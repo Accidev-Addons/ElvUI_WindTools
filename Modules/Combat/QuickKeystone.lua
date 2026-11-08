@@ -10,7 +10,7 @@ local GetContainerNumSlots = GetContainerNumSlots
 local PickupContainerItem = PickupContainerItem
 
 local C_ChallengeMode_SlotKeystone = C_ChallengeMode.SlotKeystone
-local C_Item_IsItemKeystoneByID = C_Item.IsItemKeystoneByID
+local C_MythicPlus_GetOwnerKeystoneInfo = C_MythicPlus.GetOwnerKeystoneInfo
 
 local NUM_BAG_SLOTS = NUM_BAG_SLOTS
 
@@ -19,10 +19,14 @@ function QK:PutKeystone()
 		return
 	end
 
+	local keystoneItemID = C_MythicPlus_GetOwnerKeystoneInfo()
+	if not keystoneItemID then
+		return
+	end
+
 	for bagIndex = 0, NUM_BAG_SLOTS do
 		for slotIndex = 1, GetContainerNumSlots(bagIndex) do
-			local itemID = GetContainerItemID(bagIndex, slotIndex)
-			if itemID and C_Item_IsItemKeystoneByID(itemID) then
+			if GetContainerItemID(bagIndex, slotIndex) == keystoneItemID then
 				PickupContainerItem(bagIndex, slotIndex)
 				C_ChallengeMode_SlotKeystone()
 				if CursorHasItem() then

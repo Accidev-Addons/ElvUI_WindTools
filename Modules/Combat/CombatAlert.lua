@@ -491,6 +491,10 @@ function CA:ShowAlert(alertType)
 		self:Log("debug", "Text frame not initialized")
 	end
 
+	if not self.db or not (self.db.animation or self.db.text) then
+		return
+	end
+
 	-- Queue alert if one is already playing
 	if isPlaying then
 		self:QueueAlert(alertType)

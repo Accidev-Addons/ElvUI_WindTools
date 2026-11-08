@@ -47,11 +47,6 @@ local function OverrideColor(rgba, config, normal, highlight)
 	return rgba
 end
 
----Sort the native Sirus quest watches.
-function OT:SortQuestWatches()
-	SortQuestWatches()
-end
-
 ---Create and configure cosmetic bar for objective tracker header
 ---@param header ObjectiveTrackerModuleHeaderTemplate The header frame to add cosmetic bar to
 function OT:CosmeticBar(header)
@@ -121,8 +116,6 @@ function OT:RefreshAllCosmeticBars()
 	for _, tracker in pairs(trackers) do
 		self:CosmeticBar(tracker.Header)
 	end
-
-	self:SortQuestWatches()
 end
 
 function OT:UpdateBackdrop()
@@ -386,13 +379,12 @@ function OT:ObjectiveTrackerBlock_SetHeader(block, text)
 		return
 	end
 
-	block.height = block:SetStringText(
-		block.HeaderText,
-		format("[%d] %s", level, text),
-		nil,
-		_G.OBJECTIVE_TRACKER_COLOR["Header"],
-		block.isHighlighted
-	)
+	local header = block.HeaderText
+	local height = header:GetStringHeight()
+	header:SetText(format("[%d] %s", level, text))
+	if header:GetStringHeight() > height then
+		header:SetText(text)
+	end
 end
 
 function OT:HookBlockHeader(block)
@@ -422,8 +414,6 @@ function OT:ToggleQuestLevel()
 			self:HookBlockHeader(block)
 		end)
 	end
-
-	module:MarkDirty()
 end
 
 ---Initialize the ObjectiveTracker module with hooks and settings
@@ -448,7 +438,6 @@ function OT:Initialize()
 
 	self:HandleContainerHeader(_G.ObjectiveTrackerFrame.Header)
 	self:UpdateBackdrop()
-	self:SortQuestWatches()
 end
 
 W:RegisterModule(OT:GetName())
