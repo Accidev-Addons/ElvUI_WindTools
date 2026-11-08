@@ -951,9 +951,11 @@ P.misc = {
 			leftFallback = "6948",
 			middle = "6948",
 			middleFallback = "6948",
-			right = "6948",
-			rightFallback = "6948",
+			right = "SPELL:307810",
+			rightFallback = "SPELL:310227",
 			showBindLocation = true,
+			randomPool = {},
+			custom = {},
 		},
 		additionalText = {
 			enable = true,

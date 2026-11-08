@@ -18,9 +18,12 @@ local mod = mod
 local pairs = pairs
 local random = random
 local select = select
+local sort = sort
 local strfind = strfind
+local strmatch = strmatch
 local tContains = tContains
 local tinsert = tinsert
+local tremove = tremove
 local tonumber = tonumber
 local tostring = tostring
 local type = type
@@ -36,6 +39,9 @@ local GetFramerate = GetFramerate
 local GetGameTime = GetGameTime
 local GetNetStats = GetNetStats
 local GetNumGuildMembers = GetNumGuildMembers
+local GetItemInfo = GetItemInfo
+local GetSpellInfo = GetSpellInfo
+local GetSpellLink = GetSpellLink
 local GetTime = GetTime
 local HideUIPanel = HideUIPanel
 local InCombatLockdown = InCombatLockdown
@@ -73,8 +79,6 @@ local ICON_STRING = "|T%s:16:18:0:0:64:64:4:60:7:57"
 local LEFT_BUTTON_ICON = "|TInterface\\TUTORIALFRAME\\UI-TUTORIAL-FRAME:13:11:0:-1:512:512:12:66:230:307|t"
 local RIGHT_BUTTON_ICON = "|TInterface\\TUTORIALFRAME\\UI-TUTORIAL-FRAME:13:11:0:-1:512:512:12:66:333:410|t"
 local SCROLL_BUTTON_ICON = "|TInterface\\TUTORIALFRAME\\UI-TUTORIAL-FRAME:13:11:0:-1:512:512:12:66:127:204|t"
-local ASTRAL_RECALL_SPELL_ID = 556
-local ASTRAL_RECALL_KEY = "SPELL:556"
 
 local HEARTSTONE_SIDE_SETTINGS = {
 	left = {
@@ -102,28 +106,17 @@ local friendOffline = gsub(_G.ERR_FRIEND_OFFLINE_S, "%%s", "")
 
 GB.AnimationManager = { frame = nil, groups = nil }
 
-local hearthstones = {
-	6948,
-	54452,
-	64488,
-	93672,
+local BIND_ITEMS = { 6948, 53926, 54452 }
+local TRAVEL_ITEMS = { 18984, 18986, 30542, 30544, 48933 }
+local TRAVEL_SPELLS = {
+	307810, 310227, 556, 50977, 18960,
+	3561, 3562, 3563, 3565, 3566, 3567, 32271, 32272, 33690, 35715, 49358, 49359, 53140,
+	150640, 150641, 150642, 150643, 150644, 150645, 150646, 150647, 150648,
 }
-
-local hearthstoneAndToyIDList = {
-	6948,
-	54452,
-	64488,
-	93672,
-	18984,
-	18986,
-	30542,
-	30544,
-	48933,
-	87215,
-}
+local BIND_SPELLS = { [556] = true }
 
 local hearthstonesAndToysData
-local availableHearthstones
+local hearthstoneOrder
 
 local function copyRGB(color, target)
 	target.r = color.r
@@ -274,19 +267,47 @@ local function IsHearthstoneActionUsable(actionData)
 
 	if actionData.actionType == "spell" then
 		return C_SpellBook_IsSpellKnown(actionData.actionID)
-	elseif actionData.actionType == "toy" then
-		return PlayerHasToy(actionData.actionID)
 	elseif actionData.actionType == "random" then
-		return availableHearthstones and #availableHearthstones > 0
-	elseif actionData.actionType == "item" then
-		local usesCount = C_Item_GetItemCount(actionData.actionID, nil, true)
-		if usesCount and usesCount > 0 then
-			return true
-		end
-		return PlayerHasToy(actionData.actionID)
+		return #GB:GetRandomHearthstonePool() > 0
 	end
 
-	return false
+	return PlayerHasToy(actionData.actionID) or (C_Item_GetItemCount(actionData.actionID, nil, true) or 0) > 0
+end
+
+function GB:IsInRandomPool(key)
+	local value = self.db.hearthstone.randomPool and self.db.hearthstone.randomPool[key]
+	if value == nil then
+		local data = hearthstonesAndToysData and hearthstonesAndToysData[key]
+		return data and data.bind and data.actionType ~= "spell" or false
+	end
+	return value
+end
+
+function GB:GetRandomHearthstonePool()
+	local pool = {}
+	for _, key in ipairs(hearthstoneOrder or {}) do
+		local data = hearthstonesAndToysData[key]
+		if key ~= "RANDOM" and data and self:IsInRandomPool(key) and IsHearthstoneActionUsable(data) then
+			tinsert(pool, key)
+		end
+	end
+	return pool
+end
+
+function GB:GetHearthstoneChoices(selected, withRandom)
+	local values, sorting = {}, {}
+	for _, key in ipairs(hearthstoneOrder or {}) do
+		local data = hearthstonesAndToysData[key]
+		if data and (withRandom or key ~= "RANDOM") then
+			local usable = IsHearthstoneActionUsable(data)
+			if usable or key == selected then
+				local text = F.GetIconString(data.icon, 14, 14) .. " " .. data.name
+				values[key] = usable and text or "|cff808080" .. text .. "|r"
+				tinsert(sorting, key)
+			end
+		end
+	end
+	return values, sorting
 end
 
 function GB:ResolveHearthstoneAction(side)
@@ -306,6 +327,13 @@ function GB:ResolveHearthstoneAction(side)
 		return fallbackData
 	end
 
+	for _, itemID in ipairs(BIND_ITEMS) do
+		local data = hearthstonesAndToysData[tostring(itemID)]
+		if IsHearthstoneActionUsable(data) then
+			return data
+		end
+	end
+
 	return nil
 end
 
@@ -319,14 +347,11 @@ local function AddDoubleLineForItem(actionData, prefix, button, side)
 	-- For random hearthstones, use the icon of the actual selected hearthstone
 	local iconID = actionData.icon
 	local cooldownAction = actionData
-	if actionData.actionType == "random" and button and side and availableHearthstones then
-		local randomIndex = button["randomHearthstoneIndex" .. side]
-		if randomIndex then
-			local actualItemID = availableHearthstones[randomIndex]
-			if actualItemID and hearthstonesAndToysData and hearthstonesAndToysData[tostring(actualItemID)] then
-				cooldownAction = hearthstonesAndToysData[tostring(actualItemID)]
-				iconID = cooldownAction.icon
-			end
+	if actionData.actionType == "random" and button and side then
+		local selected = hearthstonesAndToysData[button["randomHearthstoneKey" .. side] or ""]
+		if selected then
+			cooldownAction = selected
+			iconID = selected.icon
 		end
 	end
 
@@ -354,16 +379,7 @@ local function AddDoubleLineForItem(actionData, prefix, button, side)
 		name = L["Random Hearthstone"]
 	end
 
-	if
-		GB.db
-		and GB.db.hearthstone
-		and GB.db.hearthstone.showBindLocation
-		and (
-			actionData.actionType == "item" and tContains(hearthstones, actionData.actionID)
-			or actionData.actionType == "spell" and actionData.actionID == ASTRAL_RECALL_SPELL_ID
-			or actionData.actionType == "random"
-		)
-	then
+	if GB.db and GB.db.hearthstone and GB.db.hearthstone.showBindLocation and cooldownAction.bind then
 		local bindLocation = GetBindLocation()
 		if bindLocation and bindLocation ~= "" then
 			name = name .. format(" > %s", bindLocation)
@@ -446,7 +462,7 @@ local ButtonTypes = {
 		name = L["Collections"],
 		icon = W.Media.Icons.barCollections,
 		macro = {
-			LeftButton = "/click CollectionsJournalCloseButton\n/click CollectionsMicroButton\n/click CollectionsJournalTab1",
+			LeftButton = "/run ToggleCollectionsJournal(COLLECTIONS_JOURNAL_TAB_INDEX_MOUNTS)",
 			RightButton = "/click MountJournalSummonRandomFavoriteButton",
 		},
 		tooltips = {
@@ -568,6 +584,14 @@ local ButtonTypes = {
 					local sideSettings = HEARTSTONE_SIDE_SETTINGS[side]
 					AddDoubleLineForItem(GB:ResolveHearthstoneAction(side), sideSettings.tooltipPrefix, button, side)
 				end
+				local _, sorting = GB:GetHearthstoneChoices()
+				if #sorting > 0 then
+					DT.tooltip:AddLine(" ")
+					DT.tooltip:AddLine(L["Available"])
+					for _, key in ipairs(sorting) do
+						AddDoubleLineForItem(hearthstonesAndToysData[key])
+					end
+				end
 				DT.tooltip:Show()
 			end
 
@@ -587,7 +611,7 @@ local ButtonTypes = {
 		name = L["Pet Journal"],
 		icon = W.Media.Icons.barPetJournal,
 		macro = {
-			LeftButton = "/click CollectionsJournalCloseButton\n/click CollectionsMicroButton\n/click CollectionsJournalTab2",
+			LeftButton = "/run ToggleCollectionsJournal(COLLECTIONS_JOURNAL_TAB_INDEX_PETS)",
 			RightButton = "/click PetJournalSummonRandomFavoritePetButton",
 		},
 		tooltips = {
@@ -601,7 +625,7 @@ local ButtonTypes = {
 		name = L["Profession"],
 		icon = W.Media.Icons.barProfession,
 		macro = {
-			LeftButton = "/click SpellBookFrameCloseButton\n/click SpellbookMicroButton\n/click SpellBookFrameTab2",
+			LeftButton = "/run ToggleSpellBook(BOOKTYPE_PROFESSION)\n/click SpellBookFrameTab2",
 		},
 		tooltips = {
 			L["Profession"],
@@ -652,7 +676,7 @@ local ButtonTypes = {
 		name = L["Toy Box"],
 		icon = W.Media.Icons.barToyBox,
 		macro = {
-			LeftButton = "/click CollectionsJournalCloseButton\n/click CollectionsMicroButton\n/click CollectionsJournalTab4",
+			LeftButton = "/run ToggleCollectionsJournal(COLLECTIONS_JOURNAL_TAB_INDEX_TOYS)",
 		},
 		tooltips = {
 			L["Toy Box"],
@@ -1408,7 +1432,7 @@ function GB:ProfileUpdate()
 		self:UpdateMetadata()
 		if self.initialized then
 			self.bar:Show()
-			self:UpdateHearthstoneButton()
+			self:UpdateHearthStoneTable()
 			self:UpdateTimeArea()
 			self:UpdateTime()
 			self:UpdateButtons()
@@ -1427,29 +1451,31 @@ function GB:ProfileUpdate()
 	end
 end
 
-function GB:GetNextRandomHearthstone(currentIndex, times)
-	if not availableHearthstones or #availableHearthstones <= 1 or times and times >= 10 then
-		return 1, availableHearthstones and availableHearthstones[1] or 6948
+function GB:GetNextRandomHearthstone(currentKey)
+	local pool = self:GetRandomHearthstonePool()
+	if #pool > 1 then
+		for i, key in ipairs(pool) do
+			if key == currentKey then
+				tremove(pool, i)
+				break
+			end
+		end
 	end
 
-	local randomIndex = random(1, #availableHearthstones)
-	local itemID = availableHearthstones[randomIndex]
-	if currentIndex and randomIndex == currentIndex then
-		return self:GetNextRandomHearthstone(currentIndex, (times or 0) + 1)
-	end
-
-	return randomIndex, itemID
+	return pool[random(1, max(#pool, 1))]
 end
 
 local function HearthstoneMacro(actionData)
-	if actionData.actionType == "spell" or actionData.actionType == "toy" then
+	if actionData.actionType == "spell" then
 		return "/cast " .. actionData.name
+	elseif actionData.actionType == "toy" and PlayerHasToy(actionData.actionID) then
+		return "/cast " .. (GetSpellInfo(actionData.spellID) or actionData.name)
 	end
 	return format("/use item:%d", actionData.actionID)
 end
 
 function GB:UpdateHearthstoneButtonMacro(button, mouseButton)
-	if not button or not mouseButton or not availableHearthstones then
+	if not button or not mouseButton or not hearthstonesAndToysData then
 		return
 	end
 
@@ -1467,10 +1493,9 @@ function GB:UpdateHearthstoneButtonMacro(button, mouseButton)
 		format('/run UIErrorsFrame:AddMessage("%s", RED_FONT_COLOR:GetRGBA())', L["Hearthstone not found or usable."])
 
 	if actionData and actionData.actionType == "random" then
-		local currentIndex = button["randomHearthstoneIndex" .. side]
-		local randomIndex, itemID = self:GetNextRandomHearthstone(currentIndex)
-		button["randomHearthstoneIndex" .. side] = randomIndex
-		local selected = hearthstonesAndToysData[tostring(itemID)]
+		local key = self:GetNextRandomHearthstone(button["randomHearthstoneKey" .. side])
+		button["randomHearthstoneKey" .. side] = key
+		local selected = key and hearthstonesAndToysData[key]
 		if selected then
 			macro = HearthstoneMacro(selected) .. "\n/run _G.WTGameBar_UpdateHearthstoneButtons()"
 		end
@@ -1494,85 +1519,115 @@ function GB:UpdateHearthstoneButton()
 end
 
 function GB:UpdateHearthStoneTable()
-	hearthstonesAndToysData = {
-		["RANDOM"] = {
+	local data = {
+		RANDOM = {
 			name = L["Random Hearthstone"],
-			icon = "Interface\\Icons\\INV_Misc_Rune_01",
+			icon = "Interface\Icons\INV_Misc_Rune_01",
 			actionType = "random",
-			actionID = 6948,
 		},
 	}
+	local order = { "RANDOM" }
+	local seen = { RANDOM = true }
+	local building = true
+	hearthstonesAndToysData, hearthstoneOrder = data, order
 
-	async.WithSpellID(ASTRAL_RECALL_SPELL_ID, function(spell)
-		hearthstonesAndToysData[ASTRAL_RECALL_KEY] = {
-			name = spell:GetSpellName(),
-			icon = spell:GetSpellTexture(),
-			actionType = "spell",
-			actionID = ASTRAL_RECALL_SPELL_ID,
-		}
-
-		self:UpdateHearthstoneButton()
-		if self.initialized then
-			self:UpdateButtons()
-		end
-	end)
-
-	local hearthstonesTable = {}
-	for i = 1, #hearthstones do
-		local itemID = hearthstones[i]
-		hearthstonesTable[itemID] = true
-	end
-
-	availableHearthstones = {}
-
-	async.WithItemIDTable(hearthstoneAndToyIDList, "value", function(item)
-		local id = item:GetItemID()
-		if not id then
+	local function refresh()
+		if building or data ~= hearthstonesAndToysData then
 			return
 		end
-
-		if hearthstonesTable[id] then
-			if C_Item_GetItemCount(id) >= 1 or PlayerHasToy(id) then
-				tinsert(availableHearthstones, id)
-			end
-		end
-
-		local toyItemID, toySpellID, toyName, toyIcon
-		if PlayerHasToy(id) then
-			toyItemID, toySpellID, toyName, toyIcon = C_ToyBox.GetToyInfo(id)
-		end
-		hearthstonesAndToysData[tostring(id)] = {
-			name = toySpellID and toyName or item:GetItemName(),
-			icon = toySpellID and toyIcon or item:GetItemIcon(),
-			actionType = toySpellID and "toy" or "item",
-			actionID = id,
-			spellID = toySpellID,
-		}
-	end, function()
 		self:UpdateHearthstoneButton()
 		if self.initialized then
 			self:UpdateButtons()
 		end
-	end)
-end
-
-function GB:GetHearthStoneTable(includeSpell)
-	if not hearthstonesAndToysData then
-		return {}
 	end
 
-	if includeSpell then
-		return hearthstonesAndToysData
+	local function reserve(key)
+		if seen[key] then
+			return false
+		end
+		seen[key] = true
+		tinsert(order, key)
+		return true
 	end
 
-	local filteredTable = {}
-	for id, data in pairs(hearthstonesAndToysData) do
-		if data.actionType ~= "spell" then
-			filteredTable[id] = data
+	local function addSpell(spellID, bind)
+		local name, _, icon = GetSpellInfo(spellID)
+		if name and reserve("SPELL:" .. spellID) then
+			data["SPELL:" .. spellID] = { name = name, icon = icon, actionType = "spell", actionID = spellID, bind = bind }
 		end
 	end
 
-	return filteredTable
+	local function addItem(itemID, bind)
+		if not reserve(tostring(itemID)) then
+			return
+		end
+		async.WithItemID(itemID, function(item)
+			local _, toySpellID, toyName, toyIcon = C_ToyBox.GetToyInfo(itemID)
+			data[tostring(itemID)] = {
+				name = toySpellID and toyName or item:GetItemName(),
+				icon = toySpellID and toyIcon or item:GetItemIcon(),
+				actionType = toySpellID and "toy" or "item",
+				actionID = itemID,
+				spellID = toySpellID,
+				bind = bind,
+			}
+			refresh()
+		end)
+	end
+
+	for _, itemID in ipairs(BIND_ITEMS) do
+		addItem(itemID, true)
+	end
+	for _, spellID in ipairs(TRAVEL_SPELLS) do
+		addSpell(spellID, BIND_SPELLS[spellID])
+	end
+	for _, itemID in ipairs(TRAVEL_ITEMS) do
+		addItem(itemID)
+	end
+
+	local customKeys = {}
+	for key, enabled in pairs(self.db.hearthstone.custom or {}) do
+		if enabled then
+			tinsert(customKeys, key)
+		end
+	end
+	sort(customKeys)
+	for _, key in ipairs(customKeys) do
+		local spellID = tonumber(strmatch(key, "^SPELL:(%d+)$"))
+		if spellID then
+			addSpell(spellID)
+		elseif tonumber(key) then
+			addItem(tonumber(key))
+		end
+	end
+
+	building = false
+	refresh()
+end
+
+function GB:AddCustomHearthstone(text)
+	local spellID = tonumber(strmatch(text, "|Hspell:(%d+)") or strmatch(text, "^%s*[sS](%d+)%s*$"))
+	local itemID = tonumber(strmatch(text, "|Hitem:(%d+)") or strmatch(text, "^%s*(%d+)%s*$"))
+	if not spellID and not itemID then
+		spellID = tonumber(strmatch(GetSpellLink(text) or "", "|Hspell:(%d+)"))
+		itemID = tonumber(strmatch(select(2, GetItemInfo(text)) or "", "|Hitem:(%d+)"))
+	end
+	local key = spellID and GetSpellInfo(spellID) and "SPELL:" .. spellID or not spellID and itemID and tostring(itemID)
+	if key then
+		self.db.hearthstone.custom[key] = true
+		self:UpdateHearthStoneTable()
+	end
+end
+
+function GB:GetCustomHearthstones()
+	local values = {}
+	for key, enabled in pairs(self.db.hearthstone.custom) do
+		if enabled then
+			local data = hearthstonesAndToysData and hearthstonesAndToysData[key]
+			values[key] = data and F.GetIconString(data.icon, 14, 14) .. " " .. data.name or key
+		end
+	end
+	return values
 end
 
 function GB:GetAvailableButtons()

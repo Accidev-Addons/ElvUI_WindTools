@@ -1033,90 +1033,74 @@ do
 		}
 	end
 
-	options.gameBar.args.hearthstone.args.left = {
-		order = 11,
-		type = "select",
-		name = L["Left Button"],
-		width = "full",
+	local hearthstoneDB = function()
+		return E.db.WT.misc.gameBar.hearthstone
+	end
+
+	for order, key in ipairs({ "left", "middle", "right", "leftFallback", "middleFallback", "rightFallback" }) do
+		local side = gsub(key, "Fallback", "")
+		local name = L[gsub(side, "^%l", strupper) .. " Button"]
+		options.gameBar.args.hearthstone.args[key] = {
+			order = 10 + order,
+			type = "select",
+			name = side == key and name or name .. " (" .. L["Fallback"] .. ")",
+			desc = side ~= key and L["The fallback option if the selected hearthstone is not available."] or nil,
+			width = "full",
+			values = function()
+				return (GB:GetHearthstoneChoices(hearthstoneDB()[key], true))
+			end,
+			sorting = function()
+				return select(2, GB:GetHearthstoneChoices(hearthstoneDB()[key], true))
+			end,
+		}
+	end
+
+	options.gameBar.args.hearthstone.args.randomPool = {
+		order = 20,
+		type = "multiselect",
+		name = L["Random Hearthstone"],
+		desc = L["Choose what the random hearthstone picks from."],
 		values = function()
-			local result = {}
-			for id, data in pairs(GB:GetHearthStoneTable(true)) do
-				result[id] = F.GetIconString(data.icon, 14, 14) .. " " .. data.name
-			end
-			return result
+			return (GB:GetHearthstoneChoices())
+		end,
+		get = function(_, key)
+			return GB:IsInRandomPool(key)
+		end,
+		set = function(_, key, value)
+			hearthstoneDB().randomPool[key] = value
+			GB:UpdateButtons()
 		end,
 	}
 
-	options.gameBar.args.hearthstone.args.middle = {
-		order = 12,
-		type = "select",
-		name = L["Middle Button"],
+	options.gameBar.args.hearthstone.args.customAdd = {
+		order = 30,
+		type = "input",
+		name = L["Add Item or Spell"],
+		desc = L["Enter an item or spell name, an item ID, or a spell ID with the letter s in front (s307810), then press Enter. You can also drag a spell or item onto the box, or click the box and Shift+click a link."],
 		width = "full",
-		values = function()
-			local result = {}
-			for id, data in pairs(GB:GetHearthStoneTable(true)) do
-				result[id] = F.GetIconString(data.icon, 14, 14) .. " " .. data.name
-			end
-			return result
+		get = function()
+			return ""
+		end,
+		set = function(_, value)
+			GB:AddCustomHearthstone(value)
 		end,
 	}
 
-	options.gameBar.args.hearthstone.args.right = {
-		order = 13,
+	options.gameBar.args.hearthstone.args.customRemove = {
+		order = 31,
 		type = "select",
-		name = L["Right Button"],
+		name = L["Remove"],
 		width = "full",
-		values = function()
-			local result = {}
-			for id, data in pairs(GB:GetHearthStoneTable(true)) do
-				result[id] = F.GetIconString(data.icon, 14, 14) .. " " .. data.name
-			end
-			return result
+		hidden = function()
+			return not next(GB:GetCustomHearthstones())
 		end,
-	}
-
-	options.gameBar.args.hearthstone.args.leftFallback = {
-		order = 14,
-		type = "select",
-		name = L["Left Button"] .. " (" .. L["Fallback"] .. ")",
-		desc = L["The fallback option if the selected hearthstone is not available."],
-		width = "full",
 		values = function()
-			local result = {}
-			for id, data in pairs(GB:GetHearthStoneTable(false)) do
-				result[id] = F.GetIconString(data.icon, 14, 14) .. " " .. data.name
-			end
-			return result
+			return GB:GetCustomHearthstones()
 		end,
-	}
-
-	options.gameBar.args.hearthstone.args.middleFallback = {
-		order = 15,
-		type = "select",
-		name = L["Middle Button"] .. " (" .. L["Fallback"] .. ")",
-		desc = L["The fallback option if the selected hearthstone is not available."],
-		width = "full",
-		values = function()
-			local result = {}
-			for id, data in pairs(GB:GetHearthStoneTable(false)) do
-				result[id] = F.GetIconString(data.icon, 14, 14) .. " " .. data.name
-			end
-			return result
-		end,
-	}
-
-	options.gameBar.args.hearthstone.args.rightFallback = {
-		order = 16,
-		type = "select",
-		name = L["Right Button"] .. " (" .. L["Fallback"] .. ")",
-		desc = L["The fallback option if the selected hearthstone is not available."],
-		width = "full",
-		values = function()
-			local result = {}
-			for id, data in pairs(GB:GetHearthStoneTable(false)) do
-				result[id] = F.GetIconString(data.icon, 14, 14) .. " " .. data.name
-			end
-			return result
+		get = function() end,
+		set = function(_, key)
+			hearthstoneDB().custom[key] = nil
+			GB:UpdateHearthStoneTable()
 		end,
 	}
 end

@@ -18,7 +18,7 @@ local strsub = strsub
 local strupper = strupper
 local tinsert = tinsert
 local unpack = unpack
-local utf8sub = string.utf8sub
+local utf8sub = utf8.sub
 local wipe = wipe
 
 local GetAchievementLink = GetAchievementLink
