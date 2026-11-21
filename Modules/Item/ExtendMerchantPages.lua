@@ -1,133 +1,195 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local EMP = W:NewModule("ExtendMerchantPages", "AceHook-3.0")
-local S = W.Modules.Skins ---@type Skins
 
 local _G = _G
-local floor = math.floor
+local ceil = math.ceil
+local max = math.max
 local pairs = pairs
 
 local CreateFrame = CreateFrame
-local GetNumBuybackItems = GetNumBuybackItems
+local GetMerchantItemCostInfo = GetMerchantItemCostInfo
+local GetMerchantItemID = GetMerchantItemID
+local GetMerchantItemInfo = GetMerchantItemInfo
+local GetMerchantItemInfoEx = GetMerchantItemInfoEx
+local GetMerchantItemLink = GetMerchantItemLink
+local GetMerchantNumItems = GetMerchantNumItems
 local IsAddOnLoaded = IsAddOnLoaded
 
 local BLIZZARD_MERCHANT_ITEMS_PER_PAGE = 10
 local BLIZZARD_BUYBACK_ITEMS_PER_PAGE = 12
 
-function EMP:SkinButton(index)
-	if not (E.private.skins.blizzard.enable and E.private.skins.blizzard.merchant) then
+local function SetItemColors(merchantButton, itemButton, nameR, nameG, nameB, slotR, slotG, slotB, r, g, b)
+	SetItemButtonNameFrameVertexColor(merchantButton, nameR, nameG, nameB)
+	SetItemButtonSlotVertexColor(merchantButton, slotR, slotG, slotB)
+	SetItemButtonTextureVertexColor(itemButton, r, g, b)
+	SetItemButtonNormalTextureVertexColor(itemButton, r, g, b)
+end
+
+local function UpdateItem(i, index, numItems)
+	local prefix = "MerchantItem" .. i
+	local merchantButton = _G[prefix]
+	local itemButton = _G[prefix .. "ItemButton"]
+	local moneyFrame = _G[prefix .. "MoneyFrame"]
+	local altCurrencyFrame = _G[prefix .. "AltCurrencyFrame"]
+
+	if index > numItems then
+		itemButton.price = nil
+		itemButton.hasItem = nil
+		itemButton:Hide()
+		SetItemButtonNameFrameVertexColor(merchantButton, 0.5, 0.5, 0.5)
+		SetItemButtonSlotVertexColor(merchantButton, 0.4, 0.4, 0.4)
+		merchantButton.Name:SetText("")
+		moneyFrame:Hide()
+		altCurrencyFrame:Hide()
 		return
 	end
 
-	local item = _G["MerchantItem" .. index]
-	item:Size(155, 45)
-	item:StripTextures(true)
-	item:CreateBackdrop("Transparent")
-	item.backdrop:Point("TOPLEFT", -3, 2)
-	item.backdrop:Point("BOTTOMRIGHT", 2, -3)
+	local name, texture, price, quantity, numAvailable, _, extendedCost = GetMerchantItemInfo(index)
+	local canUseItem, canPurchase, isAlreadyKnown = GetMerchantItemInfoEx(index)
+	merchantButton.Name:SetText(name)
+	SetItemButtonCount(itemButton, quantity)
+	SetItemButtonStock(itemButton, numAvailable)
+	SetItemButtonTexture(itemButton, texture)
 
-	local slot = _G["MerchantItem" .. index .. "SlotTexture"]
-	item.Name:Point("LEFT", slot, "RIGHT", -5, 5)
-	item.Name:Size(110, 30)
+	local link = GetMerchantItemLink(index)
+	if not link then
+		local itemID = GetMerchantItemID(index)
+		link = itemID and C_Item.GetItemLinkCache(itemID)
+	end
 
-	local button = _G["MerchantItem" .. index .. "ItemButton"]
-	button:StripTextures()
-	button:StyleButton()
-	button:SetTemplate(nil, true)
-	button:Point("TOPLEFT", item, "TOPLEFT", 4, -4)
+	if link then
+		local honorPoints, arenaPoints = GetMerchantItemCostInfo(index)
+		local requirementType, requiredRating = C_Item.GetRequiredPVPRating(link, honorPoints, arenaPoints)
+		local types = Enum.ItemRequirementType
+		if
+			requirementType == types.Removed
+			or requirementType == types.Battleground and C_PvP.GetRatedBattlegroundRating() >= requiredRating
+			or requirementType == types.Arena
+				and max(C_PvP.GetArenaRating(1), C_PvP.GetArenaRating(2)) >= requiredRating
+		then
+			canPurchase = true
+		end
+	end
 
-	local icon = button.icon
-	icon:SetTexCoords()
-	icon:ClearAllPoints()
-	icon:Point("TOPLEFT", 1, -1)
-	icon:Point("BOTTOMRIGHT", -1, 1)
+	itemButton.price = price
+	itemButton.extendedCost = extendedCost and true or nil
+	itemButton.link = link
+	itemButton.texture = texture
 
-	local nameFrame = _G["MerchantItem" .. index .. "NameFrame"]
-	nameFrame:Point("LEFT", slot, "RIGHT", -6, -17)
+	if extendedCost then
+		MerchantFrame_UpdateAltCurrency(index, i)
+		altCurrencyFrame:ClearAllPoints()
+		if price > 0 then
+			MoneyFrame_Update(moneyFrame:GetName(), price)
+			altCurrencyFrame:SetPoint("LEFT", moneyFrame, "RIGHT", -14, 0)
+			moneyFrame:Show()
+		else
+			itemButton.price = nil
+			altCurrencyFrame:SetPoint("BOTTOMLEFT", prefix .. "NameFrame", "BOTTOMLEFT", 0, 31)
+			moneyFrame:Hide()
+		end
+		altCurrencyFrame:Show()
+	else
+		MoneyFrame_Update(moneyFrame:GetName(), price)
+		altCurrencyFrame:Hide()
+		moneyFrame:Show()
+	end
 
-	local name = _G["MerchantItem" .. index .. "Name"]
-	name:Point("LEFT", slot, "RIGHT", -4, 5)
+	itemButton.Checkmark:SetShown(isAlreadyKnown)
+	itemButton.hasItem = true
+	itemButton:SetID(index)
+	itemButton:Show()
 
-	local money = _G["MerchantItem" .. index .. "MoneyFrame"]
-	money:ClearAllPoints()
-	money:Point("BOTTOMLEFT", button, "BOTTOMRIGHT", 3, 0)
+	local unusable = not canUseItem or not canPurchase
+	if numAvailable == 0 then
+		local c = unusable and 0 or 0.5
+		SetItemColors(merchantButton, itemButton, 0.5, c, c, 0.5, c, c, 0.5, c, c)
+	elseif unusable then
+		SetItemColors(merchantButton, itemButton, 1, 0, 0, 1, 0, 0, 0.9, 0, 0)
+	else
+		local c = isAlreadyKnown and 0.8 or 1
+		SetItemColors(merchantButton, itemButton, 0.5, 0.5, 0.5, 1, 1, 1, c, c, c)
+	end
+end
 
-	S:HandleMerchantItem(index)
-	S:Proxy("HandleIconBorder", button.IconBorder)
+function EMP:AnchorBuybackItem()
+	_G.MerchantBuyBackItem:ClearAllPoints()
+	_G.MerchantBuyBackItem:Point("BOTTOMRIGHT", _G.MerchantFrame, "BOTTOMRIGHT", -7, 33)
+end
+
+function EMP:SetupGVS(frame)
+	self.gvsReady = true
+
+	if frame.SetNumColumns then
+		frame:SetWidth(_G.MerchantFrame:GetWidth() - 21)
+		frame:SetNumColumns(self.db.numberOfPages)
+	end
+
+	self:AnchorBuybackItem()
 end
 
 function EMP:MerchantFrame_UpdateMerchantInfo()
-	if not self.db or not self.db.enable then
+	local gvs = _G.GVSFrame
+	if gvs then
+		if not self.gvsReady then
+			self:SetupGVS(gvs)
+		end
+
+		for i = BLIZZARD_BUYBACK_ITEMS_PER_PAGE + 1, self.itemsPerPage do
+			_G["MerchantItem" .. i]:Hide()
+		end
 		return
 	end
 
-	for i = 1, _G.MERCHANT_ITEMS_PER_PAGE do
-		local button = _G["MerchantItem" .. i]
-		if not button then
-			break
-		end
+	local page = _G.MerchantFrame.page
+	local numItems = GetMerchantNumItems()
+	local offset = (page - 1) * self.itemsPerPage
 
-		button:Show()
-		button:ClearAllPoints()
+	for i = page == 1 and BLIZZARD_MERCHANT_ITEMS_PER_PAGE + 1 or 1, self.itemsPerPage do
+		UpdateItem(i, offset + i, numItems)
+	end
 
-		if (i % BLIZZARD_MERCHANT_ITEMS_PER_PAGE) == 1 then
-			if i == 1 then
-				button:Point("TOPLEFT", _G.MerchantFrame, "TOPLEFT", 11, -69)
-			else
-				button:Point(
-					"TOPLEFT",
-					_G["MerchantItem" .. (i - (BLIZZARD_MERCHANT_ITEMS_PER_PAGE - 1))],
-					"TOPRIGHT",
-					12,
-					0
-				)
-			end
+	_G.MerchantItem11:ClearAllPoints()
+	_G.MerchantItem11:SetPoint("TOPLEFT", _G.MerchantItem2, "TOPRIGHT", 12, 0)
+	for i = BLIZZARD_MERCHANT_ITEMS_PER_PAGE + 1, self.itemsPerPage do
+		_G["MerchantItem" .. i]:Show()
+	end
+
+	local numPages = ceil(numItems / self.itemsPerPage)
+	_G.MerchantPageText:SetFormattedText(_G.MERCHANT_PAGE_NUMBER, page, numPages)
+
+	if numItems > self.itemsPerPage then
+		if page >= numPages then
+			_G.MerchantNextPageButton:Disable()
 		else
-			if (i % 2) == 1 then
-				button:Point("TOPLEFT", _G["MerchantItem" .. (i - 2)], "BOTTOMLEFT", 0, -8)
-			else
-				button:Point("TOPLEFT", _G["MerchantItem" .. (i - 1)], "TOPRIGHT", 12, 0)
-			end
+			_G.MerchantNextPageButton:Enable()
 		end
+	else
+		_G.MerchantPageText:Hide()
+		_G.MerchantPrevPageButton:Hide()
+		_G.MerchantNextPageButton:Hide()
 	end
 end
 
 function EMP:MerchantFrame_UpdateBuybackInfo()
-	if not self.db or not self.db.enable then
+	_G.MerchantItem11:ClearAllPoints()
+	_G.MerchantItem11:SetPoint("TOPLEFT", _G.MerchantItem9, "BOTTOMLEFT", 0, -15)
+
+	for i = BLIZZARD_BUYBACK_ITEMS_PER_PAGE + 1, self.itemsPerPage do
+		_G["MerchantItem" .. i]:Hide()
+	end
+end
+
+function EMP:MerchantFrame_CloseStackSplitFrame()
+	local owner = _G.StackSplitFrame:IsShown() and _G.StackSplitFrame.owner
+	if not owner then
 		return
 	end
 
-	local numBuybackItems = GetNumBuybackItems()
-
-	for i = BLIZZARD_BUYBACK_ITEMS_PER_PAGE + 1, _G.MERCHANT_ITEMS_PER_PAGE do
-		local button = _G["MerchantItem" .. i]
-		if not button then
-			break
-		end
-
-		button:ClearAllPoints()
-
-		if i <= numBuybackItems then
-			local row = floor((i - 1) / 3)
-			local col = (i - 1) % 3
-
-			if row == 0 then
-				-- First row of buyback items
-				if col == 0 then
-					button:Point("TOPLEFT", _G.MerchantItem1, "TOPLEFT", 0, -60)
-				else
-					button:Point("TOPLEFT", _G["MerchantItem" .. (i - 1)], "TOPRIGHT", 12, 0)
-				end
-			else
-				-- Subsequent rows
-				if col == 0 then
-					button:Point("TOPLEFT", _G["MerchantItem" .. (i - 3)], "BOTTOMLEFT", 0, -15)
-				else
-					button:Point("TOPLEFT", _G["MerchantItem" .. (i - 1)], "TOPRIGHT", 12, 0)
-				end
-			end
-			button:Show()
-		else
-			button:Hide()
+	for i = BLIZZARD_BUYBACK_ITEMS_PER_PAGE + 1, self.itemsPerPage do
+		if owner == _G["MerchantItem" .. i .. "ItemButton"] then
+			_G.StackSplitFrameCancel_Click()
+			return
 		end
 	end
 end
@@ -149,24 +211,25 @@ function EMP:Initialize()
 	end
 
 	self.db = E.private.WT.item.extendMerchantPages
+	self.itemsPerPage = self.db.numberOfPages * BLIZZARD_MERCHANT_ITEMS_PER_PAGE
 
-	_G.MERCHANT_ITEMS_PER_PAGE = self.db.numberOfPages * BLIZZARD_MERCHANT_ITEMS_PER_PAGE
-	_G.MerchantFrame:Width(30 + self.db.numberOfPages * 330)
+	_G.MerchantFrame:Width(336 + (self.db.numberOfPages - 1) * 330)
 
-	for i = 1, _G.MERCHANT_ITEMS_PER_PAGE do
-		if not _G["MerchantItem" .. i] then
-			local frame = CreateFrame("Frame", "MerchantItem" .. i, _G.MerchantFrame, "MerchantItemTemplate")
-			self:SkinButton(i)
+	for i = BLIZZARD_BUYBACK_ITEMS_PER_PAGE + 1, self.itemsPerPage do
+		local item = _G["MerchantItem" .. i]
+			or CreateFrame("Frame", "MerchantItem" .. i, _G.MerchantFrame, "MerchantItemTemplate")
 
-			local altCurrencyFrame = frame:GetChild("AltCurrencyFrame") or _G["MerchantItem" .. i .. "AltCurrencyFrame"]
-			if altCurrencyFrame then
-				altCurrencyFrame:Hide()
-			end
+		item:ClearAllPoints()
+		if i % BLIZZARD_MERCHANT_ITEMS_PER_PAGE == 1 then
+			item:SetPoint("TOPLEFT", _G["MerchantItem" .. (i - BLIZZARD_MERCHANT_ITEMS_PER_PAGE + 1)], "TOPRIGHT", 12, 0)
+		elseif i % 2 == 0 then
+			item:SetPoint("TOPLEFT", _G["MerchantItem" .. (i - 1)], "TOPRIGHT", 12, 0)
+		else
+			item:SetPoint("TOPLEFT", _G["MerchantItem" .. (i - 2)], "BOTTOMLEFT", 0, -8)
 		end
 	end
 
-	_G.MerchantBuyBackItem:ClearAllPoints()
-	_G.MerchantBuyBackItem:Point("TOPLEFT", _G.MerchantItem10, "BOTTOMLEFT", 30, -53)
+	self:AnchorBuybackItem()
 
 	-- Position page navigation buttons relative to the extended frame width
 	local buttonOffset = 25 + ((self.db.numberOfPages - 1) * 165) -- Center the buttons in the extended frame
@@ -181,6 +244,7 @@ function EMP:Initialize()
 
 	self:SecureHook("MerchantFrame_UpdateMerchantInfo", "MerchantFrame_UpdateMerchantInfo")
 	self:SecureHook("MerchantFrame_UpdateBuybackInfo", "MerchantFrame_UpdateBuybackInfo")
+	self:SecureHook("MerchantFrame_CloseStackSplitFrame", "MerchantFrame_CloseStackSplitFrame")
 
 	self.initialized = true
 end

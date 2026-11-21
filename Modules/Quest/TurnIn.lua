@@ -1,12 +1,12 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local TI = W:NewModule("TurnIn", "AceEvent-3.0") ---@class TurnIn: AceModule, AceEvent-3.0
+local M = E:GetModule("Misc")
 
 local _G = _G
 local format = format
 local select = select
 local strfind = strfind
 local strlen = strlen
-local strmatch = strmatch
 local strsub = strsub
 local strupper = strupper
 local tonumber = tonumber
@@ -21,13 +21,10 @@ local GetAvailableTitle = GetAvailableTitle
 local GetGossipActiveQuests = GetGossipActiveQuests
 local GetGossipAvailableQuests = GetGossipAvailableQuests
 local GetGossipOptions = GetGossipOptions
-local GetItemInfo = GetItemInfo
 local GetNumActiveQuests = GetNumActiveQuests
 local GetNumAvailableQuests = GetNumAvailableQuests
 local GetNumQuestChoices = GetNumQuestChoices
 local GetNumQuestLogEntries = GetNumQuestLogEntries
-local GetQuestItemInfo = GetQuestItemInfo
-local GetQuestItemLink = GetQuestItemLink
 local GetQuestLogTitle = GetQuestLogTitle
 local GetQuestMoneyToGet = GetQuestMoneyToGet
 local GetQuestReward = GetQuestReward
@@ -39,7 +36,6 @@ local IsQuestCompletable = IsQuestCompletable
 local IsShiftKeyDown = IsShiftKeyDown
 local QuestFlagsPVP = QuestFlagsPVP
 local QuestGetAutoAccept = QuestGetAutoAccept
-local QuestInfoItem_OnClick = QuestInfoItem_OnClick
 local QuestIsDaily = QuestIsDaily
 local QuestIsWeekly = QuestIsWeekly
 local SelectActiveQuest = SelectActiveQuest
@@ -52,8 +48,6 @@ local UnitGUID = UnitGUID
 local UnitName = UnitName
 local UnitPlayerControlled = UnitPlayerControlled
 
-local MAX_NUM_ITEMS = MAX_NUM_ITEMS
-
 local SKIP_STRING = "^.+|cFFFF0000<.+>|r"
 
 local choiceQueued = false
@@ -62,10 +56,6 @@ local repeatableQuests = {}
 local ignoreQuestNPC = {
 	[4311] = true, -- 霍加尔·雷斧
 	[14847] = true, -- 萨杜斯·帕雷教授
-}
-
-local cashRewards = {
-	[45724] = 1e5, -- 冠军的钱包
 }
 
 local function IsRepeatableQuest(title)
@@ -293,6 +283,8 @@ function TI:QUEST_PROGRESS()
 end
 
 function TI:QUEST_COMPLETE()
+	choiceQueued = false
+
 	if self:IsPaused("COMPLETE") or self:IsIgnoredNPC() then
 		return
 	end
@@ -309,37 +301,15 @@ function TI:QUEST_COMPLETE()
 	local choices = GetNumQuestChoices()
 	if choices <= 1 then
 		GetQuestReward(1)
-	elseif self.db and self.db.selectReward then
-		local bestSellPrice, bestIndex = 0, nil
-
-		for index = 1, choices do
-			local link = GetQuestItemLink("choice", index)
-			local itemSellPrice = link and select(11, GetItemInfo(link))
-			if not itemSellPrice then
-				choiceQueued = true
-				return GetQuestItemInfo("choice", index)
-			end
-
-			itemSellPrice = cashRewards[tonumber(strmatch(link, "item:(%d+)"))] or itemSellPrice
-
-			if itemSellPrice > bestSellPrice then
-				bestSellPrice, bestIndex = itemSellPrice, index
-			end
-		end
-
-		if not bestIndex then
+	elseif self.db and self.db.getBestReward then
+		if not M.GetQuestRewardChoice then
 			return
 		end
 
-		for i = 1, MAX_NUM_ITEMS do
-			local button = _G["QuestInfoItem" .. i]
-			if button and button:IsShown() and button.type == "choice" and button:GetID() == bestIndex then
-				QuestInfoItem_OnClick(button)
-				break
-			end
-		end
-
-		if self.db.getBestReward then
+		local bestIndex, pending = M:GetQuestRewardChoice()
+		if pending then
+			choiceQueued = true
+		elseif bestIndex then
 			GetQuestReward(bestIndex)
 		end
 	end
@@ -403,6 +373,7 @@ function TI:Initialize()
 	self:RegisterEvent("QUEST_GREETING")
 	self:RegisterEvent("QUEST_ITEM_UPDATE")
 	self:RegisterEvent("QUEST_PROGRESS")
+	E:RegisterEventForObject("GET_ITEM_INFO_RECEIVED", self, self.QUEST_ITEM_UPDATE)
 
 	self.initialized = true
 end
@@ -412,6 +383,7 @@ function TI:ProfileUpdate()
 
 	if self.initialized and not self.db.enable then
 		self:UnregisterAllEvents()
+		E:UnregisterEventForObject("GET_ITEM_INFO_RECEIVED", self, self.QUEST_ITEM_UPDATE)
 		self.initialized = false
 	end
 end

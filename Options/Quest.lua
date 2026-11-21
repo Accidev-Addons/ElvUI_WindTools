@@ -2437,24 +2437,13 @@ options.turnIn = {
 				return not E.db.WT.quest.turnIn.enable
 			end,
 			args = {
-				selectReward = {
-					order = 1,
-					type = "toggle",
-					name = L["Select Reward"],
-					desc = L["If there are multiple items in the reward list, it will select the reward with the highest sell price."],
-					disabled = function()
-						return not E.db.WT.quest.turnIn.enable or E.db.WT.quest.turnIn.mode == "ACCEPT"
-					end,
-				},
 				getBestReward = {
-					order = 2,
+					order = 1,
 					type = "toggle",
 					name = L["Get Best Reward"],
 					desc = L["Complete the quest with the most valuable reward."],
 					disabled = function()
-						return not E.db.WT.quest.turnIn.enable
-							or E.db.WT.quest.turnIn.mode == "ACCEPT"
-							or not E.db.WT.quest.turnIn.selectReward
+						return not E.db.WT.quest.turnIn.enable or E.db.WT.quest.turnIn.mode == "ACCEPT"
 					end,
 				},
 			},

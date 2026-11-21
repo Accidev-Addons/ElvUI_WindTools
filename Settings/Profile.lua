@@ -777,7 +777,6 @@ P.quest = {
 			repeatable = true,
 			other = false,
 		},
-		selectReward = true,
 		getBestReward = false,
 		pauseModifier = "SHIFT",
 		customIgnoreNPCs = {},

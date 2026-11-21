@@ -40,6 +40,7 @@ local function ReskinQuestIcon(button)
 		local icon = button.icon or button.Icon
 		if icon then
 			S:Proxy("HandleIcon", icon, true)
+			S.Widgets.LowerBackdropFill(icon)
 			icon:SetInside()
 		end
 
@@ -64,6 +65,7 @@ function S:ReskinObjectiveTrackerBlockRightEdgeButton(_, block)
 		self:Proxy("HandleButton", frame, nil, nil, nil, true)
 		frame.backdrop:SetInside(frame, 4, 4)
 		self:CreateBackdropShadow(frame)
+		self.Widgets.LowerBackdropFill(frame)
 		frame.__windSkin = true
 	end
 

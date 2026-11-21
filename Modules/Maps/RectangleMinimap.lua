@@ -15,6 +15,8 @@ local select = select
 local InCombatLockdown = InCombatLockdown
 local Minimap = _G.Minimap
 
+local LOCATION_HEIGHT = 22
+
 function RM:SetHereBeDragonsPinShown(pin, isShown)
 	local forceShown = not self.db or not self.db.enable or not self.db.fixHereBeDragons
 	if isShown or forceShown then
@@ -82,9 +84,16 @@ function RM:HereBeDragonsPinsFix()
 end
 
 function RM:ChangeShape()
-	if not self.db or InCombatLockdown() then
+	if not self.db or not M.Initialized then
 		return
 	end
+
+	if InCombatLockdown() then
+		self:RegisterEvent("PLAYER_REGEN_ENABLED", "ChangeShape")
+		return
+	end
+
+	self:UnregisterEvent("PLAYER_REGEN_ENABLED")
 
 	local holder = M.MapHolder
 	local panel = _G.MinimapPanel
@@ -98,23 +107,29 @@ function RM:ChangeShape()
 
 	local mmOffset = E.PixelMode and 1 or 3
 	local mmScale = E.db.general.minimap.scale
+	local locationPanel = M.LocationPanel
+	local aboveSize = locationPanel:IsShown() and (E:Scale(LOCATION_HEIGHT) - E:Scale(1)) or 0
 
 	-- First, update the size and position of the ElvUI Minimap holder and mover
 	self.effectiveHeight = newHeight
-	self:UpdateMiniMapHolderAndMover()
+	self:UpdateMiniMapHolderAndMover(aboveSize)
+
+	local mover = _G.MinimapMover
+	local squareTop = E:Scale(halfDiff - mmOffset / mmScale - aboveSize) * mmScale
+	mover:SetClampRectInsets(0, 0, max(squareTop, 0), -max(Minimap:GetHeight() * mmScale - squareTop - mover:GetHeight(), 0))
 
 	-- Update the size and position of the panel
 	if panel:IsShown() then
 		panel:ClearAllPoints()
-		panel:Point("TOPLEFT", Minimap, "BOTTOMLEFT", -E.Border, (E.PixelMode and 0 or -3) + halfDiff * mmScale)
-		panel:Point("BOTTOMRIGHT", Minimap, "BOTTOMRIGHT", E.Border, -23 + halfDiff * mmScale)
+		panel:Point("TOPLEFT", Minimap, "BOTTOMLEFT", -E.Border, (E.PixelMode and 0 or -3) + halfDiff)
+		panel:Point("BOTTOMRIGHT", Minimap, "BOTTOMRIGHT", E.Border, -23 + halfDiff)
 	end
 
 	-- Do not allow the Minimap to be dragged off screen because the canvas cannot go off screen
 	Minimap:SetClampedToScreen(true)
 	Minimap:SetClampRectInsets(0, 0, 0, 0)
 	Minimap:ClearAllPoints()
-	Minimap:Point("TOPRIGHT", holder, -mmOffset / mmScale, -mmOffset / mmScale + halfDiff)
+	Minimap:Point("TOPRIGHT", holder, -mmOffset / mmScale, -mmOffset / mmScale + halfDiff - aboveSize)
 
 	-- Update mask
 	Minimap:SetMaskTexture(texturePath)
@@ -122,18 +137,22 @@ function RM:ChangeShape()
 
 	-- Update the size and position of the Minimap
 	Minimap.backdrop:ClearAllPoints()
-	Minimap.backdrop:SetOutside(Minimap, mmOffset, -halfDiff * mmScale + mmOffset)
+	Minimap.backdrop:SetOutside(Minimap, mmOffset, -halfDiff + mmOffset)
+
+	locationPanel:ClearAllPoints()
+	locationPanel:Point("BOTTOMLEFT", Minimap, "TOPLEFT", -E.Border, (E.PixelMode and 0 or 3) - halfDiff)
+	locationPanel:Point("TOPRIGHT", Minimap, "TOPRIGHT", E.Border, LOCATION_HEIGHT - halfDiff)
 
 	-- Update the size and position of the Minimap location text
-	if Minimap.location then
+	if Minimap.location and not locationPanel:IsShown() then
 		Minimap.location:ClearAllPoints()
-		Minimap.location:Point("TOP", Minimap, 0, -4 - halfDiff * mmScale)
+		Minimap.location:Point("TOP", Minimap, 0, -4 - halfDiff)
 	end
 
 	self:HereBeDragonsPinsFix()
 end
 
-function RM:UpdateMiniMapHolderAndMover()
+function RM:UpdateMiniMapHolderAndMover(aboveSize)
 	local panel = _G.MinimapPanel
 	local holder = M.MapHolder
 	local mover = _G.MinimapMover
@@ -142,7 +161,7 @@ function RM:UpdateMiniMapHolderAndMover()
 	local mWidth, mHeight = _G.Minimap:GetWidth(), self.effectiveHeight
 	local bWidth, bHeight = E:Scale(E.PixelMode and 2 or 6), E:Scale(E.PixelMode and 2 or 8)
 	local panelSize, joinPanel = (panel:IsShown() and panel:GetHeight()) or E:Scale(E.PixelMode and 1 or -1), E:Scale(1)
-	local HEIGHT, WIDTH = (mHeight * scale) + (panelSize - joinPanel), mWidth * scale
+	local HEIGHT, WIDTH = (mHeight * scale) + (panelSize - joinPanel) + aboveSize, mWidth * scale
 
 	holder:Size(WIDTH + bWidth, HEIGHT + bHeight)
 	mover:Size(WIDTH + bWidth, HEIGHT + bHeight)

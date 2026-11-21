@@ -6,6 +6,7 @@ local WS = W:NewModule("WidgetSkins", "AceHook-3.0", "AceEvent-3.0") ---@class W
 S.Widgets = WS
 
 local abs = abs
+local hooksecurefunc = hooksecurefunc
 local pairs = pairs
 local pcall = pcall
 local type = type
@@ -27,6 +28,32 @@ function WS.RaiseText(frame)
 			end
 		end
 	end
+end
+
+local function ClearBackdropColor(backdrop)
+	backdrop:SetBackdropColor(0, 0, 0, 0)
+end
+
+function WS.LowerBackdropFill(frame)
+	local backdrop = frame.backdrop
+	local owner = frame:IsObjectType("Texture") and frame:GetParent() or frame
+	local fill = owner:CreateTexture(nil, "BACKGROUND")
+	fill:SetInside(backdrop, 1, 1)
+	fill:SetTexture(backdrop:GetBackdrop().bgFile)
+	fill:SetVertexColor(backdrop:GetBackdropColor())
+	if not backdrop:IsShown() then
+		fill:Hide()
+	end
+
+	hooksecurefunc(backdrop, "Show", function()
+		fill:Show()
+	end)
+	hooksecurefunc(backdrop, "Hide", function()
+		fill:Hide()
+	end)
+
+	backdrop.callbackBackdropColor = ClearBackdropColor
+	ClearBackdropColor(backdrop)
 end
 
 function WS:Ace3_RegisterAsWidget(_, widget)

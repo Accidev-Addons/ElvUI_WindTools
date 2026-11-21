@@ -138,6 +138,13 @@ function W:UpdateScripts()
 	if profile.item then
 		profile.item.alreadyKnown = nil
 	end
+	local turnIn = profile.quest and profile.quest.turnIn
+	if turnIn then
+		if turnIn.selectReward == false then
+			turnIn.getBestReward = false
+		end
+		turnIn.selectReward = nil
+	end
 	local itemBars = profile.item and profile.item.extraItemsBar
 	if itemBars then
 		for i = 1, 5 do

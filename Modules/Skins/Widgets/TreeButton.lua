@@ -112,6 +112,7 @@ function WS:HandleTreeGroup(widget)
 					backdropColor.b,
 					db.selected.backdropAlpha
 				)
+				WS.LowerBackdropFill(button)
 				button.backdrop:Hide()
 			end
 

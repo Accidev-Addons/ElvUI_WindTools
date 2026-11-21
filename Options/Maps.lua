@@ -19,7 +19,7 @@ options.rectangleMinimap = {
 	end,
 	set = function(info, value)
 		E.db.WT.maps.rectangleMinimap[info[#info]] = value
-		RM:ChangeShape()
+		RM:ProfileUpdate()
 	end,
 	args = {
 		desc = {
