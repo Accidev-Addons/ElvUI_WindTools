@@ -304,16 +304,6 @@ options.reset = {
 						end)
 					end,
 				},
-				alreadyKnown = {
-					order = 3,
-					type = "execute",
-					name = L["Already Known"],
-					func = function()
-						E:StaticPopup_Show("WINDTOOLS_RESET_MODULE", L["Already Known"], nil, function()
-							E.db.WT.item.alreadyKnown = P.item.alreadyKnown
-						end)
-					end,
-				},
 				fastLoot = {
 					order = 4,
 					type = "execute",

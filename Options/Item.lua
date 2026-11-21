@@ -5,7 +5,6 @@ local async = W.Utilities.Async
 local LSM = E.Libs.LSM
 
 local DI = W:GetModule("DeleteItem")
-local AK = W:GetModule("AlreadyKnown")
 local FL = W:GetModule("FastLoot")
 local TD = W:GetModule("Trade")
 local EB = W:GetModule("ExtraItemsBar")
@@ -631,87 +630,6 @@ options.delete = {
 				CLICK = L["Fill by click"],
 				AUTO = L["Auto Fill"],
 			},
-		},
-	},
-}
-
-options.alreadyKnown = {
-	order = 3,
-	type = "group",
-	name = L["Already Known"],
-	get = function(info)
-		return E.db.WT.item.alreadyKnown[info[#info]]
-	end,
-	set = function(info, value)
-		E.db.WT.item.alreadyKnown[info[#info]] = value
-	end,
-	args = {
-		desc = {
-			order = 1,
-			type = "group",
-			inline = true,
-			name = L["Description"],
-			args = {
-				feature = {
-					order = 1,
-					type = "description",
-					name = function()
-						if AK.StopRunning then
-							local errorMsg = format(L["Because of %s, this module will not be loaded."], AK.StopRunning)
-							return C.StringByTemplate(errorMsg, "rose-500")
-						else
-							return L["Puts a overlay on already known learnable items on vendors and in the guild bank."]
-						end
-					end,
-					fontSize = "medium",
-				},
-			},
-		},
-		enable = {
-			order = 2,
-			type = "toggle",
-			name = L["Enable"],
-			disabled = function()
-				return AK.StopRunning
-			end,
-			set = function(info, value)
-				E.db.WT.item.alreadyKnown[info[#info]] = value
-				AK:ToggleSetting()
-			end,
-			width = "full",
-		},
-		mode = {
-			order = 3,
-			name = L["Mode"],
-			type = "select",
-			disabled = function()
-				return AK.StopRunning
-			end,
-			values = {
-				COLOR = L["Custom Color"],
-				MONOCHROME = L["Monochrome"],
-			},
-		},
-		color = {
-			order = 4,
-			type = "color",
-			name = L["Color"],
-			disabled = function()
-				return AK.StopRunning
-			end,
-			hidden = function()
-				return not (E.db.WT.item.alreadyKnown.mode == "COLOR")
-			end,
-			hasAlpha = false,
-			get = function(info)
-				local db = E.db.WT.item.alreadyKnown.color
-				local default = P.item.alreadyKnown.color
-				return db.r, db.g, db.b, nil, default.r, default.g, default.b, nil
-			end,
-			set = function(info, r, g, b)
-				local db = E.db.WT.item.alreadyKnown.color
-				db.r, db.g, db.b = r, g, b
-			end,
 		},
 	},
 }

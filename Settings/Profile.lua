@@ -176,11 +176,6 @@ P.item = {
 		delKey = true,
 		fillIn = "CLICK",
 	},
-	alreadyKnown = {
-		enable = true,
-		mode = "COLOR",
-		color = { r = 0, g = 1, b = 0 },
-	},
 	fastLoot = {
 		enable = true,
 		limit = 0.3,

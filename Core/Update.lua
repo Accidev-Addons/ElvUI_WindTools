@@ -135,6 +135,9 @@ function W:UpdateScripts()
 		chatText.abbreviation = "DEFAULT"
 		E.db.chat.hideChannels = true
 	end
+	if profile.item then
+		profile.item.alreadyKnown = nil
+	end
 	local itemBars = profile.item and profile.item.extraItemsBar
 	if itemBars then
 		for i = 1, 5 do
