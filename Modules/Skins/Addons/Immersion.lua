@@ -15,8 +15,8 @@ function S:Immersion_ReskinTitleButton(frame)
 			self:CreateBackdropShadow(button)
 			self:MerathilisUISkin(button.backdrop)
 
-			button.Hilite:StripTextures()
-			button.Overlay:StripTextures()
+			button.Hilite:SetBackdrop(nil)
+			button.Overlay:SetBackdrop(nil)
 			button:SetBackdrop(nil)
 			F.SetFont(button.Label)
 			button.__windSkin = true
@@ -114,7 +114,7 @@ function S:Immersion()
 	self:MerathilisUISkin(talkBox.backdrop)
 
 	-- Use colored backdrop edge as highlight
-	talkBox.Hilite:StripTextures()
+	talkBox.Hilite:SetBackdrop(nil)
 	talkBox:HookScript("OnEnter", function(box)
 		ES.SetModifiedBackdrop(box)
 
@@ -152,17 +152,6 @@ function S:Immersion()
 	talkBox.MainFrame.Indicator:ClearAllPoints()
 	talkBox.MainFrame.Indicator:Point("RIGHT", talkBox.MainFrame.CloseButton, "LEFT", -2, 0)
 
-	-- Reputation bar
-	local repBar = talkBox.ReputationBar
-	repBar:StripTextures()
-	repBar:SetStatusBarTexture(E.media.normTex)
-	repBar:CreateBackdrop()
-	repBar:ClearAllPoints()
-	repBar:Point("TOPLEFT", talkBox, "TOPLEFT", 11, -11)
-	repBar:Height(6)
-
-	E:RegisterStatusBar(repBar)
-
 	-- Backdrop of elements (bottom window)
 	local elements = talkBox.Elements
 	elements:SetBackdrop(nil)
@@ -186,7 +175,6 @@ function S:Immersion()
 	F.SetFont(content.RewardsFrame.ItemReceiveText)
 	F.SetFont(content.RewardsFrame.ItemChooseText)
 	F.SetFont(content.RewardsFrame.PlayerTitleText)
-	F.SetFont(content.RewardsFrame.SkillPointFrame.ValueText)
 
 	-- Buttons
 	self:SecureHookScript(frame, "OnEvent", "Immersion_ReskinTitleButton")

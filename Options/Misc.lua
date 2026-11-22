@@ -1449,8 +1449,21 @@ options.lfgList = {
 						E.private.WT.misc.lfgList.menu.enable = value
 					end,
 				},
-				applicant = {
+				browseWhileListed = {
 					order = 2,
+					type = "toggle",
+					name = L["Browse Groups While Listed"],
+					desc = L["Show the Browse Groups button for every member of a listed group and keep the group list open. The button in the list returns to your group."],
+					width = "full",
+					get = function()
+						return E.private.WT.misc.lfgList.browseWhileListed
+					end,
+					set = function(_, value)
+						E.private.WT.misc.lfgList.browseWhileListed = value
+					end,
+				},
+				applicant = {
+					order = 3,
 					type = "group",
 					inline = true,
 					name = L["Applicants"],

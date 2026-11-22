@@ -16,8 +16,10 @@ local strsplit = strsplit
 local tconcat = table.concat
 local tonumber = tonumber
 local tostring = tostring
+local tremove = tremove
 local wipe = wipe
 
+local CreateFrame = CreateFrame
 local GetAverageItemLevel = GetAverageItemLevel
 local GetClassInfo = GetClassInfo
 local GetItemLevelColor = GetItemLevelColor
@@ -27,6 +29,10 @@ local IsIgnored = IsIgnored
 
 local C_CategorySpell_GetCategoryInfo = C_CategorySpell.GetCategoryInfo
 local C_ChallengeMode_GetDungeonScoreRarityColor = C_ChallengeMode.GetDungeonScoreRarityColor
+local C_ChallengeMode_GetMapTable = C_ChallengeMode.GetMapTable
+local C_MythicPlus_GetPlayerStatsForMap = C_MythicPlus.GetPlayerStatsForMap
+local C_MythicPlus_IsMythicPlusActive = C_MythicPlus.IsMythicPlusActive
+local C_MythicPlus_RequestPlayerStat = C_MythicPlus.RequestPlayerStat
 local C_LFGList_GetActivityInfoTable = C_LFGList.GetActivityInfoTable
 local C_LFGList_GetSearchResultEncounterInfo = C_LFGList.GetSearchResultEncounterInfo
 local C_LFGList_GetSearchResultFriends = C_LFGList.GetSearchResultFriends
@@ -118,6 +124,71 @@ end
 ---@return number itemLevel
 function LFGPI.GetPlayerItemLevel()
 	return floor(GetAverageItemLevel() or 0)
+end
+
+local KEY_QUEUE_LIMIT = 40
+local KEY_REQUEST_TIMEOUT = 5
+
+local keyRatings = {}
+local keyQueue = {}
+local keyPending, keyPendingTime
+
+local function requestNextKeyRating()
+	if keyPending then
+		if GetTime() - keyPendingTime < KEY_REQUEST_TIMEOUT then
+			return
+		end
+		keyRatings[keyPending] = nil
+	end
+
+	keyPending = tremove(keyQueue)
+	if keyPending then
+		keyPendingTime = GetTime()
+		if C_MythicPlus_RequestPlayerStat(keyPending) == false then
+			keyRatings[keyPending] = nil
+			keyPending = nil
+		end
+	end
+end
+
+local keyFrame = CreateFrame("Frame")
+keyFrame:RegisterCustomEvent("MYTHIC_PLUS_PLAYER_STAT_UPDATE")
+keyFrame:SetScript("OnEvent", function(_, _, loaded)
+	local name = keyPending
+	if not name then
+		return
+	end
+	keyPending = nil
+
+	local rating = 0
+	if loaded then
+		for _, mapID in ipairs(C_ChallengeMode_GetMapTable()) do
+			local stats = C_MythicPlus_GetPlayerStatsForMap(name, mapID)
+			rating = rating + (stats and stats.dungeonScore or 0)
+		end
+	end
+	keyRatings[name] = floor(rating)
+
+	requestNextKeyRating()
+	if LFGPI.OnKeyRating then
+		LFGPI.OnKeyRating()
+	end
+end)
+
+---@param name string
+---@return number? rating
+function LFGPI:GetKeyRating(name)
+	local rating = keyRatings[name]
+	if rating == nil and name ~= "" and C_MythicPlus_IsMythicPlusActive() then
+		if #keyQueue >= KEY_QUEUE_LIMIT then
+			keyRatings[tremove(keyQueue, 1)] = nil
+		end
+		keyRatings[name] = false
+		keyQueue[#keyQueue + 1] = name
+	end
+
+	requestNextKeyRating()
+	return rating or nil
 end
 
 local groupCache = {}
@@ -308,6 +379,11 @@ local function wrapItemLevel(itemLevel, text)
 	return color and color:WrapTextInColorCode(text) or text
 end
 
+local function wrapKeyRating(rating, text)
+	local color = rating and rating > 0 and C_ChallengeMode_GetDungeonScoreRarityColor(rating)
+	return color and color:WrapTextInColorCode(text) or text
+end
+
 local function shortAge(seconds)
 	local minutes = max(1, floor((seconds or 0) / 60))
 	if minutes < 60 then
@@ -368,6 +444,9 @@ local playerTags = {
 		relation = function(m)
 			return relationTexts[m.relation]
 		end,
+		keyRating = function(m)
+			return m.keyRating or LFGPI:GetKeyRating(m.name)
+		end,
 		amount = function(m)
 			return m.amount
 		end,
@@ -398,6 +477,9 @@ local playerTags = {
 		end,
 		roleColor = function(m, text)
 			return roleColors[m.role] and format("|cff%s%s|r", roleColors[m.role], text) or text
+		end,
+		keyColor = function(m, text)
+			return wrapKeyRating(m.keyRating or keyRatings[m.name], text)
 		end,
 	},
 }
@@ -533,8 +615,7 @@ local groupTags = {
 			return wrapItemLevel(g.avgIlvl, text)
 		end,
 		leaderScoreColor = function(g, text)
-			local color = g.leaderScore and C_ChallengeMode_GetDungeonScoreRarityColor(g.leaderScore)
-			return color and color:WrapTextInColorCode(text) or text
+			return wrapKeyRating(g.leaderScore, text)
 		end,
 		classColor = function(g, text)
 			return g.leaderClass and C.StringWithClassColor(text, g.leaderClass) or text
@@ -662,8 +743,9 @@ function LFGPI:GetPreviewGroup()
 		leaderScore = 1820,
 	}
 
-	local function add(name, class, classID, specIndex, role, ilvl, category, isLeader, relation)
+	local function add(name, class, classID, specIndex, role, ilvl, category, isLeader, relation, keyRating)
 		group.members[#group.members + 1] = {
+			keyRating = keyRating,
 			name = name,
 			ilvl = ilvl,
 			class = class,
@@ -677,10 +759,10 @@ function LFGPI:GetPreviewGroup()
 		}
 	end
 
-	add("Uther", "PALADIN", 2, 2, "TANK", 263, 90015, true)
-	add("Anduin", "PRIEST", 5, 2, "HEALER", 258, 90010, false, "friend")
-	add("Jaina", "MAGE", 8, 3, "DAMAGER", 254, 90010, false, "guild")
-	add("Tirion", "PALADIN", 2, 3, "DAMAGER", 249, 90006, false)
+	add("Uther", "PALADIN", 2, 2, "TANK", 263, 90015, true, nil, 1820)
+	add("Anduin", "PRIEST", 5, 2, "HEALER", 258, 90010, false, "friend", 2310)
+	add("Jaina", "MAGE", 8, 3, "DAMAGER", 254, 90010, false, "guild", 940)
+	add("Tirion", "PALADIN", 2, 3, "DAMAGER", 249, 90006, false, nil, 0)
 
 	previewGroup = group
 	return group
@@ -709,6 +791,7 @@ function LFGPI:GetTagHelp(kind)
 		add("{{categoryName}}", L["Sirus category name"])
 		add("{{leader}}", L["The word \"Leader\" for the group leader"])
 		add("{{relation}}", L["Friend, guild member or ignored player mark"])
+		add("{{keyRating}}", L["Mythic+ rating, requested from the server for each player when the tooltip opens"])
 		add("{{amount}}", L["Number of players (composition template only)"])
 		add("{{classIcon}} {{specIcon}} {{roleIcon}} {{categoryIcon}} {{leaderIcon}}", L["Icons"])
 		lines[#lines + 1] = sizeHint
@@ -717,6 +800,7 @@ function LFGPI:GetTagHelp(kind)
 		add("{{classColorStart}}...{{classColorEnd}}", L["Class color"])
 		add("{{ilvlColorStart}}...{{ilvlColorEnd}}", L["Item level color"])
 		add("{{roleColorStart}}...{{roleColorEnd}}", L["Role color"])
+		add("{{keyColorStart}}...{{keyColorEnd}}", L["Mythic+ rating color"])
 	else
 		add("{{groupName}}", L["Group name"])
 		add("{{activity}}", L["Full activity name"])

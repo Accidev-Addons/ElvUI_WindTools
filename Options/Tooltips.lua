@@ -313,6 +313,10 @@ local playerTemplatePresets = {
 		L["Detailed"],
 		"{{roleIcon:14}} {{specIcon:14}} {{classColorStart}}{{name}}{{classColorEnd}} {{grayStart}}{{specName}}{{grayEnd}} {{ilvlColorStart}}{{ilvl}}{{ilvlColorEnd}}{{categoryStart}} {{categoryIcon:14}} {{grayStart}}{{categoryName}}{{grayEnd}}{{categoryEnd}}{{leaderStart}} {{leaderIcon:12}}{{leaderEnd}}{{relationStart}} {{relation}}{{relationEnd}}",
 	},
+	{
+		L["With Mythic+ rating"],
+		"{{roleIcon:14}} {{classColorStart}}{{name}} - {{specName}}{{classColorEnd}} {{ilvlColorStart}}({{ilvl}}){{ilvlColorEnd}}{{keyRatingStart}} {{keyColorStart}}{{keyRating}}{{keyColorEnd}}{{keyRatingEnd}}{{leaderStart}} {{leaderIcon:12}}{{leaderEnd}}",
+	},
 }
 
 local headerTemplatePresets = {

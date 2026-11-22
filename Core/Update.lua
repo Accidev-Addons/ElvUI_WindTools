@@ -176,6 +176,12 @@ function W:UpdateScripts()
 		end
 	end
 
+	local backdrop = E.private.WT.quest.objectiveTracker.backdrop
+	if not backdrop.offsetXSwapped then
+		backdrop.topLeftOffsetX, backdrop.bottomRightOffsetX = backdrop.bottomRightOffsetX, backdrop.topLeftOffsetX
+		backdrop.offsetXSwapped = true
+	end
+
 	self:ConvertEnhanced()
 
 	E.global.WT.version = W.Version

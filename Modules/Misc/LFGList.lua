@@ -10,6 +10,7 @@ local floor = floor
 local format = format
 local gmatch = gmatch
 local ipairs = ipairs
+local max = max
 local min = min
 local pairs = pairs
 local select = select
@@ -31,7 +32,9 @@ local FauxScrollFrame_Update = FauxScrollFrame_Update
 local GameTooltip = GameTooltip
 local GameTooltip_Hide = GameTooltip_Hide
 local GetItemLevelColor = GetItemLevelColor
+local GetNumRaidMembers = GetNumRaidMembers
 local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
+local GetTime = GetTime
 local HandleURL = HandleURL
 local IsAddOnLoaded = IsAddOnLoaded
 local IsIgnored = IsIgnored
@@ -41,6 +44,7 @@ local C_LFGList_GetApplicantMemberInfo = C_LFGList.GetApplicantMemberInfo
 local C_LFGList_GetApplicationInfo = C_LFGList.GetApplicationInfo
 local C_LFGList_GetSearchResultInfo = C_LFGList.GetSearchResultInfo
 local C_LFGList_GetSearchResultPlayerInfo = C_LFGList.GetSearchResultPlayerInfo
+local C_LFGList_HasActiveEntryInfo = C_LFGList.HasActiveEntryInfo
 
 local lower = utf8 and utf8.lower or strlower
 
@@ -50,6 +54,7 @@ local ACTIVITY_ROWS = 11
 LL.activityCounts = {}
 LL.filterTotal = 0
 LL.filterShown = 0
+LL.browseKickTime = 0
 
 ---Reskins and customizes role icons in LFG (Looking for Group) lists with various visual enhancements.
 ---When role is nil, the icon and its elements are hidden by setting alpha to 0.
@@ -905,6 +910,38 @@ function LL:UpdateFilterButton()
 	end
 end
 
+function LL:KeepBrowsing(frame)
+	if not self.browsing then
+		return
+	end
+
+	if not C_LFGList_HasActiveEntryInfo() then
+		self.browsing = nil
+	elseif frame.activePanel == frame.ApplicationViewer then
+		local now = GetTime()
+		if now - self.browseKickTime < 0.3 then
+			self.browsing = nil
+			return
+		end
+		self.browseKickTime = now
+		_G.LFGListFrame_SetActivePanel(frame, frame.SearchPanel)
+	end
+end
+
+function LL:UpdateBrowseButtons()
+	if not self.db.browseWhileListed or not C_LFGList_HasActiveEntryInfo() then
+		return
+	end
+
+	local frame = _G.LFGListFrame
+	local button = frame.SearchPanel.BackToGroupButton
+	button:SetText(GetNumRaidMembers() > 0 and L["Return to my raid"] or L["Return to my group"])
+	button:SetWidth(max(144, button:GetTextWidth() + 24))
+	button:Show()
+	frame.SearchPanel.BackButton:Hide()
+	frame.ApplicationViewer.BrowseGroupsButton:Show()
+end
+
 function LL:Refresh()
 	if not self.initialized then
 		return
@@ -931,6 +968,20 @@ function LL:Initialize()
 	self:SecureHook("LFGListUtil_SortSearchResults", "FilterResults")
 	self:SecureHook("LFGListUtil_GetSearchEntryMenu", "UpdateEntryMenu")
 	self:SecureHook("LFGListApplicationViewer_UpdateApplicantMember", "UpdateApplicantMember")
+	self:SecureHook("LFGListFrame_FixPanelValid", "KeepBrowsing")
+	self:SecureHook("LFGListApplicationViewer_UpdateInfo", "UpdateBrowseButtons")
+	self:SecureHook("LFGListSearchPanel_UpdateButtonStatus", "UpdateBrowseButtons")
+
+	local frame = _G.LFGListFrame
+	frame.ApplicationViewer.BrowseGroupsButton:HookScript("OnClick", function()
+		self.browsing = self.db.browseWhileListed
+	end)
+	frame.SearchPanel.BackToGroupButton:HookScript("OnClick", function()
+		self.browsing = nil
+	end)
+	frame:HookScript("OnHide", function()
+		self.browsing = nil
+	end)
 
 	self.initialized = true
 	self:UpdateFilterButton()

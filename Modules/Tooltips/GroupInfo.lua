@@ -243,6 +243,14 @@ function T:GroupInfo()
 	end
 
 	self:SecureHook("LFGListUtil_SetSearchEntryTooltip", "AddGroupInfo")
+
+	LFGPI.OnKeyRating = function()
+		local tooltip = _G.GameTooltip
+		local owner = tooltip:IsShown() and tooltip:GetOwner()
+		if owner and owner.resultID then
+			self:AddGroupInfo(tooltip, owner.resultID)
+		end
+	end
 end
 
 T:AddCallback("GroupInfo")

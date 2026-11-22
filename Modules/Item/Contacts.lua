@@ -195,7 +195,7 @@ function CT:ConstructButtons()
 	toggleButton:Size(24)
 	SetButtonTexture(toggleButton, W.Media.Icons.list)
 	SetButtonTooltip(toggleButton, F.GetWindStyleText(L["Toggle Contacts"]))
-	toggleButton:Point("BOTTOMRIGHT", _G.MailFrame, "BOTTOMRIGHT", -16, 34)
+	toggleButton:Point("RIGHT", _G.MailFrameCloseButton, "LEFT", -4, 0)
 	toggleButton:RegisterForClicks("AnyUp")
 
 	toggleButton:SetScript("OnClick", function()

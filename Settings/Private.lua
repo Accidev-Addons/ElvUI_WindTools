@@ -138,6 +138,7 @@ V.misc = {
 		menu = {
 			enable = true,
 		},
+		browseWhileListed = true,
 		applicant = {
 			enable = true,
 			itemLevelColor = true,

@@ -8,6 +8,7 @@ local _G = _G
 local format = format
 local gsub = gsub
 local max = max
+local min = min
 local pairs = pairs
 local strfind = strfind
 local strmatch = strmatch
@@ -136,19 +137,30 @@ function OT:UpdateBackdrop()
 	if not frame.backdrop then
 		frame:CreateBackdrop()
 		S:CreateBackdropShadow(frame)
+		self:SecureHook(frame.ScrollFrame.ScrollChild, "SetSize", "UpdateBackdropHeight")
+		self:SecureHook(W:GetModule("AutoCollapse"), "SetContentCollapsed", "UpdateBackdropHeight")
 	end
 
 	frame.backdrop:Show()
 	frame.backdrop:SetTemplate(config.transparent and "Transparent")
-	S:Reposition(
-		frame.backdrop,
-		frame,
-		0,
-		config.topLeftOffsetY + 10,
-		-config.bottomRightOffsetY + 10,
-		-config.bottomRightOffsetX + 20,
-		config.topLeftOffsetX + 15
-	)
+	frame.backdrop:ClearAllPoints()
+	frame.backdrop:Point("TOPLEFT", frame, "TOPLEFT", config.topLeftOffsetX - 20, config.topLeftOffsetY + 10)
+	frame.backdrop:Point("TOPRIGHT", frame, "TOPRIGHT", config.bottomRightOffsetX + 15, config.topLeftOffsetY + 10)
+	self:UpdateBackdropHeight()
+end
+
+function OT:UpdateBackdropHeight()
+	local frame = _G.ObjectiveTrackerFrame
+	local config = self.db.backdrop
+	local scrollFrame = frame.ScrollFrame
+	local height = frame.Header:GetHeight()
+	local contentsHeight = scrollFrame:IsShown() and scrollFrame.ScrollChild:GetHeight() or 0
+
+	if contentsHeight > 0 then
+		height = frame.topModulePadding + min(contentsHeight, frame:GetHeight() - frame.topModulePadding)
+	end
+
+	frame.backdrop:Height(max(height + config.topLeftOffsetY - config.bottomRightOffsetY + 20, 1))
 end
 
 ---Add colorful progression and percentage to objective tracker text
