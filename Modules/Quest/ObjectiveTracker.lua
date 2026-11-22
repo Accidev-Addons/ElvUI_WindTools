@@ -25,6 +25,8 @@ local trackers = {
 	_G.QuestObjectiveTracker,
 	_G.AchievementObjectiveTracker,
 	_G.ProfessionsRecipeTracker,
+	_G.BattlePassQuestTracker,
+	_G.ReturningCharacterQuestTracker,
 }
 
 ---Override the Blizzard text color used in objective tracker

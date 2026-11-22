@@ -219,7 +219,7 @@ options.reset = {
 					end,
 				},
 				resetInstance = {
-					order = 4,
+					order = 5,
 					type = "execute",
 					name = L["Reset Instance"],
 					func = function()

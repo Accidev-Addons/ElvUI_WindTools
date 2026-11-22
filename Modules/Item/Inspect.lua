@@ -32,6 +32,7 @@ local ChatEdit_ChooseBoxForSend = ChatEdit_ChooseBoxForSend
 local ChatEdit_InsertLink = ChatEdit_InsertLink
 local CreateFrame = CreateFrame
 local GetInventoryItemLink = GetInventoryItemLink
+local GetInventoryItemTexture = GetInventoryItemTexture
 local GetItemGem = GetItemGem
 local GetItemInfo = GetItemInfo
 local GetItemInfoInstant = GetItemInfoInstant
@@ -43,8 +44,11 @@ local SetPortraitTexture = SetPortraitTexture
 local UnitClass = UnitClass
 local UnitGUID = UnitGUID
 local UnitHealthMax = UnitHealthMax
+local UnitIsUnit = UnitIsUnit
 local UnitLevel = UnitLevel
 local UnitName = UnitName
+
+local C_Inspect_GetAvgItemLevel = C_Inspect.GetAvgItemLevel
 
 local GetInspectSpecialization = E.GetInspectSpecialization
 local GetSpecialization = E.GetSpecialization
@@ -63,7 +67,7 @@ local STAT_ROW_SEPARATOR_SPACING = 3
 local STAT_ROW_HEIGHT = 20
 local STAT_PADDING = 10
 local ITEM_LEVEL_CHECK_INTERVAL = 0.08
-local INSPECT_WAIT_MAX_SECONDS = 3
+local INSPECT_WAIT_MAX_SECONDS = 1
 local INSPECT_WAIT_MAX_ROUNDS = floor(INSPECT_WAIT_MAX_SECONDS / ITEM_LEVEL_CHECK_INTERVAL)
 
 local RETRIEVING_ITEM_INFO = RETRIEVING_ITEM_INFO
@@ -162,7 +166,7 @@ function circleIconPrototype:Reset()
 end
 
 ---Updates the size of the circle icon
----@param size number? The size of the icon (default: 32)
+---@param size number? The size of the icon (default: 17)
 function circleIconPrototype:UpdateSize(size)
 	size = size or 17
 	self:Size(size)
@@ -357,6 +361,9 @@ end
 local function GetUnitSlotItemInfo(unit, slotIndex)
 	local link = GetInventoryItemLink(unit, slotIndex)
 	if not link then
+		if GetInventoryItemTexture(unit, slotIndex) then
+			E:GetGearSlotInfo(unit, slotIndex, true)
+		end
 		return
 	end
 
@@ -450,7 +457,7 @@ end
 ---@class UnitStatistics : EquipmentStats
 ---@field level number
 ---@field health number
----@field itemLevel number
+---@field itemLevel number?
 
 ---Collects unit statistics for comparison
 ---@param unit string The unit to collect stats from
@@ -461,7 +468,7 @@ local function GetUnitStats(unit, itemLevel)
 
 	result.level = UnitLevel(unit)
 	result.health = UnitHealthMax(unit)
-	result.itemLevel = type(itemLevel) == "number" and itemLevel or 0
+	result.itemLevel = type(itemLevel) == "number" and itemLevel or nil
 
 	---@cast result UnitStatistics
 
@@ -482,7 +489,7 @@ function I:ShouldShowPanel(unit, parent)
 			return false
 		end
 	elseif unit == "player" and _G.InspectFrame.WTInspect and parent == _G.InspectFrame.WTInspect then
-		if not self.db.playerOnInspect then
+		if not self.db.playerOnInspect or UnitIsUnit(parent.unit, "player") then
 			return false
 		end
 	end
@@ -1069,6 +1076,17 @@ function I:ShowInspectPanels(unit, itemLevel)
 		local statsFrame = self:CreateStatsComparePanel(playerFrame)
 		self:UpdateStatsComparePanel(statsFrame, unit, itemLevel)
 	end
+
+	for _, slotInfo in ipairs(DISPLAY_SLOTS) do
+		if not GetInventoryItemLink(unit, slotInfo.index) and GetInventoryItemTexture(unit, slotInfo.index) then
+			F.WaitFor(function()
+				return GetInventoryItemLink(unit, slotInfo.index) ~= nil
+			end, function()
+				self:UNIT_INVENTORY_CHANGED(nil, unit)
+			end, ITEM_LEVEL_CHECK_INTERVAL, INSPECT_WAIT_MAX_ROUNDS)
+			break
+		end
+	end
 end
 
 function I:NotifyInspect(unit)
@@ -1089,7 +1107,8 @@ function I:INSPECT_TALENT_READY(_, guid)
 		return
 	end
 
-	local itemLevelContext = nil ---@type number?
+	local itemLevelContext = nil ---@type number|string?
+	local rounds = 0
 
 	F.WaitFor(function()
 		if self.inspecting[guid] == nil then
@@ -1101,9 +1120,13 @@ function I:INSPECT_TALENT_READY(_, guid)
 			return false
 		end
 
-		local itemLevel = E:GetUnitItemLevel(unit)
+		rounds = rounds + 1
+		local itemLevel = C_Inspect_GetAvgItemLevel(unit) or E:GetUnitItemLevel(unit)
 		if type(itemLevel) ~= "number" or itemLevel <= 0 then
-			return false
+			if rounds < INSPECT_WAIT_MAX_ROUNDS then
+				return false
+			end
+			itemLevel = "tooSoon"
 		end
 
 		itemLevelContext = itemLevel
@@ -1152,6 +1175,7 @@ function I:Initialize()
 	self:SecureHook("NotifyInspect")
 	self:RegisterEvent("INSPECT_TALENT_READY")
 	self:RegisterEvent("UNIT_INVENTORY_CHANGED")
+	E:RegisterEventForObject("INSPECT_ITEM_LEVEL_UPDATE", self, self.INSPECT_TALENT_READY)
 
 	self.initialized = true
 end
