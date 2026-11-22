@@ -9,11 +9,13 @@ local GB = W:GetModule("GameBar")
 local AM = W:GetModule("Automation")
 local SA = W:GetModule("SpellActivationAlert") ---@class SpellActivationAlert
 local LL = W:GetModule("LFGList")
+local LFGPI = W.Utilities.LFGPlayerInfo
 
 local format = format
 local pairs = pairs
 local tonumber = tonumber
 local tostring = tostring
+local wipe = wipe
 
 local GetCVar = GetCVar
 local GetCVarBool = GetCVarBool
@@ -1309,6 +1311,175 @@ options.lfgList = {
 					min = 0,
 					max = 1,
 					step = 0.01,
+				},
+			},
+		},
+		row = {
+			order = 5,
+			type = "group",
+			name = L["Group Row"],
+			disabled = function()
+				return not E.private.WT.misc.lfgList.enable
+			end,
+			get = function(info)
+				return E.private.WT.misc.lfgList.row[info[#info]]
+			end,
+			set = function(info, value)
+				E.private.WT.misc.lfgList.row[info[#info]] = value
+				LL:Refresh()
+			end,
+			args = {
+				info = {
+					order = 1,
+					type = "toggle",
+					name = L["Info Line"],
+					desc = L["Show an extra line with group details in every row of the list."],
+				},
+				fontSize = {
+					order = 2,
+					type = "range",
+					name = L["Font Size"],
+					min = 8,
+					max = 14,
+					step = 1,
+				},
+				dimUnqualified = {
+					order = 3,
+					type = "toggle",
+					name = L["Dim Unavailable Groups"],
+					desc = L["Fade the groups whose required item level is higher than yours."],
+				},
+				markIgnored = {
+					order = 4,
+					type = "toggle",
+					name = L["Mark Ignored Leader"],
+					desc = L["Color the group name red when its leader is on your ignore list."],
+				},
+				template = {
+					order = 5,
+					type = "input",
+					name = L["Row Template"],
+					desc = function()
+						return LFGPI:GetTagHelp("group")
+					end,
+					width = "full",
+				},
+				preview = {
+					order = 6,
+					type = "description",
+					name = function()
+						local text = LFGPI:RenderGroup(E.private.WT.misc.lfgList.row.template, LFGPI:GetPreviewGroup())
+						return "\n" .. C.StringByTemplate(L["Preview"], "blue-400") .. ": " .. text .. "\n"
+					end,
+				},
+				useDefault = {
+					order = 7,
+					type = "execute",
+					name = L["Default"],
+					desc = L["Reset the template to default value."],
+					func = function()
+						E.private.WT.misc.lfgList.row.template = V.misc.lfgList.row.template
+						LL:Refresh()
+					end,
+				},
+			},
+		},
+		filter = {
+			order = 6,
+			type = "group",
+			name = L["Filter"],
+			disabled = function()
+				return not E.private.WT.misc.lfgList.enable
+			end,
+			args = {
+				enable = {
+					order = 1,
+					type = "toggle",
+					name = L["Filter Button"],
+					desc = L["Add a filter button next to the refresh button. It opens a side panel with filters and sorting."],
+					get = function()
+						return E.private.WT.misc.lfgList.filter.enable
+					end,
+					set = function(_, value)
+						E.private.WT.misc.lfgList.filter.enable = value
+						LL:Refresh()
+					end,
+				},
+				note = {
+					order = 2,
+					type = "description",
+					name = "\n"
+						.. L["The filters are set in the side panel of the group finder: activities, saved instances, free slots, item level, roles, difficulty, size, age, words in the text and the sort order."]
+						.. "\n",
+				},
+				reset = {
+					order = 3,
+					type = "execute",
+					name = L["Reset"],
+					desc = L["Reset every filter to its default value."],
+					func = function()
+						local db = E.private.WT.misc.lfgList.filter
+						local shown = db.panelShown
+						wipe(db.hidden)
+						E:CopyTable(db, V.misc.lfgList.filter)
+						db.panelShown = shown
+						LL:Refresh()
+					end,
+				},
+			},
+		},
+		extras = {
+			order = 7,
+			type = "group",
+			name = L["Menu and Applicants"],
+			disabled = function()
+				return not E.private.WT.misc.lfgList.enable
+			end,
+			args = {
+				menu = {
+					order = 1,
+					type = "toggle",
+					name = L["Extended Context Menu"],
+					desc = L["Add the leader's website profile, name copying, ignore and a member list to the right-click menu of a group."],
+					width = "full",
+					get = function()
+						return E.private.WT.misc.lfgList.menu.enable
+					end,
+					set = function(_, value)
+						E.private.WT.misc.lfgList.menu.enable = value
+					end,
+				},
+				applicant = {
+					order = 2,
+					type = "group",
+					inline = true,
+					name = L["Applicants"],
+					get = function(info)
+						return E.private.WT.misc.lfgList.applicant[info[#info]]
+					end,
+					set = function(info, value)
+						E.private.WT.misc.lfgList.applicant[info[#info]] = value
+					end,
+					args = {
+						enable = {
+							order = 1,
+							type = "toggle",
+							name = L["Enable"],
+							desc = L["Improve the applicant list of your own group."],
+						},
+						itemLevelColor = {
+							order = 2,
+							type = "toggle",
+							name = L["Item Level Color"],
+							desc = L["Color the item level of an applicant."],
+						},
+						specIcon = {
+							order = 3,
+							type = "toggle",
+							name = L["Specialization Icon"],
+							desc = L["Show the specialization icon before the applicant name."],
+						},
+					},
 				},
 			},
 		},

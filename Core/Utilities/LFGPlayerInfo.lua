@@ -2,23 +2,37 @@ local W ---@class WindTools
 local F, E, L ---@type Functions, ElvUI, LocaleTable
 W, F, E, L = unpack((select(2, ...)))
 local C = W.Utilities.Color
+local UF = E:GetModule("UnitFrames")
 
+local floor = floor
 local format = format
 local gsub = gsub
 local ipairs = ipairs
-local pairs = pairs
+local max = max
+local min = min
 local select = select
+local strjoin = strjoin
 local strsplit = strsplit
-local tinsert = tinsert
+local tconcat = table.concat
 local tonumber = tonumber
 local tostring = tostring
+local wipe = wipe
 
+local GetAverageItemLevel = GetAverageItemLevel
 local GetClassInfo = GetClassInfo
+local GetItemLevelColor = GetItemLevelColor
 local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
+local GetTime = GetTime
+local IsIgnored = IsIgnored
 
+local C_CategorySpell_GetCategoryInfo = C_CategorySpell.GetCategoryInfo
+local C_ChallengeMode_GetDungeonScoreRarityColor = C_ChallengeMode.GetDungeonScoreRarityColor
 local C_LFGList_GetActivityInfoTable = C_LFGList.GetActivityInfoTable
+local C_LFGList_GetSearchResultEncounterInfo = C_LFGList.GetSearchResultEncounterInfo
+local C_LFGList_GetSearchResultFriends = C_LFGList.GetSearchResultFriends
 local C_LFGList_GetSearchResultInfo = C_LFGList.GetSearchResultInfo
 local C_LFGList_GetSearchResultPlayerInfo = C_LFGList.GetSearchResultPlayerInfo
+local C_LFGList_IsSavedInstance = C_LFGList.IsSavedInstance
 
 local GROUP_FINDER_CATEGORY_ID_DUNGEONS = GROUP_FINDER_CATEGORY_ID_DUNGEONS
 local LOCALIZED_CLASS_NAMES_MALE = LOCALIZED_CLASS_NAMES_MALE
@@ -26,83 +40,63 @@ local LOCALIZED_CLASS_NAMES_MALE = LOCALIZED_CLASS_NAMES_MALE
 ---@cast F Functions
 
 ---@class LFGPlayerInfo
----Utility class for parsing and processing LFG (Looking For Group) player information.
----Provides functionality to extract role, class, and specialization data from group finder results.
-W.Utilities.LFGPlayerInfo = {
+local LFGPI = {
 	name = "Utilities:LFGPlayerInfo",
 }
+W.Utilities.LFGPlayerInfo = LFGPI
 
----Get the name identifier for this utility
----@return string name The name identifier for logging
-function W.Utilities.LFGPlayerInfo:GetName()
+---@return string name
+function LFGPI:GetName()
 	return self.name
 end
 
-F.Developer.InjectLogger(W.Utilities.LFGPlayerInfo)
+F.Developer.InjectLogger(LFGPI)
 
 local classIconStyle = "flat" ---@type ClassIconStyle
 
----Set the class icon style for rendering
----@param style ClassIconStyle The desired class icon styles
-function W.Utilities.LFGPlayerInfo:SetClassIconStyle(style)
+---@param style ClassIconStyle
+function LFGPI:SetClassIconStyle(style)
 	if style then
 		classIconStyle = style
 	end
 end
 
----Role priority order for display and processing
 ---@type ("TANK" | "HEALER" | "DAMAGER")[]
 local roleOrder = { "TANK", "HEALER", "DAMAGER" }
+local roleIndex = { TANK = 1, HEALER = 2, DAMAGER = 3 }
 
----Get the role order array
----@return ("TANK" | "HEALER" | "DAMAGER")[] roleOrder Array of role names in priority order
-function W.Utilities.LFGPlayerInfo.GetRoleOrder()
+---@return ("TANK" | "HEALER" | "DAMAGER")[] roleOrder
+function LFGPI.GetRoleOrder()
 	return roleOrder
 end
 
----Colored role names with appropriate visual styling
----@type table<string, string>
-local coloredRoleName = {
-	TANK = "|cff00a8ff" .. L["Tank"] .. "|r",
-	HEALER = "|cff2ecc71" .. L["Healer"] .. "|r",
-	DAMAGER = "|cffe74c3c" .. L["DPS"] .. "|r",
-}
+local roleColors = { TANK = "00a8ff", HEALER = "2ecc71", DAMAGER = "e74c3c" }
+local roleNames = { TANK = L["Tank"], HEALER = L["Healer"], DAMAGER = L["DPS"] }
 
----Get colored role name for display
----@param role string The role name ("TANK", "HEALER", "DAMAGER")
----@return string coloredName The colored and formatted role name
-function W.Utilities.LFGPlayerInfo.GetColoredRoleName(role)
-	return coloredRoleName[role]
+---@param role string
+---@return string coloredName
+function LFGPI.GetColoredRoleName(role)
+	return roleColors[role] and format("|cff%s%s|r", roleColors[role], roleNames[role]) or ""
 end
 
----Mapping from class file names to class IDs
+local classList = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN", "MAGE", "WARLOCK", "DRUID" }
+
 ---@type table<ClassFile, integer>
 local classFileToID = {}
 
----Mapping from localized specialization names to specialization IDs by class
 ---@type table<ClassFile, table<string, integer>>
 local localizedSpecNameToID = {}
 
----Mapping from localized specialization names to icon paths by class
----@type table<ClassFile, table<string, integer>>
+---@type table<ClassFile, table<string, string>>
 local localizedSpecNameToIcon = {}
 
----Initialize class and specialization data mappings
----Scans all available classes and their specializations to build lookup tables
 for classID = 1, 13 do
-	-- Scan all specs and specilizations, 13 is Evoker
 	local classFile = select(2, GetClassInfo(classID)) ---@type ClassFile|nil
 
 	if classFile then
 		classFileToID[classFile] = classID
-
-		if not localizedSpecNameToID[classFile] then
-			localizedSpecNameToID[classFile] = {}
-		end
-
-		if not localizedSpecNameToIcon[classFile] then
-			localizedSpecNameToIcon[classFile] = {}
-		end
+		localizedSpecNameToID[classFile] = localizedSpecNameToID[classFile] or {}
+		localizedSpecNameToIcon[classFile] = localizedSpecNameToIcon[classFile] or {}
 
 		for specIndex = 1, 4 do
 			local id, name, _, icon = GetSpecializationInfoForClassID(classID, specIndex)
@@ -114,285 +108,649 @@ for classID = 1, 13 do
 	end
 end
 
----Get icon texture path for a specific class and specialization
----@param class string The class file name (e.g., "WARRIOR")
----@param spec string The localized specialization name
----@return any|nil iconPath The icon texture path, or nil if not found
-function W.Utilities.LFGPlayerInfo.GetIconTextureWithClassAndSpecName(class, spec)
+---@param class string
+---@param spec string
+---@return string|nil iconPath
+function LFGPI.GetIconTextureWithClassAndSpecName(class, spec)
 	return localizedSpecNameToIcon[class] and localizedSpecNameToIcon[class][spec]
 end
 
----@class CompositionRoleCache
----@field totalAmount number Total number of players in this role
----@field playerList table<ClassFile, table<string, number>> Nested table of players organized by class and specializations
-
----@class CompositionRoleCacheManager
----@field TANK CompositionRoleCache Cache for tank role
----@field HEALER CompositionRoleCache Cache for healer role
----@field DAMAGER CompositionRoleCache Cache for damage dealer role
-W.Utilities.LFGPlayerInfo.Composition = {}
-
----Clear the cache and initialize role structures
----Resets all role data to empty state with zero counts
-function W.Utilities.LFGPlayerInfo.Composition:Clear()
-	for _, role in ipairs(roleOrder) do
-		self[role] = { totalAmount = 0, playerList = {} }
-	end
+---@return number itemLevel
+function LFGPI.GetPlayerItemLevel()
+	return floor(GetAverageItemLevel() or 0)
 end
 
----Add a player to the cache for a specific role, class, and specialization
----@param role string The player's role ("TANK", "HEALER", "DAMAGER")
----@param class string The player's class file name (e.g., "WARRIOR")
----@param spec string The player's specialization name
-function W.Utilities.LFGPlayerInfo.Composition:AddPlayer(role, class, spec)
-	if not self[role] then
-		W.Utilities.LFGPlayerInfo:Log(
-			"warning",
-			format("cache not been initialized correctly, the role:%s is nil.", role)
-		)
+local groupCache = {}
+local groupCacheTime = 0
+
+---@param resultID number
+---@return table? group
+function LFGPI:GetGroup(resultID)
+	local now = GetTime()
+	if groupCacheTime ~= now then
+		wipe(groupCache)
+		groupCacheTime = now
 	end
 
-	if not self[role].playerList[class] then
-		self[role].playerList[class] = {}
+	local group = groupCache[resultID]
+	if group then
+		return group
 	end
 
-	if not self[role].playerList[class][spec] then
-		self[role].playerList[class][spec] = 0
-	end
-
-	self[role].playerList[class][spec] = self[role].playerList[class][spec] + 1
-	self[role].totalAmount = self[role].totalAmount + 1
-end
-
----Update cache with player information from a LFG search result
----Processes all members in the group and categorizes them by role, class, and spec
----@param resultID number The LFG search result ID to process
-function W.Utilities.LFGPlayerInfo:Update(resultID)
-	self.Composition:Clear()
-
-	local result = C_LFGList_GetSearchResultInfo(resultID)
-
-	if not result then
-		self:Log("debug", "cache not updated correctly, the number of results is nil.")
+	local info = resultID and C_LFGList_GetSearchResultInfo(resultID)
+	if not info then
 		return
 	end
 
-	if not result.numMembers or result.numMembers == 0 then
-		self:Log("debug", "cache not updated correctly, the number of result.numMembers is nil or 0.")
-		return
+	local activity = C_LFGList_GetActivityInfoTable(info.activityID) or {}
+	local leaderScore = activity.isMythicPlusActivity and info.leaderOverallDungeonScore
+	local friends, guildMates = C_LFGList_GetSearchResultFriends(resultID)
+	local relations = {}
+	for _, name in ipairs(friends) do
+		relations[name] = "friend"
+	end
+	for _, name in ipairs(guildMates) do
+		relations[name] = "guild"
 	end
 
-	for i = 1, result.numMembers do
-		local memberInfo = C_LFGList_GetSearchResultPlayerInfo(resultID, i)
-		if memberInfo then
-			local role, class, spec = memberInfo.assignedRole, memberInfo.classFilename, memberInfo.specName
+	group = {
+		id = resultID,
+		info = info,
+		activity = activity,
+		members = {},
+		classes = {},
+		ignored = {},
+		tanks = 0,
+		healers = 0,
+		dps = 0,
+		num = 0,
+		max = activity.maxNumPlayers or 0,
+		reqIlvl = info.requiredItemLevel or 0,
+		friends = #friends + #guildMates,
+		bosses = C_LFGList_GetSearchResultEncounterInfo(resultID) or {},
+		saved = C_LFGList_IsSavedInstance(resultID),
+		leaderName = info.leaderName ~= "" and info.leaderName or nil,
+		leaderClass = info.leaderClassID and select(2, GetClassInfo(info.leaderClassID)),
+		leaderScore = leaderScore and leaderScore > 0 and leaderScore or nil,
+	}
 
-			if not role then
-				self:Log("debug", "cache not updated correctly, the role is nil.")
-				return
+	local sum, lowest, highest = 0, nil, 0
+	for i = 1, info.numMembers or 0 do
+		local player = C_LFGList_GetSearchResultPlayerInfo(resultID, i)
+		if player and player.classFilename then
+			local name = player.name or ""
+			local member = {
+				name = name,
+				ilvl = player.level or 0,
+				class = player.classFilename,
+				spec = player.specName,
+				role = player.assignedRole or "DAMAGER",
+				category = player.categorySpell or 0,
+				isLeader = player.isLeader,
+				relation = relations[name],
+				group = group,
+			}
+
+			if IsIgnored(name) then
+				member.relation = "ignored"
+				group.ignored[#group.ignored + 1] = name
+				if member.isLeader then
+					group.leaderIgnored = true
+				end
 			end
 
-			if not class then
-				self:Log("debug", "cache not updated correctly, the class is nil.")
-				return
+			group.members[#group.members + 1] = member
+			group.classes[member.class] = (group.classes[member.class] or 0) + 1
+			if member.role == "TANK" then
+				group.tanks = group.tanks + 1
+			elseif member.role == "HEALER" then
+				group.healers = group.healers + 1
+			else
+				group.dps = group.dps + 1
 			end
 
-			if not spec then
-				self:Log("debug", "cache not updated correctly, the spec is nil.")
-				return
-			end
-
-			self.Composition:AddPlayer(role, class, spec)
+			sum = sum + member.ilvl
+			lowest = min(lowest or member.ilvl, member.ilvl)
+			highest = max(highest, member.ilvl)
 		end
 	end
+
+	group.num = #group.members
+	group.free = max(group.max - group.num, 0)
+	group.avgIlvl = group.num > 0 and floor(sum / group.num + 0.5) or 0
+	group.minIlvl = lowest or 0
+	group.maxIlvl = highest
+	group.qualified = group.reqIlvl <= LFGPI.GetPlayerItemLevel()
+
+	groupCache[resultID] = group
+	return group
 end
 
----Check if a search result is for dungeon content
----@param resultID number The LFG search result ID to check
----@return boolean isDungeon True if the result is for dungeon content
-function W.Utilities.LFGPlayerInfo:IsIDDungeons(resultID)
+---@param resultID number
+---@return boolean isDungeon
+function LFGPI:IsIDDungeons(resultID)
 	local result = C_LFGList_GetSearchResultInfo(resultID)
 	local activity = result and C_LFGList_GetActivityInfoTable(result.activityID)
 	return activity and activity.categoryID == GROUP_FINDER_CATEGORY_ID_DUNGEONS
 end
 
----Conduct template rendering with player information
----Template system similar to React/Vue with mustache-style syntax
----Supports: {{classIcon}}, {{className}}, {{specIcon}}, {{specName}}, {{amount}}, etc.
----@param template string The template string with placeholder tags
----@param role string|nil The player's role
----@param class string|nil The player's class file name
----@param spec string|nil The player's specialization name
----@param amount number|nil The number of players with this role/class/spec
----@return string result The rendered template string
-function W.Utilities.LFGPlayerInfo:Conduct(template, role, class, spec, amount)
-	-- This function allow you do a very simple template rendering.
-	-- The syntax like a mix of React and Vue.
-	-- The field between `{{` and `}}` should NOT have any space.
-	-- The {{tagStart}} and {{tagEnd}} is a tag pair like HTML tag, but it has been designed for matching latest close tag.
-	-- [Sample]
-	-- {{classIcon:14}}{{specIcon:14,18}} {{classColorStart}}{{className}}{{classColorEnd}}{{amountStart}} x {{amount}}{{amountEnd}}
+---@param members table[]
+---@param mode "ROLE"|"ILVL"|"CLASS"|"NAME"|"NONE"
+---@return table[] sorted
+function LFGPI:SortMembers(members, mode)
+	local sorted = {}
+	for i, member in ipairs(members) do
+		sorted[i] = member
+	end
 
-	local result = template
+	if mode == "NONE" then
+		return sorted
+	end
 
-	-- {{classIcon}}
-	result = gsub(result, "{{classIcon:([0-9,]-)}}", function(sub)
-		if not class then
-			self:Log("warning", "className not found, class is not given.")
-			return ""
+	table.sort(sorted, function(a, b)
+		if mode == "ROLE" and a.role ~= b.role then
+			return roleIndex[a.role] < roleIndex[b.role]
 		end
-
-		local size = { strsplit(",", sub) }
-		local height = size[1] and size[1] ~= "" and tonumber(size[1]) or 14
-		local width = size[2] and size[2] ~= "" and tonumber(size[2]) or height
-
-		return F.GetClassIconStringWithStyle(class, classIconStyle, width, height)
+		if mode == "CLASS" and a.class ~= b.class then
+			return a.class < b.class
+		end
+		if mode ~= "NAME" and a.ilvl ~= b.ilvl then
+			return a.ilvl > b.ilvl
+		end
+		return a.name < b.name
 	end)
 
-	-- {{className}}
-	result = gsub(result, "{{className}}", function(sub)
-		if not class then
-			self:Log("warning", "className not found, class is not given.")
-			return ""
-		end
-
-		return LOCALIZED_CLASS_NAMES_MALE[class]
-	end)
-
-	-- {{classId}}
-	result = gsub(result, "{{classId}}", function(sub)
-		if not class then
-			self:Log("warning", "classId not found, class is not given.")
-			return ""
-		end
-
-		local classID = classFileToID[class]
-
-		return classID or ""
-	end)
-
-	-- {{specIcon}}
-	result = gsub(result, "{{specIcon:([0-9,]-)}}", function(sub)
-		if not spec then
-			self:Log("warning", "specIcon not found, spec is not given.")
-			return ""
-		end
-
-		if spec == "Initial" then
-			return ""
-		end
-
-		local icon = localizedSpecNameToIcon[class] and localizedSpecNameToIcon[class][spec]
-
-		local size = { strsplit(",", sub) }
-		local height = size[1] and size[1] ~= "" and tonumber(size[1]) or 14
-		local width = size[2] and size[2] ~= "" and tonumber(size[2]) or height
-
-		return icon and F.GetIconString(icon, height, width, true) or ""
-	end)
-
-	-- {{specName}}
-	result = gsub(result, "{{specName}}", function(sub)
-		if not spec then
-			self:Log("warning", "specName not found, spec is not given.")
-			return ""
-		end
-
-		return spec
-	end)
-
-	-- {{specId}}
-	result = gsub(result, "{{specId}}", function(sub)
-		if not class then
-			self:Log("warning", "specId not found, spec is not given.")
-			return ""
-		end
-
-		local specID = localizedSpecNameToID[class] and localizedSpecNameToID[class][spec]
-
-		return specID or ""
-	end)
-
-	-- {{classColorStart}} ... {{classColorEnd}}
-	result = gsub(result, "{{classColorStart}}(.-){{classColorEnd}}", function(sub)
-		if not class then
-			self:Log("warning", "className not found, class is not given.")
-			return ""
-		end
-
-		return C.StringWithClassColor(sub, class)
-	end)
-
-	-- {{amountStart}} ... {{amountEnd}}
-	result = gsub(result, "{{amountStart}}(.-){{amountEnd}}", function(sub)
-		if not amount then
-			self:Log("warning", "amount not found, amount is not given.")
-			return ""
-		elseif amount <= 1 then -- should not show amount if the amount is only one
-			return ""
-		else
-			return gsub(sub, "{{amount}}", tostring(amount))
-		end
-	end)
-
-	-- {{amount}}
-	result = gsub(result, "{{amount}}", function()
-		if not amount then
-			self:Log("warning", "amount not found, amount is not given.")
-			return ""
-		end
-		return tostring(amount)
-	end)
-
-	-- {{classColorStart}} ... {{classColorEnd}}
-	result = gsub(result, "{{classColorStart}}(.-){{classColorEnd}}", function(sub)
-		if not class then
-			self:Log("warning", "className not found, class is not given.")
-			return ""
-		end
-		return C.StringWithClassColor(sub, class)
-	end)
-
-	return result
+	return sorted
 end
 
----Generate a preview of template rendering using sample data
----@param template string|nil The template string to preview
----@return string result The rendered preview string, empty if template is nil
-function W.Utilities.LFGPlayerInfo:ConductPreview(template)
-	if not template then
+local namedColors = {
+	red = "ff5555",
+	green = "55ff55",
+	yellow = "ffd200",
+	orange = "ff8000",
+	blue = "66bbff",
+	gray = "999999",
+	white = "ffffff",
+}
+
+local relationTexts = {
+	friend = "|cff66bbff" .. L["Friend"] .. "|r",
+	guild = "|cff55ff55" .. L["Guild"] .. "|r",
+	ignored = "|cffff5555" .. L["Ignored"] .. "|r",
+}
+
+local function parseSize(args, default)
+	local height, width = strsplit(",", args or "")
+	height = tonumber(height) or default
+	return height, tonumber(width) or height
+end
+
+local function roleIcon(role, args)
+	local texture = role and UF.RoleIconTextures[role]
+	if not texture then
 		return ""
 	end
-
-	local specName = select(2, GetSpecializationInfoForClassID(2, 2))
-
-	return self:Conduct(template, "TANK", "PALADIN", specName, 2)
+	local height, width = parseSize(args, 14)
+	return format("|T%s:%d:%d:0:0:64:64:8:56:8:56|t", texture, height, width)
 end
 
----Get formatted party information using the provided template
----Processes cached player data and renders it using the template system
----@param template string|nil The template string for formatting player info
----@return table<string, string[]>? dataTable Table organized by role containing formatted strings, nil if template is invalid
-function W.Utilities.LFGPlayerInfo:GetPartyInfo(template)
-	if not template then
-		self:Log("warning", "template is nil.")
-		return
+local function plainIcon(texture, args, default)
+	local height, width = parseSize(args, default)
+	return format("|T%s:%d:%d|t", texture, height, width)
+end
+
+local function positive(value)
+	return value and value > 0 and value or ""
+end
+
+local function wrapItemLevel(itemLevel, text)
+	local color = itemLevel and itemLevel > 0 and GetItemLevelColor(itemLevel)
+	return color and color:WrapTextInColorCode(text) or text
+end
+
+local function shortAge(seconds)
+	local minutes = max(1, floor((seconds or 0) / 60))
+	if minutes < 60 then
+		return format(L["%d min"], minutes)
 	end
+	return format(L["%d h"], floor(minutes / 60))
+end
 
-	local dataTable = {}
+local playerTags = {
+	value = {
+		name = function(m)
+			return m.name
+		end,
+		ilvl = function(m)
+			return positive(m.ilvl)
+		end,
+		className = function(m)
+			return LOCALIZED_CLASS_NAMES_MALE[m.class]
+		end,
+		classId = function(m)
+			return classFileToID[m.class]
+		end,
+		classIcon = function(m, args)
+			local height, width = parseSize(args, 14)
+			return m.class and F.GetClassIconStringWithStyle(m.class, classIconStyle, width, height)
+		end,
+		specName = function(m)
+			return m.spec
+		end,
+		specId = function(m)
+			return localizedSpecNameToID[m.class] and localizedSpecNameToID[m.class][m.spec]
+		end,
+		specIcon = function(m, args)
+			local icon = LFGPI.GetIconTextureWithClassAndSpecName(m.class, m.spec)
+			local height, width = parseSize(args, 14)
+			return icon and F.GetIconString(icon, height, width, true)
+		end,
+		roleIcon = function(m, args)
+			return roleIcon(m.role, args)
+		end,
+		roleName = function(m)
+			return roleNames[m.role]
+		end,
+		categoryName = function(m)
+			return m.category and m.category ~= 0 and (C_CategorySpell_GetCategoryInfo(m.category))
+		end,
+		categoryIcon = function(m, args)
+			local _, icon = C_CategorySpell_GetCategoryInfo(m.category or 0)
+			local height, width = parseSize(args, 14)
+			return icon and F.GetIconString(icon, height, width)
+		end,
+		leaderIcon = function(m, args)
+			return m.isLeader and plainIcon(W.Media.Icons.leader, args, 12)
+		end,
+		leader = function(m)
+			return m.isLeader and L["Leader"]
+		end,
+		relation = function(m)
+			return relationTexts[m.relation]
+		end,
+		amount = function(m)
+			return m.amount
+		end,
+	},
+	cond = {
+		amount = function(m)
+			return m.amount and m.amount > 1
+		end,
+		category = function(m)
+			return m.category and m.category ~= 0
+		end,
+		friend = function(m)
+			return m.relation == "friend"
+		end,
+		guild = function(m)
+			return m.relation == "guild"
+		end,
+		ignored = function(m)
+			return m.relation == "ignored"
+		end,
+	},
+	wrap = {
+		classColor = function(m, text)
+			return C.StringWithClassColor(text, m.class) or text
+		end,
+		ilvlColor = function(m, text)
+			return wrapItemLevel(m.ilvl, text)
+		end,
+		roleColor = function(m, text)
+			return roleColors[m.role] and format("|cff%s%s|r", roleColors[m.role], text) or text
+		end,
+	},
+}
 
-	for _, role in ipairs(roleOrder) do
-		dataTable[role] = {}
-
-		local members = self.Composition[role]
-
-		for class, numberOfPlayersSortBySpec in pairs(members.playerList) do
-			for spec, numberOfPlayers in pairs(numberOfPlayersSortBySpec) do
-				local result = self:Conduct(template, role, class, spec, numberOfPlayers)
-				tinsert(dataTable[role], result)
+local groupTags = {
+	value = {
+		groupName = function(g)
+			return g.info.name
+		end,
+		activity = function(g)
+			return g.activity.fullName
+		end,
+		activityShort = function(g)
+			return g.activity.shortName
+		end,
+		leaderName = function(g)
+			return g.leaderName and (C.StringWithClassColor(g.leaderName, g.leaderClass) or g.leaderName)
+		end,
+		leaderScore = function(g)
+			return g.leaderScore
+		end,
+		members = function(g)
+			return g.num
+		end,
+		max = function(g)
+			return positive(g.max)
+		end,
+		free = function(g)
+			return positive(g.free)
+		end,
+		tanks = function(g)
+			return g.tanks
+		end,
+		healers = function(g)
+			return g.healers
+		end,
+		dps = function(g)
+			return g.dps
+		end,
+		tankIcon = function(_, args)
+			return roleIcon("TANK", args)
+		end,
+		healerIcon = function(_, args)
+			return roleIcon("HEALER", args)
+		end,
+		dpsIcon = function(_, args)
+			return roleIcon("DAMAGER", args)
+		end,
+		avgIlvl = function(g)
+			return positive(g.avgIlvl)
+		end,
+		minIlvl = function(g)
+			return positive(g.minIlvl)
+		end,
+		maxIlvl = function(g)
+			return positive(g.maxIlvl)
+		end,
+		reqIlvl = function(g)
+			return positive(g.reqIlvl)
+		end,
+		myIlvl = function()
+			return LFGPI.GetPlayerItemLevel()
+		end,
+		age = function(g)
+			return shortAge(g.info.age)
+		end,
+		bosses = function(g)
+			return positive(#g.bosses)
+		end,
+		voice = function(g)
+			return g.info.voiceChat
+		end,
+		friends = function(g)
+			return positive(g.friends)
+		end,
+		difficulty = function(g)
+			return g.activity.isHeroicActivity and L["Heroic"] or g.activity.isNormalActivity and L["Normal"]
+		end,
+		saved = function(g)
+			return g.saved and L["Saved"]
+		end,
+		ignored = function(g)
+			return #g.ignored > 0 and tconcat(g.ignored, ", ")
+		end,
+		categoryName = function(g)
+			local spell = g.info.categorySpell
+			return spell and spell > 0 and (C_CategorySpell_GetCategoryInfo(spell))
+		end,
+		categoryIcon = function(g, args)
+			local _, icon = C_CategorySpell_GetCategoryInfo(g.info.categorySpell or 0)
+			local height, width = parseSize(args, 14)
+			return icon and F.GetIconString(icon, height, width)
+		end,
+		skull = function(_, args)
+			return plainIcon([[Interface\TargetingFrame\UI-TargetingFrame-Skull]], args, 12)
+		end,
+		classes = function(g, args)
+			local height, width = parseSize(args, 14)
+			local parts = {}
+			for _, class in ipairs(classList) do
+				local count = g.classes[class]
+				if count then
+					local icon = F.GetClassIconStringWithStyle(class, classIconStyle, width, height)
+					parts[#parts + 1] = count > 1 and icon .. count or icon
+				end
 			end
+			return tconcat(parts, " ")
+		end,
+		missing = function(g, args)
+			local height, width = parseSize(args, 14)
+			local parts = {}
+			for _, class in ipairs(classList) do
+				if not g.classes[class] then
+					parts[#parts + 1] = F.GetClassIconStringWithStyle(class, classIconStyle, width, height)
+				end
+			end
+			return tconcat(parts, " ")
+		end,
+	},
+	cond = {
+		qualified = function(g)
+			return g.qualified
+		end,
+		unqualified = function(g)
+			return not g.qualified
+		end,
+		heroic = function(g)
+			return g.activity.isHeroicActivity
+		end,
+	},
+	wrap = {
+		ilvlColor = function(g, text)
+			return wrapItemLevel(g.avgIlvl, text)
+		end,
+		leaderScoreColor = function(g, text)
+			local color = g.leaderScore and C_ChallengeMode_GetDungeonScoreRarityColor(g.leaderScore)
+			return color and color:WrapTextInColorCode(text) or text
+		end,
+		classColor = function(g, text)
+			return g.leaderClass and C.StringWithClassColor(text, g.leaderClass) or text
+		end,
+		reqColor = function(g, text)
+			return format("|cff%s%s|r", g.qualified and namedColors.green or namedColors.red, text)
+		end,
+	},
+}
+
+local function shown(value)
+	return value ~= nil and value ~= false and value ~= "" and value ~= 0
+end
+
+local function render(template, tags, context)
+	local text = gsub(template, "{{(%a+)Start}}(.-){{%1End}}", function(name, body)
+		local wrap = tags.wrap[name]
+		local hex = namedColors[name]
+		local test = tags.cond[name] or tags.value[name]
+		if not wrap and not hex and not test then
+			return
 		end
+
+		body = render(body, tags, context)
+		if wrap then
+			return wrap(context, body)
+		elseif hex then
+			return format("|cff%s%s|r", hex, body)
+		end
+		return shown(test(context)) and body or ""
+	end)
+
+	return (gsub(text, "{{(%a+):?([%d,]*)}}", function(name, args)
+		local value = tags.value[name]
+		if not value then
+			return
+		end
+
+		local result = value(context, args)
+		return shown(result) and tostring(result) or ""
+	end))
+end
+
+---@param template string
+---@param member table
+---@return string text
+function LFGPI:RenderPlayer(template, member)
+	return render(template or "", playerTags, member)
+end
+
+---@param template string
+---@param group table
+---@return string text
+function LFGPI:RenderGroup(template, group)
+	return render(template or "", groupTags, group)
+end
+
+---@param group table
+---@return table<string, table[]> composition
+function LFGPI:GetComposition(group)
+	local composition = { TANK = {}, HEALER = {}, DAMAGER = {} }
+	local index = {}
+
+	for _, member in ipairs(self:SortMembers(group.members, "CLASS")) do
+		local key = strjoin(":", member.role, member.class, member.spec or "")
+		local entry = index[key]
+		if not entry then
+			entry = { role = member.role, class = member.class, spec = member.spec, amount = 0, name = "", ilvl = 0 }
+			index[key] = entry
+			composition[member.role][#composition[member.role] + 1] = entry
+		end
+		entry.amount = entry.amount + 1
 	end
 
-	return dataTable
+	return composition
+end
+
+local previewGroup
+
+---@return table group
+function LFGPI:GetPreviewGroup()
+	if previewGroup then
+		return previewGroup
+	end
+
+	local function specName(classID, specIndex)
+		return (select(2, GetSpecializationInfoForClassID(classID, specIndex)))
+	end
+
+	local group = {
+		id = 0,
+		info = {
+			name = L["Sample group"],
+			comment = "",
+			voiceChat = "Discord",
+			age = 754,
+			categorySpell = 90010,
+			requiredItemLevel = 250,
+		},
+		activity = {
+			fullName = L["Sample Mythic+ dungeon"],
+			shortName = L["Sample dungeon"],
+			isMythicPlusActivity = true,
+			maxNumPlayers = 5,
+		},
+		members = {},
+		classes = { PALADIN = 2, PRIEST = 1, MAGE = 1 },
+		ignored = {},
+		bosses = { "1", "2", "3" },
+		tanks = 1,
+		healers = 1,
+		dps = 2,
+		num = 4,
+		max = 5,
+		free = 1,
+		reqIlvl = 250,
+		friends = 1,
+		avgIlvl = 256,
+		minIlvl = 249,
+		maxIlvl = 263,
+		saved = true,
+		qualified = true,
+		leaderName = "Uther",
+		leaderClass = "PALADIN",
+		leaderScore = 1820,
+	}
+
+	local function add(name, class, classID, specIndex, role, ilvl, category, isLeader, relation)
+		group.members[#group.members + 1] = {
+			name = name,
+			ilvl = ilvl,
+			class = class,
+			spec = specName(classID, specIndex),
+			role = role,
+			category = category,
+			isLeader = isLeader,
+			relation = relation,
+			amount = 2,
+			group = group,
+		}
+	end
+
+	add("Uther", "PALADIN", 2, 2, "TANK", 263, 90015, true)
+	add("Anduin", "PRIEST", 5, 2, "HEALER", 258, 90010, false, "friend")
+	add("Jaina", "MAGE", 8, 3, "DAMAGER", 254, 90010, false, "guild")
+	add("Tirion", "PALADIN", 2, 3, "DAMAGER", 249, 90006, false)
+
+	previewGroup = group
+	return group
+end
+
+local function helpLine(tag, description)
+	return C.StringByTemplate(tag, "blue-400") .. " = " .. description
+end
+
+local sizeHint = L["Icon size: {{tag:16}} or {{tag:height,width}}."]
+
+---@param kind "player"|"group"
+---@return string help
+function LFGPI:GetTagHelp(kind)
+	local lines = { F.GetWindStyleText(L["Template Elements"]) }
+	local function add(tag, description)
+		lines[#lines + 1] = helpLine(tag, description)
+	end
+
+	if kind == "player" then
+		add("{{name}}", L["Character name"])
+		add("{{ilvl}}", L["Item level"])
+		add("{{className}}", L["Class name"])
+		add("{{specName}}", L["Specialization name"])
+		add("{{roleName}}", L["Role name"])
+		add("{{categoryName}}", L["Sirus category name"])
+		add("{{leader}}", L["The word \"Leader\" for the group leader"])
+		add("{{relation}}", L["Friend, guild member or ignored player mark"])
+		add("{{amount}}", L["Number of players (composition template only)"])
+		add("{{classIcon}} {{specIcon}} {{roleIcon}} {{categoryIcon}} {{leaderIcon}}", L["Icons"])
+		lines[#lines + 1] = sizeHint
+		lines[#lines + 1] = ""
+		lines[#lines + 1] = F.GetWindStyleText(L["Blocks"])
+		add("{{classColorStart}}...{{classColorEnd}}", L["Class color"])
+		add("{{ilvlColorStart}}...{{ilvlColorEnd}}", L["Item level color"])
+		add("{{roleColorStart}}...{{roleColorEnd}}", L["Role color"])
+	else
+		add("{{groupName}}", L["Group name"])
+		add("{{activity}}", L["Full activity name"])
+		add("{{activityShort}}", L["Short activity name"])
+		add("{{difficulty}}", L["Difficulty"])
+		add("{{leaderName}}", L["Leader name in class color"])
+		add("{{leaderScore}}", L["Leader's Mythic+ rating"])
+		add("{{members}} {{max}} {{free}}", L["Members, group size, free slots"])
+		add("{{tanks}} {{healers}} {{dps}}", L["Number of players by role"])
+		add("{{avgIlvl}} {{minIlvl}} {{maxIlvl}}", L["Average, lowest and highest item level"])
+		add("{{reqIlvl}} {{myIlvl}}", L["Required item level and yours"])
+		add("{{age}}", L["Time since the group was listed"])
+		add("{{bosses}}", L["Number of defeated bosses"])
+		add("{{friends}}", L["Number of friends and guild members"])
+		add("{{ignored}}", L["Names of ignored players in the group"])
+		add("{{saved}}", L["The word \"Saved\" when you are saved to this instance"])
+		add("{{voice}}", L["Voice chat"])
+		add("{{categoryName}}", L["Required Sirus category"])
+		add("{{classes}} {{missing}}", L["Icons of present and missing classes"])
+		add("{{tankIcon}} {{healerIcon}} {{dpsIcon}} {{categoryIcon}} {{skull}}", L["Icons"])
+		lines[#lines + 1] = sizeHint
+		lines[#lines + 1] = ""
+		lines[#lines + 1] = F.GetWindStyleText(L["Blocks"])
+		add("{{ilvlColorStart}}...{{ilvlColorEnd}}", L["Color of the average item level"])
+		add("{{leaderScoreColorStart}}...{{leaderScoreColorEnd}}", L["Leader's Mythic+ rating color"])
+		add("{{classColorStart}}...{{classColorEnd}}", L["Leader class color"])
+		add("{{reqColorStart}}...{{reqColorEnd}}", L["Green if you meet the item level requirement, red otherwise"])
+	end
+
+	add("{{redStart}}...{{redEnd}}", L["Fixed color: red, green, yellow, orange, blue, gray, white"])
+	add(
+		"{{tagStart}}...{{tagEnd}}",
+		L["Shows the content only when the tag has a value, for example {{bossesStart}}bosses: {{bosses}}{{bossesEnd}}"]
+	)
+
+	return tconcat(lines, "\n")
 end

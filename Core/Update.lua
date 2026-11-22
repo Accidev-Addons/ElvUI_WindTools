@@ -124,6 +124,19 @@ function W:ConvertEnhanced()
 	end
 end
 
+local function removePvpRatingTags(template)
+	if type(template) ~= "string" then
+		return template
+	end
+
+	for _, tag in ipairs({ "rating", "bgRating", "pvpRating" }) do
+		template = template:gsub("{{" .. tag .. "Start}}.-{{" .. tag .. "End}}", "")
+		template = template:gsub("{{" .. tag .. ":?[%d,]*}}", "")
+	end
+
+	return template
+end
+
 function W:UpdateScripts()
 	local profile = E.db.WT
 	local gameBar = profile.misc and profile.misc.gameBar
@@ -137,6 +150,14 @@ function W:UpdateScripts()
 	end
 	if profile.item then
 		profile.item.alreadyKnown = nil
+	end
+	local groupInfo = profile.tooltips and profile.tooltips.groupInfo
+	if groupInfo then
+		groupInfo.hideBlizzard = nil
+		groupInfo.mode = nil
+		groupInfo.ratings = nil
+		groupInfo.playerTemplate = removePvpRatingTags(groupInfo.playerTemplate)
+		groupInfo.template = removePvpRatingTags(groupInfo.template)
 	end
 	local turnIn = profile.quest and profile.quest.turnIn
 	if turnIn then
