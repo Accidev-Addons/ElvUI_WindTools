@@ -1,6 +1,7 @@
 local W, F, E, L = unpack((select(2, ...))) ---@type WindTools, Functions, ElvUI, LocaleTable
 local ES = E.Skins
 local S = W.Modules.Skins ---@type Skins
+local TT = E:GetModule("Tooltip")
 
 local _G = _G
 local pairs = pairs
@@ -92,6 +93,13 @@ do -- If there is no speech progress text in first time, the skin will not be ap
 	end
 end
 
+function S:Immersion_ReskinTooltips(frame)
+	for tooltip in frame.Inspector.tooltipFramePool:EnumerateActive() do
+		TT:SetStyle(tooltip)
+		tooltip.Hilite:SetBackdrop(nil)
+	end
+end
+
 function S:Immersion()
 	if not E.private.WT.skins.enable or not E.private.WT.skins.addons.immersion then
 		return
@@ -152,9 +160,20 @@ function S:Immersion()
 	talkBox.MainFrame.Indicator:ClearAllPoints()
 	talkBox.MainFrame.Indicator:Point("RIGHT", talkBox.MainFrame.CloseButton, "LEFT", -2, 0)
 
+	local progressionBar = talkBox.ProgressionBar
+	self:Proxy("HandleStatusBar", progressionBar)
+	progressionBar:ClearAllPoints()
+	progressionBar:Point("BOTTOMLEFT", talkBox.backdrop, "BOTTOMLEFT", 2, 2)
+	progressionBar:Point("BOTTOMRIGHT", talkBox.backdrop, "BOTTOMRIGHT", -2, 2)
+
 	-- Backdrop of elements (bottom window)
 	local elements = talkBox.Elements
 	elements:SetBackdrop(nil)
+	self:SecureHook(elements, "SetBackdrop", function(_, backdrop)
+		if backdrop then
+			elements:SetBackdrop(nil)
+		end
+	end)
 	elements:CreateBackdrop("Transparent")
 	elements.backdrop:ClearAllPoints()
 	elements.backdrop:Point("TOPLEFT", elements, "TOPLEFT", 10, -5)
@@ -179,6 +198,7 @@ function S:Immersion()
 	-- Buttons
 	self:SecureHookScript(frame, "OnEvent", "Immersion_ReskinTitleButton")
 	self:SecureHook(frame, "Show", "Immersion_Show")
+	self:SecureHook(frame, "ShowItems", "Immersion_ReskinTooltips")
 end
 
 S:AddCallbackForAddon("Immersion")

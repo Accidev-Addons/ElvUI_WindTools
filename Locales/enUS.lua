@@ -1508,3 +1508,6 @@ L["Return to my raid"] = true
 L["Return to my group"] = true
 L["Browse Groups While Listed"] = true
 L["Show the Browse Groups button for every member of a listed group and keep the group list open. The button in the list returns to your group."] = true
+L["Import the string from the box above. It replaces your %s settings and reloads the UI."] = true
+L["An ElvUI export of Profile, Private or Global already contains the matching part of the %s settings."] = true
+L["Account-wide %s settings, such as mail contacts and the login message, are not in this string. Export them with ElvUI Options -> Profiles -> Export -> Global (Account Settings)."] = true

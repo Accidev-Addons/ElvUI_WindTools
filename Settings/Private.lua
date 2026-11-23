@@ -188,6 +188,7 @@ V.quest = {
 			topLeftOffsetY = 0,
 			bottomRightOffsetX = 0,
 			bottomRightOffsetY = 0,
+			offsetXSwapped = false,
 		},
 		header = {
 			name = E.db.general.font,

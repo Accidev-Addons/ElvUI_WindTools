@@ -2,6 +2,7 @@ local F ---@class Functions
 local W, F, E, L, V, P, G ---@type WindTools, Functions, ElvUI, LocaleTable, PrivateDB, ProfileDB, GlobalDB
 W, F, E, L, V, P, G = unpack((select(2, ...)))
 
+local gsub = gsub
 local next = next
 local strmatch = strmatch
 local type = type
@@ -15,9 +16,57 @@ F.Profiles = {}
 
 ---@type table Generated keys configuration for profile data
 local generatedKeys = {
-	profile = {},
-	private = {},
+	profile = {
+		announcement = { utility = { custom = true } },
+		item = { extraItemsBar = { customList = true, blackList = true } },
+		misc = {
+			keybindAlias = { list = true },
+			gameBar = { hearthstone = { custom = true, randomPool = true } },
+		},
+		social = {
+			chatText = { customAbbreviation = true },
+			chatBar = { channels = { world = { config = true } } },
+		},
+		quest = { turnIn = { customIgnoreNPCs = true } },
+	},
+	private = {
+		combat = { destroyTotem = { keys = true } },
+		misc = {
+			moveFrames = { framePositions = true },
+			lfgList = { filter = { hidden = true } },
+		},
+	},
+	global = {
+		item = { contacts = { alts = true, favorites = true } },
+	},
 }
+
+for scope, keys in next, generatedKeys do
+	Serializer.GeneratedKeys[scope].WT = keys
+end
+
+local defaultFont, defaultStatusBar = E.db.general.font, E.db.unitframe.statusbar
+
+local function KeepElvUIDefaults(data, current, defaults)
+	for key, value in next, defaults do
+		local currentValue = current[key]
+		if type(value) == "table" then
+			if type(currentValue) == "table" then
+				local sub = KeepElvUIDefaults(data[key] or {}, currentValue, value)
+				if next(sub) ~= nil then
+					data[key] = sub
+				end
+			end
+		elseif
+			currentValue ~= nil
+			and (value == defaultFont or value == defaultStatusBar or (key == "size" and defaults.name == defaultFont))
+		then
+			data[key] = currentValue
+		end
+	end
+
+	return data
+end
 
 ---@class Functions
 ---Generate compressed and encoded string from data
@@ -81,12 +130,14 @@ function F.Profiles.GetOutputString(profile, private)
 	if profile then
 		profileData = E:CopyTable(profileData, E.db.WT)
 		profileData = E:RemoveTableDuplicates(profileData, P, generatedKeys.profile)
+		KeepElvUIDefaults(profileData, E.db.WT, P)
 	end
 
 	local privateData = {}
 	if private then
 		privateData = E:CopyTable(privateData, E.private.WT)
 		privateData = E:RemoveTableDuplicates(privateData, V, generatedKeys.private)
+		KeepElvUIDefaults(privateData, E.private.WT, V)
 	end
 
 	local profileString = F.Profiles.GenerateString(profileData)
@@ -103,7 +154,7 @@ end
 ---Import profile and private data from string
 ---@param importString string The import string containing profile and private data
 function F.Profiles.ImportByString(importString)
-	local profileString, privateString = strmatch(importString, "^(.-){}(.+)$")
+	local profileString, privateString = strmatch(gsub(importString, "%s", ""), "^(.-){}(.+)$")
 	if not profileString or not privateString then
 		F.Print("Error importing profile. String is invalid or corrupted!")
 		return
@@ -111,14 +162,17 @@ function F.Profiles.ImportByString(importString)
 
 	local profileData = F.Profiles.ExactString(profileString)
 	local privateData = F.Profiles.ExactString(privateString)
-
-	if profileData and type(next(profileData)) ~= "nil" then
-		E:CopyTable(E.db.WT, P)
-		E:CopyTable(E.db.WT, profileData)
+	if not profileData or not privateData then
+		return
 	end
 
-	if privateData and type(next(privateData)) ~= "nil" then
-		E:CopyTable(E.private.WT, V)
-		E:CopyTable(E.private.WT, privateData)
+	if type(next(profileData)) ~= "nil" then
+		E.db.WT = E:CopyTable(E:CopyTable({}, P), profileData)
 	end
+
+	if type(next(privateData)) ~= "nil" then
+		E.private.WT = E:CopyTable(E:CopyTable({}, V), privateData)
+	end
+
+	return true
 end

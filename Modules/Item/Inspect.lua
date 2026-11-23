@@ -485,7 +485,7 @@ function I:ShouldShowPanel(unit, parent)
 			return false
 		end
 	elseif parent == _G.InspectFrame then
-		if not self.db.inspect then
+		if not self.db.inspect or _G.CharacterFrame:IsShown() then
 			return false
 		end
 	elseif unit == "player" and _G.InspectFrame.WTInspect and parent == _G.InspectFrame.WTInspect then
@@ -1176,6 +1176,19 @@ function I:Initialize()
 	self:RegisterEvent("INSPECT_TALENT_READY")
 	self:RegisterEvent("UNIT_INVENTORY_CHANGED")
 	E:RegisterEventForObject("INSPECT_ITEM_LEVEL_UPDATE", self, self.INSPECT_TALENT_READY)
+
+	self:SecureHookScript(_G.CharacterFrame, "OnShow", function()
+		local panel = _G.InspectFrame and _G.InspectFrame.WTInspect
+		if panel then
+			panel:Hide()
+		end
+	end)
+	self:SecureHookScript(_G.CharacterFrame, "OnHide", function()
+		local unit = _G.InspectFrame and _G.InspectFrame.unit
+		if unit then
+			self:UNIT_INVENTORY_CHANGED(nil, unit)
+		end
+	end)
 
 	self.initialized = true
 end

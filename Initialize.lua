@@ -18,8 +18,8 @@ local GetAddOnMetadata = GetAddOnMetadata
 ---@class WindTools : AceAddon, AceConsole-3.0, AceEvent-3.0, AceTimer-3.0, AceHook-3.0
 local W = AceAddon:NewAddon(addonName, "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0", "AceHook-3.0")
 
-V.WT = {} ---@class ProfileDB
-P.WT = {} ---@class PrivateDB
+V.WT = {} ---@class PrivateDB
+P.WT = {} ---@class ProfileDB
 G.WT = {} ---@class GlobalDB
 
 addon[1] = W

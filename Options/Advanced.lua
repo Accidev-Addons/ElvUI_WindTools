@@ -861,8 +861,9 @@ do
 		button1 = _G.ACCEPT,
 		button2 = _G.CANCEL,
 		OnAccept = function()
-			F.Profiles.ImportByString(text)
-			ReloadUI()
+			if F.Profiles.ImportByString(text) then
+				ReloadUI()
+			end
 		end,
 		whileDead = 1,
 		hideOnEscape = true,
@@ -896,7 +897,8 @@ do
 					text = {
 						order = 1,
 						type = "input",
-						name = " ",
+						name = L["String"],
+						desc = format(L["Import and export your %s settings."], W.Title),
 						multiline = 15,
 						width = "full",
 						get = function()
@@ -910,6 +912,7 @@ do
 						order = 2,
 						type = "execute",
 						name = L["Import"],
+						desc = format(L["Import the string from the box above. It replaces your %s settings and reloads the UI."], W.Title),
 						func = function()
 							if text ~= "" then
 								E:StaticPopup_Show("WINDTOOLS_IMPORT_STRING")
@@ -954,12 +957,14 @@ do
 						order = 7,
 						type = "description",
 						name = format(
-							"%s\n%s\n%s\n%s\n%s",
+							"%s\n%s\n%s\n%s\n%s\n%s\n%s",
 							C.StringByTemplate(L["I want to sync setting of WindTools!"], "blue-500"),
 							L["WindTools saves all data in ElvUI Profile and Private database."],
 							L["So if you set ElvUI Profile and Private these |cffff0000TWO|r databases to the same across multiple character, the setting of WindTools will be synced."],
 							L["Sharing ElvUI Profile is a very common thing nowadays, but actually ElvUI Private database is also exist for saving configuration of General, Skins, etc."],
-							L["Check the setting of ElvUI Private database in ElvUI Options -> Profiles -> Private (tab)."]
+							L["Check the setting of ElvUI Private database in ElvUI Options -> Profiles -> Private (tab)."],
+							format(L["An ElvUI export of Profile, Private or Global already contains the matching part of the %s settings."], W.Title),
+							format(L["Account-wide %s settings, such as mail contacts and the login message, are not in this string. Export them with ElvUI Options -> Profiles -> Export -> Global (Account Settings)."], W.Title)
 						),
 						width = "full",
 					},
@@ -986,6 +991,7 @@ do
 						order = 2,
 						type = "toggle",
 						name = L["Enable"],
+						desc = L["Automatically copy the selected private profile to a new character on first login."],
 						get = function(info)
 							return E.global.WT.core.autoCopyPrivateProfile.enable
 						end,

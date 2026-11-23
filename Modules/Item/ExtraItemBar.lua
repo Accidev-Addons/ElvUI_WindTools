@@ -657,6 +657,7 @@ function EB:UpdateBar(id)
 			if bar.waitGroup.ticker then
 				bar.waitGroup.ticker:Cancel()
 			end
+			barDB = E.db.WT.item.extraItemsBar["bar" .. id]
 			bar.alphaMin = barDB.alphaMin
 			bar.alphaMax = barDB.alphaMax
 
