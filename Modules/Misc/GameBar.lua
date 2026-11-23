@@ -61,6 +61,7 @@ local ToggleCalendar = ToggleCalendar
 local ToggleTimeManager = ToggleTimeManager
 local UnregisterStateDriver = UnregisterStateDriver
 
+local C_BattlePass = C_BattlePass
 local C_Item_GetItemCooldown = GetItemCooldown
 local C_Item_GetItemCount = GetItemCount
 local C_SpellBook_IsSpellKnown = IsSpellKnown
@@ -417,6 +418,13 @@ local sharedCache = {
 	friends = {},
 }
 
+local function battlePassClick(mouseButton)
+	return function()
+		DT.RegisteredDataTexts.BattlePass.onClick(nil, mouseButton)
+		DT.tooltip:Hide()
+	end
+end
+
 local ButtonTypes = {
 	ACHIEVEMENTS = {
 		name = L["Achievements"],
@@ -437,6 +445,22 @@ local ButtonTypes = {
 			end,
 		},
 		tooltips = "Bags",
+	},
+	BATTLE_PASS = {
+		name = _G.BATTLEPASS,
+		icon = W.Media.Icons.barBattlePass,
+		click = {
+			LeftButton = battlePassClick("LeftButton"),
+			MiddleButton = battlePassClick("MiddleButton"),
+			RightButton = battlePassClick("RightButton"),
+		},
+		additionalText = function()
+			if not C_BattlePass.IsEnabled() then
+				return ""
+			end
+			return C_BattlePass.GetLevelInfo() .. (C_BattlePass.HasUnclaimedReward() and "!" or "")
+		end,
+		tooltips = "BattlePass",
 	},
 	BLIZZARD_SHOP = {
 		name = L["Blizzard Shop"],
@@ -1522,7 +1546,7 @@ function GB:UpdateHearthStoneTable()
 	local data = {
 		RANDOM = {
 			name = L["Random Hearthstone"],
-			icon = "Interface\Icons\INV_Misc_Rune_01",
+			icon = "Interface\\Icons\\INV_Misc_Rune_01",
 			actionType = "random",
 		},
 	}

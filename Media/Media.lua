@@ -433,6 +433,7 @@ AddMedia("list", "List.tga", "Icons")
 
 AddMedia("barAchievements", "GameBar\\Achievements.tga", "Icons")
 AddMedia("barBags", "GameBar\\Bags.tga", "Icons")
+AddMedia("barBattlePass", "GameBar\\BattlePass.tga", "Icons")
 AddMedia("barBlizzardShop", "GameBar\\BlizzardShop.tga", "Icons")
 AddMedia("barCharacter", "GameBar\\Character.tga", "Icons")
 AddMedia("barCollections", "GameBar\\Collections.tga", "Icons")

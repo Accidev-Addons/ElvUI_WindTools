@@ -1001,7 +1001,7 @@ P.misc = {
 			[3] = "ACHIEVEMENTS",
 			[4] = "ENCOUNTER_JOURNAL",
 			[5] = "TOY_BOX",
-			[6] = "PET_JOURNAL",
+			[6] = "BATTLE_PASS",
 			[7] = "BAGS",
 		},
 	},
