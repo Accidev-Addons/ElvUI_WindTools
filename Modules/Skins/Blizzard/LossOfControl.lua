@@ -124,6 +124,7 @@ function S:LossOfControlFrame()
 		end
 	end)
 
+	_G.LossOfControlFrame.blackBg:SetAllPoints()
 	self:LossOfControlFrame_UpdateSize(_G.LossOfControlFrame)
 
 	E:CreateMover(
