@@ -335,7 +335,6 @@ L["Count Down"] = "Обратный отсчет"
 L["Count Down Time"] = "Обратный отсчет времени"
 L["Count down time in seconds."] = "Обратный отсчет времени в секундах. Без DBM и BigWigs игровой отсчёт запускается только от 3 секунд."
 L["Counter"] = "Счетчик"
-L["Crafted Food"] = "Крафтовая еда"
 L["Crafted by mage"] = "Создано магом"
 L["Ctrl"] = true
 L["Ctrl Key"] = "Клавиша Ctrl"

@@ -14,6 +14,7 @@ local IL = W:GetModule("ItemLevel")
 local EMP = W:GetModule("ExtendMerchantPages")
 
 local format = format
+local GetItemInfoInstant = GetItemInfoInstant
 local ipairs = ipairs
 local pairs = pairs
 local print = print
@@ -54,7 +55,7 @@ local extraItemGroupTooltip = (function()
 		generateSlotDesc(),
 		desc("POTION", L["Potions"]),
 		desc("FLASK", L["Flasks"]),
-		desc("FOOD", L["Crafted Food"]),
+		desc("FOOD", L["Food"]),
 		desc("FOODVENDOR", format("%s - %s", L["Food"], L["Sold by vendor"])),
 		desc("MAGEFOOD", format("%s - %s", L["Food"], L["Crafted by mage"])),
 		desc("FISHING", L["Fishing"]),
@@ -115,7 +116,7 @@ options.extraItemsBar = {
 					end,
 					set = function(_, value)
 						local itemID = tonumber(value)
-						if itemID and async.WithItemID(itemID) then
+						if itemID and GetItemInfoInstant(itemID) then
 							tinsert(E.db.WT.item.extraItemsBar.customList, itemID)
 							EB:UpdateBars()
 						else
@@ -155,6 +156,7 @@ options.extraItemsBar = {
 						if customListSelected1 then
 							local list = E.db.WT.item.extraItemsBar.customList
 							tremove(list, customListSelected1)
+							customListSelected1 = nil
 							EB:UpdateBars()
 						end
 					end,
@@ -178,7 +180,7 @@ options.extraItemsBar = {
 					end,
 					set = function(_, value)
 						local itemID = tonumber(value)
-						if itemID and async.WithItemID(itemID) then
+						if itemID and GetItemInfoInstant(itemID) then
 							E.db.WT.item.extraItemsBar.blackList[itemID] = true
 							EB:UpdateBars()
 						else

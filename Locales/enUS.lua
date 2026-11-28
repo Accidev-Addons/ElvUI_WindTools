@@ -335,7 +335,6 @@ L["Count Down"] = true
 L["Count Down Time"] = true
 L["Count down time in seconds."] = "Count down time in seconds. Without DBM or BigWigs the game countdown starts only from 3 seconds."
 L["Counter"] = true
-L["Crafted Food"] = true
 L["Crafted by mage"] = true
 L["Ctrl"] = true
 L["Ctrl Key"] = true

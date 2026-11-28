@@ -316,7 +316,7 @@ P.item = {
 					b = 1,
 				},
 			},
-			include = "MAGEFOOD,FOOD,FOODVENDOR,CUSTOM",
+			include = "CUSTOM,MAGEFOOD,FOOD,FOODVENDOR",
 		},
 		bar4 = {
 			enable = false,

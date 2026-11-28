@@ -9,6 +9,7 @@ local ceil = ceil
 local format = format
 local ipairs = ipairs
 local pairs = pairs
+local sort = sort
 local strmatch = strmatch
 local strsplit = strsplit
 local tinsert = tinsert
@@ -20,6 +21,8 @@ local CooldownFrame_SetTimer = CooldownFrame_SetTimer
 local CreateFrame = CreateFrame
 local GameTooltip = _G.GameTooltip
 local GetBindingKey = GetBindingKey
+local GetContainerItemID = GetContainerItemID
+local GetContainerNumSlots = GetContainerNumSlots
 local GetInventoryItemCooldown = GetInventoryItemCooldown
 local GetInventoryItemID = GetInventoryItemID
 local GetInventoryItemLink = GetInventoryItemLink
@@ -33,30 +36,40 @@ local UnregisterStateDriver = UnregisterStateDriver
 
 local GetItemCooldown = GetItemCooldown
 local GetItemCount = GetItemCount
+local GetItemInfo = GetItemInfo
 local GetItemInfoInstant = GetItemInfoInstant
 local GetNumQuestLogEntries = GetNumQuestLogEntries
 local IsItemInRange = IsItemInRange
+
+local NUM_BAG_SLOTS = NUM_BAG_SLOTS
 
 local function C_Timer_NewTicker(...)
 	return C_Timer:NewTicker(...)
 end
 
 local questItemList = {}
+local knownQuestItems = {}
 local function UpdateQuestItemList()
 	wipe(questItemList)
 
 	for questLogIndex = 1, GetNumQuestLogEntries() do
 		local link = GetQuestLogSpecialItemInfo(questLogIndex)
-		if link then
-			tinsert(questItemList, { questLogIndex = questLogIndex, itemID = GetItemInfoInstant(link) })
+		local itemID = link and GetItemInfoInstant(link)
+		if itemID then
+			knownQuestItems[itemID] = true
+			tinsert(questItemList, { questLogIndex = questLogIndex, itemID = itemID })
 		end
+	end
+
+	for itemID in pairs(knownQuestItems) do
+		tinsert(questItemList, { itemID = itemID })
 	end
 end
 
 local equipmentList = {}
 local function UpdateEquipmentList()
 	wipe(equipmentList)
-	for slotID = 1, 18 do
+	for slotID = 1, 19 do
 		local itemID = GetInventoryItemID("player", slotID)
 		local itemLink = itemID and GetInventoryItemLink("player", slotID)
 		if itemID and itemLink and GetItemSpell(itemLink) then
@@ -77,14 +90,14 @@ local function ParseSlotFilter(slotStr)
 		startSlot, endSlot = tonumber(startSlot), tonumber(endSlot)
 		if startSlot and endSlot and startSlot <= endSlot then
 			for slotID = startSlot, endSlot do
-				if slotID >= 1 and slotID <= 18 then
+				if slotID >= 1 and slotID <= 19 then
 					allowedSlots[slotID] = true
 				end
 			end
 		end
 	elseif strmatch(slotStr, "^%d+$") then
 		local slotID = tonumber(slotStr)
-		if slotID and slotID >= 1 and slotID <= 18 then
+		if slotID and slotID >= 1 and slotID <= 19 then
 			allowedSlots[slotID] = true
 		end
 	end
@@ -239,23 +252,11 @@ function EB:SetUpButton(button, itemData, slotID, waitGroup)
 	button:SetScript("OnEnter", function(_)
 		local bar = button:GetParent()
 		local barDB = EB.db["bar" .. bar.id]
-		if not bar or not barDB then
+		if not barDB then
 			return
 		end
 
-		if barDB.globalFade then
-			if AB.fadeParent and not AB.fadeParent.mouseLock then
-				E:UIFrameFadeIn(AB.fadeParent, 0.2, AB.fadeParent:GetAlpha(), 1)
-			end
-		elseif barDB.mouseOver then
-			local alphaCurrent = bar:GetAlpha()
-			E:UIFrameFadeIn(
-				bar,
-				barDB.fadeTime * (barDB.alphaMax - alphaCurrent) / (barDB.alphaMax - barDB.alphaMin),
-				alphaCurrent,
-				barDB.alphaMax
-			)
-		end
+		EB:FadeInBar(bar)
 
 		if barDB.tooltip then
 			GameTooltip:SetOwner(button, "ANCHOR_BOTTOMRIGHT", 0, -2)
@@ -272,26 +273,7 @@ function EB:SetUpButton(button, itemData, slotID, waitGroup)
 	end)
 
 	button:SetScript("OnLeave", function(_)
-		local bar = button:GetParent()
-		local barDB = EB.db["bar" .. bar.id]
-		if not bar or not barDB then
-			return
-		end
-
-		if barDB.globalFade then
-			if AB.fadeParent and not AB.fadeParent.mouseLock then
-				E:UIFrameFadeOut(AB.fadeParent, 0.2, AB.fadeParent:GetAlpha(), 1 - AB.db.globalFadeAlpha)
-			end
-		elseif barDB.mouseOver then
-			local alphaCurrent = bar:GetAlpha()
-			E:UIFrameFadeOut(
-				bar,
-				barDB.fadeTime * (alphaCurrent - barDB.alphaMin) / (barDB.alphaMax - barDB.alphaMin),
-				alphaCurrent,
-				barDB.alphaMin
-			)
-		end
-
+		EB:FadeOutBar(button:GetParent())
 		GameTooltip:Hide()
 	end)
 
@@ -401,41 +383,57 @@ function EB:CreateBar(id)
 		end
 	end
 
+	bar:EnableMouse(true)
 	bar:SetScript("OnEnter", function(_)
-		local barDB = EB.db["bar" .. id]
-		if not barDB then
-			return
-		end
-
-		if not barDB.globalFade and barDB.mouseOver and barDB.alphaMax and barDB.alphaMin then
-			local alphaCurrent = bar:GetAlpha()
-			E:UIFrameFadeIn(
-				bar,
-				barDB.fadeTime * (barDB.alphaMax - alphaCurrent) / (barDB.alphaMax - barDB.alphaMin),
-				alphaCurrent,
-				barDB.alphaMax
-			)
-		end
+		EB:FadeInBar(bar)
 	end)
-
 	bar:SetScript("OnLeave", function(_)
-		local barDB = EB.db["bar" .. id]
-		if not barDB then
-			return
-		end
-
-		if not barDB.globalFade and barDB.mouseOver and barDB.alphaMax and barDB.alphaMin then
-			local alphaCurrent = bar:GetAlpha()
-			E:UIFrameFadeOut(
-				bar,
-				barDB.fadeTime * (alphaCurrent - barDB.alphaMin) / (barDB.alphaMax - barDB.alphaMin),
-				alphaCurrent,
-				barDB.alphaMin
-			)
-		end
+		EB:FadeOutBar(bar)
 	end)
 
 	self.bars[id] = bar
+end
+
+function EB:FadeInBar(bar)
+	local barDB = self.db["bar" .. bar.id]
+	if not barDB then
+		return
+	end
+
+	if barDB.globalFade then
+		if AB.fadeParent and not AB.fadeParent.mouseLock then
+			E:UIFrameFadeIn(AB.fadeParent, 0.2, AB.fadeParent:GetAlpha(), 1)
+		end
+	elseif barDB.mouseOver then
+		local alphaCurrent = bar:GetAlpha()
+		E:UIFrameFadeIn(
+			bar,
+			barDB.fadeTime * (barDB.alphaMax - alphaCurrent) / (barDB.alphaMax - barDB.alphaMin),
+			alphaCurrent,
+			barDB.alphaMax
+		)
+	end
+end
+
+function EB:FadeOutBar(bar)
+	local barDB = self.db["bar" .. bar.id]
+	if not barDB or bar:IsMouseOver() then
+		return
+	end
+
+	if barDB.globalFade then
+		if AB.fadeParent and not AB.fadeParent.mouseLock then
+			E:UIFrameFadeOut(AB.fadeParent, 0.2, AB.fadeParent:GetAlpha(), 1 - AB.db.globalFadeAlpha)
+		end
+	elseif barDB.mouseOver then
+		local alphaCurrent = bar:GetAlpha()
+		E:UIFrameFadeOut(
+			bar,
+			barDB.fadeTime * (alphaCurrent - barDB.alphaMin) / (barDB.alphaMax - barDB.alphaMin),
+			alphaCurrent,
+			barDB.alphaMin
+		)
+	end
 end
 
 function EB:ValidateItem(itemID)
@@ -483,9 +481,12 @@ function EB:UpdateBar(id)
 	end
 
 	local buttonID = 1
+	local added = {}
+	local addedSlots = {}
 
 	local function addNormalButton(itemID)
-		if self:ValidateItem(itemID) and buttonID <= barDB.numButtons then
+		if not added[itemID] and self:ValidateItem(itemID) and buttonID <= barDB.numButtons then
+			added[itemID] = true
 			self:SetUpButton(bar.buttons[buttonID], { itemID = itemID }, nil, bar.waitGroup)
 			self:UpdateButtonSize(bar.buttons[buttonID], barDB)
 			buttonID = buttonID + 1
@@ -494,7 +495,8 @@ function EB:UpdateBar(id)
 
 	local function addSlotButton(slotID)
 		local itemID = GetInventoryItemID("player", slotID)
-		if self:ValidateItem(itemID) and buttonID <= barDB.numButtons then
+		if not addedSlots[slotID] and self:ValidateItem(itemID) and buttonID <= barDB.numButtons then
+			addedSlots[slotID] = true
 			self:SetUpButton(bar.buttons[buttonID], nil, slotID, bar.waitGroup)
 			self:UpdateButtonSize(bar.buttons[buttonID], barDB)
 			buttonID = buttonID + 1
@@ -507,10 +509,42 @@ function EB:UpdateBar(id)
 		end
 	end
 
+	local function addBagButtons(consumableSubclassID)
+		local items, itemLevels = {}, {}
+		for bag = 0, NUM_BAG_SLOTS do
+			for slot = 1, GetContainerNumSlots(bag) do
+				local itemID = GetContainerItemID(bag, slot)
+				if itemID and not itemLevels[itemID] then
+					local _, _, _, _, _, classID, subclassID = GetItemInfoInstant(itemID)
+					if classID == 0 and subclassID == consumableSubclassID then
+						local _, _, _, itemLevel = GetItemInfo(itemID)
+						itemLevels[itemID] = itemLevel or 0
+						tinsert(items, itemID)
+					end
+				end
+			end
+		end
+
+		sort(items, function(a, b)
+			if itemLevels[a] ~= itemLevels[b] then
+				return itemLevels[a] > itemLevels[b]
+			end
+			return a < b
+		end)
+
+		for _, itemID in ipairs(items) do
+			addNormalButton(itemID)
+		end
+	end
+
 	for _, module in ipairs({ strsplit("[, ]", barDB.include) }) do
 		if buttonID <= barDB.numButtons then
 			if self.ModuleList[module] then
 				addNormalButtons(self.ModuleList[module])
+			end
+
+			if self.ConsumableSubclassList[module] then
+				addBagButtons(self.ConsumableSubclassList[module])
 			elseif module == "QUEST" then -- Quest Items
 				for _, data in ipairs(questItemList) do
 					addNormalButton(data.itemID)
@@ -664,7 +698,7 @@ function EB:UpdateBar(id)
 			if barDB.globalFade then
 				bar:SetAlpha(1)
 			else
-				bar:SetAlpha(barDB.mouseOver and barDB.alphaMin or barDB.alphaMax)
+				bar:SetAlpha(barDB.mouseOver and not bar:IsMouseOver() and barDB.alphaMin or barDB.alphaMax)
 			end
 
 			local anchor = bar:GetParent()
@@ -798,7 +832,9 @@ function EB:ProfileUpdate()
 		UpdateEquipmentList()
 	elseif self.initialized then
 		E:UnregisterEventForObject("BAG_UPDATE_DELAYED", self, self.UpdateBars)
+		self:UnregisterEvent("ITEM_LOCKED")
 		self:UnregisterEvent("PLAYER_ALIVE")
+		self:UnregisterEvent("PLAYER_REGEN_ENABLED")
 		self:UnregisterEvent("PLAYER_EQUIPMENT_CHANGED")
 		self:UnregisterEvent("PLAYER_UNGHOST")
 		self:UnregisterEvent("QUEST_ACCEPTED")
