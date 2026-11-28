@@ -10,6 +10,10 @@ function S:Blizzard_MacroUI()
 
 	self:CreateShadow(_G.MacroFrame)
 	self:CreateShadow(_G.MacroPopupFrame)
+
+	for i = 1, _G.MacroFrame.numTabs do
+		self:ReskinTab(_G["MacroFrameTab" .. i])
+	end
 end
 
 S:AddCallbackForAddon("Blizzard_MacroUI")

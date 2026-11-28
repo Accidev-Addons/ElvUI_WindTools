@@ -9,7 +9,7 @@ function S:Blizzard_InspectUI()
 	end
 
 	self:CreateShadow(_G.InspectFrame)
-	for i = 1, 4 do
+	for i = 1, _G.InspectFrame.numTabs do
 		self:ReskinTab(_G["InspectFrameTab" .. i])
 	end
 

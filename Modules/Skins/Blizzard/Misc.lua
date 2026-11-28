@@ -38,3 +38,65 @@ function S:BlizzardMiscFrames()
 end
 
 S:AddCallback("BlizzardMiscFrames")
+
+local panelShadows = {
+	ArenaFrame = { "arena" },
+	ArenaRegistrarFrame = { "arenaregistrar" },
+	BattlePassFrame = { "battlePass" },
+	BattlefieldFrame = { "pvp" },
+	ChallengesFrame = { "lfd", "challenges" },
+	ChallengesInspectFrame = { "lfd", "challenges" },
+	ChooseItemFrame = { "chooseitem" },
+	Custom_RouletteFrame = { "roulette" },
+	DeathRecapFrame = { "deathRecap" },
+	DeclensionFrame = { "misc" },
+	DummyControlFrame = { "dummycontrol" },
+	GuildControlPopupFrame = { "guild", "guild" },
+	GuildFrame = { "guild", "guild" },
+	GuildRegistrarFrame = { "guildregistrar", "guild" },
+	HardcoreFrame = { "hardcore" },
+	HeadHuntingFrame = { "headhunting" },
+	HeadHuntingSetRewardExternalFrame = { "headhunting" },
+	InspectRecipeFrame = { "tradeskill" },
+	ItemBrowser = { "itembrowser" },
+	LFRParentFrame = { "lfr", "lookingForGroup" },
+	LadderFrame = { "lfd", "lookingForGroup" },
+	LookingForGuildFrame = { "guild", "guild" },
+	LootCasePreviewFrame = { "lootCasePreview" },
+	PVPBannerFrame = { "arenaregistrar" },
+	PVPParentFrame = { "pvp" },
+	PVPUIFrame = { "lfd", "lookingForGroup" },
+	PetitionFrame = { "petition", "guild" },
+	PlayerTalentFrame = { "talent" },
+	PromoCodeFrame = { "store" },
+	QuestLogDetailFrame = { "quest", "quest" },
+	SpellBookFrame = { "spellbook" },
+	StoreFrame = { "store" },
+	TabardFrame = { "tabard", "guild" },
+	TradeSkillFrame = { "tradeskill" },
+	WorldStateScoreFrame = { "bgscore" },
+}
+
+local function CreatePanelShadow(frame)
+	if frame.backdrop then
+		S:CreateBackdropShadow(frame, true)
+	elseif frame.template and frame.template ~= "NoBackdrop" then
+		S:CreateShadow(frame)
+	end
+
+	for i = 1, frame.numTabs or 0 do
+		S:ReskinTab(_G[frame:GetName() .. "Tab" .. i])
+	end
+end
+
+function S:BlizzardPanelShadows()
+	for name, keys in pairs(panelShadows) do
+		local frame = _G[name]
+		if frame and self:CheckDB(keys[1], keys[2] or "misc") then
+			CreatePanelShadow(frame)
+			self:SecureHookScript(frame, "OnShow", CreatePanelShadow)
+		end
+	end
+end
+
+S:AddCallback("BlizzardPanelShadows")

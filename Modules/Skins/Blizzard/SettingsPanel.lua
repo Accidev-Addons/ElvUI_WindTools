@@ -9,6 +9,10 @@ function S:SettingsPanel()
 	self:CreateShadow(_G.InterfaceOptionsFrame)
 	self:CreateShadow(_G.VideoOptionsFrame)
 	self:CreateShadow(_G.AudioOptionsFrame)
+
+	for i = 1, _G.InterfaceOptionsFrame.numTabs do
+		self:ReskinTab(_G["InterfaceOptionsFrameTab" .. i])
+	end
 end
 
 S:AddCallback("SettingsPanel")

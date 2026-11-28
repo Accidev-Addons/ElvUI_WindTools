@@ -12,6 +12,10 @@ function S:Bank()
 	end
 
 	self:CreateBackdropShadow(_G.BankFrame)
+
+	for i = 1, _G.BankFrame.numTabs do
+		self:ReskinTab(_G["BankFrameTab" .. i])
+	end
 end
 
 local skinnedButtons = {}
