@@ -321,6 +321,7 @@ L["Compatibility Check"] = true
 L["Complete"] = true
 L["Complete Text"] = true
 L["Complete the quest with the most valuable reward."] = true
+L["Completed"] = true
 L["Config List"] = true
 L["Confirm Summon"] = true
 L["Confirm summon from other player automatically."] = true

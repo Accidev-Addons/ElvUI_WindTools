@@ -14,6 +14,8 @@ local tinsert = tinsert
 local tonumber = tonumber
 local tostring = tostring
 
+local C_BattlePass = C_BattlePass
+local Enum = Enum
 local GetNumQuestLeaderBoards = GetNumQuestLeaderBoards
 local GetNumQuestLogEntries = GetNumQuestLogEntries
 local GetQuestLink = GetQuestLink
@@ -311,7 +313,7 @@ end
 ---Handle quest progress update event
 ---@param status QuestStatusType
 ---@param objectiveData? QuestObjectiveData
-function QP:HandleQuestProgress(status, questData, objectiveData)
+function QP:HandleQuestProgress(status, questData, objectiveData, skipAnnounce)
 	if not self.fiveSecondsAfterLogin then
 		return
 	end
@@ -335,8 +337,9 @@ function QP:HandleQuestProgress(status, questData, objectiveData)
 		local progressText = format(db.detailTemplate, objectiveData.numFulfilled, objectiveData.numRequired)
 		local progressColor = F.GetProgressColor(objectiveData.numFulfilled / objectiveData.numRequired)
 		local coloredProgressText = C.StringWithRGB(progressText, progressColor)
-		plainContext.progress = format("%s %s", objectiveText, progressText)
-		coloredContext.progress = format("%s %s", coloredObjectiveText, coloredProgressText)
+		plainContext.progress = objectiveText and format("%s %s", objectiveText, progressText) or progressText
+		coloredContext.progress = coloredObjectiveText and format("%s %s", coloredObjectiveText, coloredProgressText)
+			or coloredProgressText
 		if objectiveData.finished then
 			plainContext.progress = plainContext.progress .. " " .. db.completeText
 			coloredContext.icon = format("|T%s:0|t", W.Media.Icons.complete)
@@ -351,6 +354,10 @@ function QP:HandleQuestProgress(status, questData, objectiveData)
 	if self.db.enable then
 		local message = self:RenderTemplate(self.db.displayTemplate, self:FilterContext(coloredContext))
 		UIErrorsFrame:AddMessage(message)
+	end
+
+	if skipAnnounce then
+		return
 	end
 
 	-- Send to announcement module
@@ -374,6 +381,7 @@ do
 	local ERR_QUEST_ADD_ITEM_SII = ERR_QUEST_ADD_ITEM_SII
 	local ERR_QUEST_ADD_FOUND_SII = ERR_QUEST_ADD_FOUND_SII
 	local ERR_QUEST_ADD_KILL_SII = ERR_QUEST_ADD_KILL_SII
+	local ERR_QUEST_ADD_PLAYER_KILL_SII = ERR_QUEST_ADD_PLAYER_KILL_SII
 	local ERR_QUEST_UNKNOWN_COMPLETE = ERR_QUEST_UNKNOWN_COMPLETE
 	local ERR_QUEST_OBJECTIVE_COMPLETE_S = ERR_QUEST_OBJECTIVE_COMPLETE_S
 
@@ -382,6 +390,7 @@ do
 		_G.ERR_QUEST_ADD_ITEM_SII = disabled and ERR_QUEST_ADD_ITEM_SII or ""
 		_G.ERR_QUEST_ADD_FOUND_SII = disabled and ERR_QUEST_ADD_FOUND_SII or ""
 		_G.ERR_QUEST_ADD_KILL_SII = disabled and ERR_QUEST_ADD_KILL_SII or ""
+		_G.ERR_QUEST_ADD_PLAYER_KILL_SII = disabled and ERR_QUEST_ADD_PLAYER_KILL_SII or ""
 		_G.ERR_QUEST_UNKNOWN_COMPLETE = disabled and ERR_QUEST_UNKNOWN_COMPLETE or ""
 		_G.ERR_QUEST_OBJECTIVE_COMPLETE_S = disabled and ERR_QUEST_OBJECTIVE_COMPLETE_S or ""
 	end
@@ -389,6 +398,36 @@ end
 
 function QP:HandleQuestUpdateEvent()
 	F.TaskManager:AfterLogin(self.ProcessQuestUpdate, self)
+end
+
+local battlePassProgress = {}
+local battlePassQuestTypes = {
+	[Enum.BattlePass.QuestType.Daily] = "daily",
+	[Enum.BattlePass.QuestType.Weekly] = "weekly",
+}
+
+function QP:HandleBattlePassQuestUpdate(_, questType, questIndex)
+	local db = self.db.battlePass
+	if not (self.db.enable and questIndex and db[battlePassQuestTypes[questType]]) then
+		return
+	end
+
+	local questID = C_BattlePass.GetQuestID(questType, questIndex)
+	local name, description, _, _, progressValue, progressMaxValue = C_BattlePass.GetQuestInfo(questType, questIndex)
+	local previousValue = battlePassProgress[questID] or 0
+	battlePassProgress[questID] = progressValue
+
+	local finished = progressValue >= progressMaxValue
+	if progressValue <= previousValue or not finished and progressMaxValue > db.disableIfRequiredOver then
+		return
+	end
+
+	self:HandleQuestProgress(QUEST_STATUS.QUEST_UPDATE, { title = name }, {
+		item = db.description and description or nil,
+		numFulfilled = progressValue,
+		numRequired = progressMaxValue,
+		finished = finished,
+	}, true)
 end
 
 ---Fetch the context for preview or test
@@ -421,6 +460,7 @@ function QP:Initialize()
 	if not self.initialized then
 		self:RegisterEvent("QUEST_LOG_UPDATE", "HandleQuestUpdateEvent")
 		self:RegisterEvent("QUEST_WATCH_UPDATE", "HandleQuestUpdateEvent")
+		E:RegisterEventForObject("BATTLEPASS_QUEST_UPDATE", self, self.HandleBattlePassQuestUpdate)
 		self.initialized = true
 	end
 

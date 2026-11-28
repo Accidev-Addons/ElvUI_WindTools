@@ -1417,6 +1417,47 @@ options.progress = {
 				E.db.WT.quest.progress.displayTemplate = P.quest.progress.displayTemplate
 			end,
 		},
+		battlePass = {
+			order = 6,
+			type = "group",
+			name = _G.BATTLEPASS_TITLE,
+			inline = true,
+			get = function(info)
+				return E.db.WT.quest.progress.battlePass[info[#info]]
+			end,
+			set = function(info, value)
+				E.db.WT.quest.progress.battlePass[info[#info]] = value
+			end,
+			disabled = function()
+				return not E.db.WT.quest.progress.enable
+			end,
+			args = {
+				daily = {
+					order = 1,
+					type = "toggle",
+					name = _G.BATTLEPASS_QUESTS_DAILY,
+				},
+				weekly = {
+					order = 2,
+					type = "toggle",
+					name = _G.BATTLEPASS_QUESTS_WEEKLY,
+				},
+				description = {
+					order = 3,
+					type = "toggle",
+					name = L["Description"],
+				},
+				disableIfRequiredOver = {
+					order = 4,
+					type = "range",
+					name = L["Disable If Required Over"],
+					desc = L["Disable the progress message if the required number of objectives is over this value to avoid spamming."],
+					step = 1,
+					min = 1,
+					max = 10000,
+				},
+			},
+		},
 		soundEffects = {
 			order = 10,
 			type = "group",
@@ -2131,7 +2172,7 @@ options.progress = {
 					order = 2,
 					type = "group",
 					inline = true,
-					name = L["Complete"],
+					name = L["Completed"],
 					get = function(info)
 						return E.db.WT.quest.progress.progress.complete[info[#info]]
 					end,
